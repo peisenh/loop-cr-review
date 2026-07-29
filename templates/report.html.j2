@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>{{ tool }} — {{ name }}</title>
+<style>
+@media print { .card { break-inside: avoid } }
+body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; background: #eef1f6; color: #1a2233 }
+.wrap { max-width: 900px; margin: 0 auto; padding: 22px }
+h1 { font-size: 20px; margin: 0 }
+.tool { font-size: 12px; color: #5a6b82; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 2px }
+.sub { color: #5a6b82; font-size: 13px; margin: 2px 0 16px }
+.disclaimer { background: #fff6f3; border: 1px solid #f0b7a6; border-left: 4px solid #c0392b;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #7a2318; line-height: 1.5 }
+.disclaimer b { color: #a12626 }
+.card { background: #fff; border: 1px solid #dde3ee; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px }
+h2 { font-size: 14px; margin: 0 0 10px }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px }
+.kpi { background: #fff; border: 1px solid #dde3ee; border-radius: 10px; padding: 10px 12px }
+.kpi .v { font-size: 21px; font-weight: 700 }
+.kpi .l { font-size: 10.5px; color: #5a6b82; text-transform: uppercase; letter-spacing: .03em }
+.row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 13px }
+.row span { width: 150px }
+.row b { width: 52px; text-align: right }
+.track { flex: 1; height: 12px; background: #eef1f6; border-radius: 6px; overflow: hidden }
+.fill { height: 100% }
+table { width: 100%; border-collapse: collapse; font-size: 12px }
+th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #eef1f6 }
+th { color: #5a6b82; font-weight: 600 }
+tr.weak { background: #fff3e8 } tr.strong { background: #fdeaea } tr.ok { background: #eef8ef }
+img { width: 100%; border-radius: 8px }
+.note { font-size: 11.5px; color: #5a6b82; line-height: 1.5 }
+.tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-right: 5px }
+.tw { background: #fff3e8; color: #a5541b } .ts { background: #fdeaea; color: #a12626 } .to { background: #eef8ef; color: #2b7a34 }
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="tool">{{ tool }}</p>
+<h1>Ambulatory Glucose Profile &amp; CR-Beurteilung</h1>
+<div class="sub">{{ name }} · {{ span }} · {{ days }} Tage · {{ device }} · Sensor-Wear {{ wear }}%</div>
+
+<div class="disclaimer">
+  <b>⚠︎ Kein Medizinprodukt — nur Analyse.</b> Dieses Werkzeug wertet vorhandene CGM-/Pumpendaten
+  statistisch aus. Es stellt <b>keine Diagnose</b> und <b>keine Therapieempfehlung</b> dar und ersetzt
+  nicht die ärztliche Beurteilung. <b>Insulin-, CR- oder sonstige Einstellungen niemals ohne das
+  Diabetes-Team ändern.</b> Alle Werte dienen ausschließlich als Gesprächsgrundlage; <b>keine Gewähr</b>
+  für Richtigkeit oder Vollständigkeit.
+</div>
+
+<div class="grid">
+  <div class="kpi"><div class="v">{{ mean }}</div><div class="l">Ø Glukose mg/dL</div></div>
+  <div class="kpi"><div class="v">{{ gmi }}%</div><div class="l">GMI</div></div>
+  <div class="kpi"><div class="v">{{ cv }}%</div><div class="l">CV (Ziel ≤36%)</div></div>
+  <div class="kpi"><div class="v">{{ tir }}%</div><div class="l">Time in Range</div></div>
+</div>
+
+<div class="card">
+  <h2>Time in Ranges</h2>
+  {% for band in tir_bands %}
+  <div class="row"><span>{{ band.label | safe }}</span>
+    <div class="track"><div class="fill" style="width: {{ band.width }}%; background: {{ band.color }}"></div></div>
+    <b>{{ band.val }}%</b></div>
+  {% endfor %}
+  <div class="note" style="margin-top: 6px">
+    Ziele: TIR ≥70% · TBR&lt;70 &lt;4% · TBR&lt;54 &lt;1% · CV ≤36%. TITR(70–140) {{ titr }}%.</div>
+</div>
+
+<div class="card"><h2>AGP (Perzentile 5/25/50/75/95)</h2>
+  <img src="data:image/png;base64,{{ agp_img }}"></div>
+
+<div class="card"><h2>Reale Postprandial-Verläufe je Mahlzeit (Median)</h2>
+  <img src="data:image/png;base64,{{ slot_img }}">
+  <div class="note" style="margin-top: 6px">{{ curve_cap }}</div></div>
+
+<div class="card">
+  <h2>CR-Beurteilung pro Slot (Loop-aware)</h2>
+  <table>
+    <tr><th>Slot</th><th>n (clean)</th><th>Ø CHO</th><th>CR abgel.</th><th>Bolus</th>
+        <th>Loop {{ wlab }}</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>Befund</th></tr>
+    {% for s in slots %}
+    <tr class="{{ s.cls }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
+        <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
+        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="note" style="margin-top: 8px">
+    <b>Methode:</b> Loop {{ wlab }} = zusätzlich vom Auto-Mode geliefertes Basal über der
+    Fasten-Basalrate ({{ fb }} U/h) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
+    aus (CR zu schwach). CR_eff = CHO / (Bolus + Loop-Mehrbasal). Δ{{ wlab }} = Glukose bei
+    {{ wlab }} minus prämahlzeitlich. „clean" = Mahlzeiten ohne weitere Mahlzeit im {{ wlab }}-Fenster.</div>
+</div>
+
+<div class="card">
+  <h2>Per-Mahlzeit-Detail</h2>
+  <table>
+    <tr><th>Zeit</th><th>Slot</th><th>CHO g</th><th>Bolus U</th><th>CR</th>
+        <th>Loop {{ wlab }} U</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
+    {% for m in meals %}
+    <tr class="{{ m.cls }}"><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
+        <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
+        <td>{{ m.d4 }}</td><td>{{ '⚠︎' if m.contam else '' }}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="note" style="margin-top: 6px">⚠︎ = kontaminiertes Fenster (weitere Mahlzeit &lt;{{ wlab }} danach).</div>
+</div>
+
+<div class="card">
+  <h2>Einordnung &amp; Grenzen</h2>
+  <div class="note">
+    <span class="tag ts">zu stark</span><span class="tag tw">zu schwach</span><span class="tag to">passend</span><br><br>
+    Dies ist <b>Entscheidungs-Evidenz für das Diabetes-Team</b>, keine Dosieranweisung.<br>
+    {{ cr_note | safe }}
+    • Unter CamAPS Auto Mode kompensiert der Loop laufend; das Loop-Mehrbasal ist gerade deshalb das
+      aussagekräftige Signal. Der Algorithmus adaptiert über Tage und kann länger bestehende
+      Fehleinstellungen teilweise glätten.<br>
+    • Confounder (Fett/Protein, Bewegung, gesplittete Boli, überlappende Mahlzeiten) sind über Mediane
+      gedämpft, nicht eliminiert; Slots mit wenigen „clean"-Mahlzeiten{{ clean_note }} sind unsicherer.<br>
+    • Fasten-Basal als Referenz setzt mahlzeit-/korrekturfreie Nächte 00–05h voraus.
+  </div>
+</div>
+
+</div>
+</body>
+</html>
