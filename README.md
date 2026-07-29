@@ -88,9 +88,9 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 
 Ein entpackter **Glooko-Export mit CamAPS-FX-Daten** (siehe „Kontext" oben) mit:
 
-- `cgm_data_1.csv` — CGM-Werte (`Zeitstempel, Glukose (mg/dl), Seriennummer`)
-- `Insulin data/bolus_data_1.csv` — Boli inkl. `Kohlenhydrataufnahme (g)` und `Abgegebenes Insulin (E)`
-- `Insulin data/basal_data_1.csv` — Basal-Segmente (`Rate`, `Dauer`)
+- `cgm_data_*.csv` — CGM-Werte (`Zeitstempel, Glukose (mg/dl), Seriennummer`); Glooko splittet lange Zeiträume auf mehrere nummerierte Dateien (`cgm_data_1.csv`, `cgm_data_2.csv`, …) — alle werden eingelesen
+- `Insulin data/bolus_data_*.csv` — Boli inkl. `Kohlenhydrataufnahme (g)` und `Abgegebenes Insulin (E)`
+- `Insulin data/basal_data_*.csv` — Basal-Segmente (`Rate`, `Dauer`)
 
 Deutsches Zahlformat (Komma) und `dd.mm.yyyy HH:MM` werden erkannt. Einheit: **mg/dL**.
 

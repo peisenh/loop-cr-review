@@ -81,41 +81,70 @@ def slot_of(hour):
 
 
 # --- Einlesen ---------------------------------------------------------------
+def numbered_csvs(directory, stem):
+    """Alle nummerierten Export-Dateien <stem>_N.csv, numerisch sortiert.
+
+    Glooko zerlegt grosse Exporte in cgm_data_1.csv, cgm_data_2.csv, ...
+    """
+    files = list(Path(directory).glob(f"{stem}_*.csv"))
+
+    def order(path):
+        match = re.search(rf"{re.escape(stem)}_(\d+)\.csv$", path.name)
+        return int(match.group(1)) if match else 0
+
+    return sorted(files, key=order)
+
+
 def read_cgm(base):
-    """-> (times[np.array], glucose[np.array], patient_name, sensor)."""
+    """-> (times[np.array], glucose[np.array], patient_name, sensor).
+
+    Liest alle cgm_data_*.csv (Glooko splittet lange Zeitraeume auf mehrere Dateien).
+    """
     times, gluc, sensor, name = [], [], "", "Patient"
-    with open(base / "cgm_data_1.csv", encoding="utf-8-sig") as fh:
-        reader = csv.reader(fh)
-        meta = next(reader)
-        next(reader)
-        match = re.search(r"Name\s*:\s*([^,]+)", ",".join(meta))
-        if match:
-            name = match.group(1).strip()
-        for row in reader:
-            if len(row) >= 2 and row[1].strip():
-                times.append(parse_ts(row[0]))
-                gluc.append(num(row[1]))
-                if not sensor and len(row) >= 3 and row[2].strip():
-                    sensor = row[2].strip()
-    order = np.argsort(times)
-    return np.array(times)[order], np.array(gluc)[order], name, sensor
+    files = numbered_csvs(base, "cgm_data")
+    if not files:
+        raise FileNotFoundError(f"Keine cgm_data_*.csv in {base} gefunden")
+    for idx, path in enumerate(files):
+        with open(path, encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            meta = next(reader)
+            next(reader)
+            if idx == 0:
+                match = re.search(r"Name\s*:\s*([^,]+)", ",".join(meta))
+                if match:
+                    name = match.group(1).strip()
+            for row in reader:
+                if len(row) >= 2 and row[1].strip():
+                    times.append(parse_ts(row[0]))
+                    gluc.append(num(row[1]))
+                    if not sensor and len(row) >= 3 and row[2].strip():
+                        sensor = row[2].strip()
+    times = np.array(times)
+    gluc = np.array(gluc)
+    order = np.argsort(times, kind="stable")
+    times, gluc = times[order], gluc[order]
+    if len(times):                                   # Duplikate (gleicher Zeitstempel) raus
+        keep = np.concatenate(([True], times[1:] != times[:-1]))
+        times, gluc = times[keep], gluc[keep]
+    return times, gluc, name, sensor
 
 
 def read_meals(base):
     """-> (meals[list], pump). Mahlzeit = zusammengefasste Boli >= MEAL_MIN_CHO g mit Bolus."""
     raw, pump = [], ""
-    with open(base / "Insulin data/bolus_data_1.csv", encoding="utf-8-sig") as fh:
-        reader = csv.reader(fh)
-        next(reader)
-        next(reader)
-        for row in reader:
-            if not pump and len(row) >= 9 and row[8].strip():
-                pump = row[8].strip()
-            cho = num(row[3])
-            if not np.isnan(cho) and cho > 0:
-                ins = num(row[5])
-                raw.append({"time": parse_ts(row[0]), "cho": cho, "bg": num(row[2]),
-                            "bolus": 0.0 if np.isnan(ins) else ins})
+    for path in numbered_csvs(base / "Insulin data", "bolus_data"):
+        with open(path, encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            next(reader)
+            next(reader)
+            for row in reader:
+                if not pump and len(row) >= 9 and row[8].strip():
+                    pump = row[8].strip()
+                cho = num(row[3])
+                if not np.isnan(cho) and cho > 0:
+                    ins = num(row[5])
+                    raw.append({"time": parse_ts(row[0]), "cho": cho, "bg": num(row[2]),
+                                "bolus": 0.0 if np.isnan(ins) else ins})
     raw.sort(key=lambda m: m["time"])
     merged = []
     for meal in raw:
@@ -132,15 +161,16 @@ def read_meals(base):
 def read_basal_timeline(base):
     """-> (rate[np.array U/h je Minute], t0, minutes, fasting_basal)."""
     segs = []
-    with open(base / "Insulin data/basal_data_1.csv", encoding="utf-8-sig") as fh:
-        reader = csv.reader(fh)
-        next(reader)
-        next(reader)
-        for row in reader:
-            rate_val = num(row[4])
-            if not np.isnan(rate_val):
-                dur = num(row[2])
-                segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
+    for path in numbered_csvs(base / "Insulin data", "basal_data"):
+        with open(path, encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            next(reader)
+            next(reader)
+            for row in reader:
+                rate_val = num(row[4])
+                if not np.isnan(rate_val):
+                    dur = num(row[2])
+                    segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
     segs.sort()
     t0 = segs[0][0]
     minutes = int((segs[-1][0] + timedelta(minutes=segs[-1][1]) - t0).total_seconds() // 60) + 1
@@ -437,7 +467,7 @@ def parse_args():
     """CLI-Argumente parsen."""
     parser = argparse.ArgumentParser(description="AGP + Loop-aware CR-Report aus CamAPS/Glooko-Export")
     parser.add_argument("export_dir", nargs="?", default=".",
-                        help="entpackter Export-Ordner (mit cgm_data_1.csv etc.)")
+                        help="entpackter Export-Ordner (nummerierte Dateien werden zusammengeführt)")
     parser.add_argument("-o", "--out", default=None,
                         help="Ausgabe-HTML (Default: ./<name>_loop-cr-review_<fenster>.html)")
     parser.add_argument("-w", "--window-hours", type=float, default=4.0,
