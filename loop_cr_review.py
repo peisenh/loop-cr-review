@@ -439,7 +439,7 @@ def parse_args():
     parser.add_argument("export_dir", nargs="?", default=".",
                         help="entpackter Export-Ordner (mit cgm_data_1.csv etc.)")
     parser.add_argument("-o", "--out", default=None,
-                        help="Ausgabe-HTML (Default: /mnt/user-data/outputs/<name>_loop-cr-review_<fenster>.html)")
+                        help="Ausgabe-HTML (Default: ./<name>_loop-cr-review_<fenster>.html)")
     parser.add_argument("-w", "--window-hours", type=float, default=4.0,
                         help="Postprandiales Fenster in Stunden (Default 4.0; z.B. 3, 3.5, 4)")
     parser.add_argument("-t", "--template-dir", default=None,
@@ -460,7 +460,7 @@ def main():
     html = render(context, template_dir)
 
     slug = re.sub(r"[^a-z0-9]+", "_", context["name"].lower()).strip("_") or "patient"
-    out = Path(args.out) if args.out else Path(f"/mnt/user-data/outputs/{slug}_loop-cr-review_{wlab}.html")
+    out = Path(args.out) if args.out else Path(f"{slug}_loop-cr-review_{wlab}.html")
     out.write_text(html, encoding="utf-8")
     print(f"geschrieben: {out} | {len(html)} bytes")
     print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]
