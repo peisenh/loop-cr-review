@@ -1,7 +1,7 @@
 [MAIN]
 max-line-length=120
 # Daten-Lese-/Analyse-/Assemblierungsfunktionen halten legitim etwas mehr Lokale.
-max-locals=20
+max-locals=22
 
 [MESSAGES CONTROL]
 disable=missing-module-docstring,

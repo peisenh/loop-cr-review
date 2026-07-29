@@ -27,6 +27,7 @@ Wertet einen CamAPS/Glooko-Export aus und erzeugt einen eigenständigen HTML-Rep
 - **AGP** (Perzentile 5/25/50/75/95 über 24 h) und **mediane Postprandial-Verläufe** je Slot.
 - **Konsens-Metriken** (Battelino 2019): Ø-Glukose, GMI, CV, TIR/TITR/TBR/TAR, Sensor-Wear.
 - **Loop-aware CR-Beurteilung** pro Slot (Frühstück / Mittag / Abend) mit datengetriebenem Befund (zu schwach / zu stark / passend) und Per-Mahlzeit-Detailtabelle.
+- **Ableitungen aus der Kurvenform**: pro Slot Kurven-Metriken (Peak-Höhe/-Zeit, Tiefpunkt, Spätanstieg) und daraus abgeleitete Kandidaten-Stellschrauben (SEA/Spritz-Ess-Abstand, Dosis, Fett/Protein, Hypo-Achtung) — als Hypothesen fürs Team, plus Klarstellung von `CR_eff` als Ansatz statt Zielwert.
 - Alles Patientenbezogene (Name, Gerät, Zeitraum, Interpretation) wird **aus den Daten** gezogen, nichts ist hartcodiert.
 
 ## Kontext: CamAPS FX & Glooko
@@ -61,6 +62,14 @@ Positives Loop-Mehrbasal ⇒ der Loop gleicht eine zu schwache CR aus ⇒ `CR_ef
 
 ## Installation
 
+Debian/Ubuntu über Systempakete (empfohlen, z. B. im Homelab):
+
+```bash
+sudo apt install python3-numpy python3-matplotlib python3-jinja2
+```
+
+Oder plattformunabhängig über pip (ggf. in einem venv):
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -84,6 +93,25 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 
 **PDF:** Report im Browser öffnen → Drucken → „Als PDF speichern" (Karten sind gegen Seitenumbrüche geschützt).
 
+## Beispieldaten zum Ausprobieren
+
+Im Ordner [`example-data/`](example-data/) liegt ein vollständiger, **rein synthetischer**
+Beispiel-Export (Patient „Alex Beispiel", 14 Tage, CamAPS FX / Libre 3 / YpsoPump) — keine echten
+Patientendaten. Damit lässt sich das Tool ohne eigenen Export testen:
+
+```bash
+python3 loop_cr_review.py example-data
+```
+
+Der erzeugte Report entspricht dem Screenshot oben.
+
+Eigene Exporte legst du am besten unter [`data/`](data/) ab — der Inhalt dieses Ordners ist per
+`.gitignore` ausgenommen, damit echte Patientendaten nicht ins Repo geraten:
+
+```bash
+python3 loop_cr_review.py data/mein-export
+```
+
 ## Erwartete Eingabe
 
 Ein entpackter **Glooko-Export mit CamAPS-FX-Daten** (siehe „Kontext" oben) mit:
@@ -101,6 +129,9 @@ loop-cr-review/
 ├── loop_cr_review.py          # Logik (Einlesen, Analyse, Charts, Context)
 ├── templates/
 │   └── report.html.j2         # Darstellung (Jinja2) — Layout/Wording hier anpassen
+├── example-data/              # synthetischer Beispiel-Export zum Ausprobieren
+├── data/                      # eigene Exporte (Inhalt per .gitignore ausgenommen)
+├── docs/                      # Screenshots fürs README
 ├── requirements.txt
 ├── README.md
 ├── CONTRIBUTING.md

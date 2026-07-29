@@ -1,21 +1,20 @@
 # Python
 __pycache__/
-*.py[cod]
-*.egg-info/
-.mypy_cache/
-.ruff_cache/
-
-# Verzeichnis mit Glooko Daten und Ausgabe
-/data/
-
-# Editor / OS
-.idea/
-.vscode/
-*.swp
-.DS_Store
+*.pyc
+*.pyo
+.venv/
+venv/
 
 # Emacs
 *~
 \#*\#
 .\#*
-*.~undo-tree~
+*.elc
+TAGS
+
+# generierte Reports (Beispiel-PNGs in docs/ bleiben)
+*_loop-cr-review_*.html
+
+# eigene Exporte / echte Daten — NIEMALS committen (PHI)
+/data/*
+!/data/README.md

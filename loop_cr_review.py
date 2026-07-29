@@ -33,10 +33,17 @@ MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 FASTING_HOURS = (0, 1, 2, 3, 4)
 LOOP_RATIO = 0.12          # |Loop-Mehrbasal / Bolus| ab hier auffaellig
 D4_WEAK, D4_STRONG = 15, -30
+D4_HIGH = 40               # Δ4h ab hier klar zu hoch (auch ohne Loop-Signal)
 CR_DEV_LOW, CR_DEV_HIGH = 0.75, 1.33
 PRE_BG_HIGH = 150
+# Schwellen fuer die Kurvenform-Ableitungen
+PEAK_EARLY = 75            # min: Peak vor dieser Zeit gilt als "frueh"
+PEAK_RISE_HIGH = 55        # mg/dL Anstieg ueber Start: "hoher Peak"
+NADIR_LOW = 85             # mg/dL: Tiefpunkt darunter = auffaellig
+NADIR_LATE = 120           # min: Tief nach dieser Zeit = spaet (Insulin-Tail)
 TIME_FMTS = ("%d.%m.%Y %H:%M",)
 TOOL_NAME = "Loop-CR-Review"
+REPO_URL = "https://github.com/peisenh/loop-cr-review"
 
 
 # --- kleine Helfer ----------------------------------------------------------
@@ -260,7 +267,7 @@ def aggregate_slot(slot_rows):
 
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     ratio = exc / bol if bol else 0
-    if ratio > LOOP_RATIO and d4 > D4_WEAK:
+    if ratio > LOOP_RATIO or d4 > D4_HIGH:
         flag, cls = "zu schwach → straffen", "weak"
     elif ratio < -LOOP_RATIO or d4 < D4_STRONG:
         flag, cls = "zu stark → lockern", "strong"
@@ -289,6 +296,60 @@ def shape_description(curve):
         return "klettert und kehrt nicht zum Ausgangswert zurück"
     if end - start < -25:
         return "fällt deutlich unter den Ausgangswert"
+    return "kehrt nahe zum Ausgangswert zurück (ausgewogen)"
+
+
+def curve_metrics(curve, grid):
+    """Peak/Nadir/Start/Ende + 'steigt am Ende noch' aus einer Postprandialkurve."""
+    pk, nd = int(np.nanargmax(curve)), int(np.nanargmin(curve))
+    return {"start": float(np.nanmedian(curve[:2])), "end": float(np.nanmedian(curve[-2:])),
+            "peak": float(curve[pk]), "peak_t": int(grid[pk]),
+            "nadir": float(curve[nd]), "nadir_t": int(grid[nd]),
+            "rising_end": float(curve[-1]) - float(curve[-3]) > 5}
+
+
+def slot_levers(agg, met, window):
+    """Kandidaten-Stellschrauben (Tag, CSS-Klasse, Text) aus Befund + Kurvenform."""
+    levers = []
+    if agg["cls"] != "ok" and met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
+        levers.append(("SEA", "sea", "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen "
+                                     "(kappt die Spitze ohne mehr Dosis)"))
+    if agg["cls"] == "weak":
+        levers.append(("Dosis", "cr", f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}"))
+    elif agg["cls"] == "strong":
+        levers.append(("Dosis", "cr", "überdeckt/Abfall → Dosis dieser Mahlzeit eher reduzieren; "
+                                      "SEA und Dosis zusammen betrachten"))
+    late_rise = met["peak_t"] >= window * 0.66 and met["end"] - met["start"] > 20
+    if late_rise and agg["cls"] != "ok":
+        levers.append(("Fett/Protein", "fp", "monotoner Spätanstieg (kein Umkehrpunkt) → Fett/Protein "
+                                             "prüfen; ggf. verzögerter/Dual-Bolus statt nur straffen"))
+    elif late_rise:
+        levers.append(("Beobachten", "obs", "leichter später Wiederanstieg → ggf. Fett/Protein oder "
+                                            "Basalrate in diesem Zeitfenster, nur im Auge behalten"))
+    if met["nadir"] < NADIR_LOW and met["nadir_t"] >= NADIR_LATE:
+        levers.append(("Achtung", "obs", f"Tief ~{met['nadir']:.0f} mg/dL gegen {met['nadir_t']} min "
+                                         "→ Hypo-Fenster zuerst absichern"))
+    if agg["cls"] == "ok" and not any(t == "Dosis" for t, _, _ in levers):
+        levers.append(("Referenz", "obs", "Dosis & Timing passen — so belassen; "
+                                          "dient als Vergleich für die anderen Slots"))
+    if not levers:
+        levers.append(("—", "obs", "keine auffällige Form"))
+    return levers
+
+
+def slot_headline(agg, met):
+    """Befund-bewusste Kurzbeschreibung der Slot-Form (konsistent zum Befund)."""
+    rise_end = met["end"] - met["start"]
+    early_high = met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH
+    if agg["cls"] == "strong":
+        return ("hoher Peak, danach Abfall unter die Ausgangslage" if met["nadir"] < NADIR_LOW
+                else "fällt unter den Ausgangswert")
+    if agg["cls"] == "weak":
+        return "klettert und kehrt nicht zum Ausgangswert zurück"
+    if rise_end > 20:
+        return "leichter Spätanstieg, netto aber ausgewogen"
+    if early_high:
+        return "früher Peak, kehrt anschließend sauber zurück"
     return "kehrt nahe zum Ausgangswert zurück (ausgewogen)"
 
 
@@ -400,7 +461,8 @@ def _meals_context(rows):
         out.append({
             "time": f"{row['time']:%d.%m %H:%M}", "label": SLOT_LABEL[row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
-            "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]), "d4": f"{row['d4']:+.0f}",
+            "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
+            "d4": f"{row['d4']:+.0f}" if not np.isnan(row["d4"]) else "—",
             "contam": row["contam"], "cls": cls,
         })
     return out
@@ -421,6 +483,32 @@ def _captions(meals, by_slot, window, val_at):
     return curve_cap, clean_note
 
 
+def _recommendations_context(meals, by_slot, window, val_at):
+    """Pro Slot: Kurven-Metriken + abgeleitete Stellschrauben; plus CR_eff-Beispiel."""
+    grid = np.arange(0, window + 1, 10)
+    recs, example, example_exc = [], None, 0.0
+    for slot in MAIN_SLOTS:
+        curve = slot_median_curve(meals, slot, window, val_at)
+        agg = aggregate_slot(by_slot.get(slot, []))
+        if curve is None or agg is None or np.all(np.isnan(curve)):
+            continue
+        met = curve_metrics(curve, grid)
+        recs.append({
+            "label": SLOT_LABEL[slot], "cls": agg["cls"], "headline": slot_headline(agg, met),
+            "peak": f"{met['peak']:.0f}", "peak_t": met["peak_t"],
+            "nadir": f"{met['nadir']:.0f}", "nadir_t": met["nadir_t"],
+            "d4": f"{agg['d4']:+.0f}", "loop": f"{agg['exc']:+.2f}",
+            "cr": fmt_cr(agg["cr"]), "cre": fmt_cr(agg["cre"]),
+            "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
+        })
+        if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):
+            example, example_exc = ({"label": SLOT_LABEL[slot], "cho": f"{agg['cho']:.0f}",
+                                     "bol": f"{agg['bol']:.1f}", "loop": f"{agg['exc']:.1f}",
+                                     "cre": fmt_cr(agg["cre"]), "d4": f"{agg['d4']:+.0f}",
+                                     "underdosed": agg["d4"] > D4_WEAK}, agg["exc"])
+    return recs, example
+
+
 def build_context(base, window, wlab):
     """Alle Daten lesen, analysieren und den Template-Context zusammenstellen."""
     times, gluc, name, sensor = read_cgm(base)
@@ -435,6 +523,7 @@ def build_context(base, window, wlab):
         by_slot[row["slot"]].append(row)
 
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
+    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at)
     device = " · ".join(p for p in (pump, sensor) if p) or "Gerät unbekannt"
     tir_bands = [("Very High &gt;250", met["tar2"], "#b23b3b"),
                  ("High 181–250", met["tar1"], "#e0913a"),
@@ -444,6 +533,7 @@ def build_context(base, window, wlab):
 
     return {
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
+        "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
         "days": f"{met['days']:.0f}", "device": f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": f"{met['mean']:.0f}", "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
@@ -452,6 +542,7 @@ def build_context(base, window, wlab):
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
+        "recs": recs, "cr_example": cr_example,
         "fb": f"{basal[3]:.2f}", "wlab": wlab,
     }
 
