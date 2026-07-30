@@ -581,6 +581,11 @@ def parse_args():
 
 def main():
     """Report bauen und schreiben."""
+    for stream in (sys.stdout, sys.stderr):        # Windows-Konsole (cp1252) sonst Crash bei '→'
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     args = parse_args()
     window = int(round(args.window_hours * 60))
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
