@@ -1,8 +1,9 @@
 name: Build executables
 
 # Baut eigenständige Binaries für Linux und Windows.
-# - bei Tag "v*": Binaries werden ans zugehörige Release gehängt
-# - manuell (workflow_dispatch): nur bauen + als Artefakt hochladen (zum Testen, ohne Release)
+# - manuell (workflow_dispatch): nur bauen + als CI-Artefakt (kein Release)
+# - bei Tag "v*": zusätzlich ein ENTWURF-Release mit beiden Binaries — Text von Hand
+#   ergänzen und selbst "Publish" klicken, damit nie ein halbfertiges Release online ist.
 on:
   push:
     tags: ["v*"]
@@ -54,17 +55,26 @@ jobs:
             mv dist/loop-cr-review "${{ matrix.asset }}"
           fi
 
-      # Manuell: als CI-Artefakt (kein Release)
-      - name: Upload als Artefakt
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
 
-      # Tag: ans Release anhängen
-      - name: Ans Release anhängen
-        if: startsWith(github.ref, 'refs/tags/')
+  # Nur bei Tag: beide Binaries einsammeln und in EINEN Entwurf hochladen.
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Artefakte einsammeln
+        uses: actions/download-artifact@v7
+        with:
+          path: dist-assets
+          merge-multiple: true
+
+      - name: Entwurf-Release mit Binaries
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.asset }}
+          draft: true
+          files: dist-assets/*
