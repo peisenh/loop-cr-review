@@ -12,6 +12,7 @@ import base64
 import csv
 import io
 import re
+import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -88,6 +89,16 @@ def slot_of(hour):
 
 
 # --- Einlesen ---------------------------------------------------------------
+def resource_dir():
+    """Basisverzeichnis für mitgelieferte Dateien (Template).
+
+    Als PyInstaller-Binary liegen die Daten in sys._MEIPASS, sonst neben diesem Modul.
+    """
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", "."))
+    return Path(__file__).resolve().parent
+
+
 def numbered_csvs(directory, stem):
     """Alle nummerierten Export-Dateien <stem>_N.csv, numerisch sortiert.
 
@@ -575,7 +586,7 @@ def main():
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
             else f"{args.window_hours:g}h")
     template_dir = (Path(args.template_dir) if args.template_dir
-                    else Path(__file__).resolve().parent / "templates")
+                    else resource_dir() / "templates")
 
     context = build_context(Path(args.export_dir), window, wlab)
     html = render(context, template_dir)

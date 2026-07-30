@@ -12,6 +12,12 @@ venv/
 *.elc
 TAGS
 
+# PyInstaller / Build-Artefakte
+build/
+dist/
+*.spec
+smoke.html
+
 # generierte Reports (Beispiel-PNGs in docs/ bleiben)
 *_loop-cr-review_*.html
 

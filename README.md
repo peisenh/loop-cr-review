@@ -74,6 +74,20 @@ Oder plattformunabhängig über pip (ggf. in einem venv):
 pip install -r requirements.txt
 ```
 
+### Fertige Binaries (ohne Python)
+
+Für jedes Release werden über GitHub Actions eigenständige Executables gebaut und angehängt
+(`loop-cr-review-linux`, `loop-cr-review-windows.exe`) — herunterladen, ausführbar machen, fertig.
+Das Report-Template ist im Binary enthalten.
+
+Selbst bauen (auf der jeweiligen Plattform, kein Cross-Compile):
+
+```bash
+pip install -r requirements.txt pyinstaller
+pyinstaller --onefile --name loop-cr-review \
+  --add-data "templates/report.html.j2:templates" loop_cr_review.py   # Windows: ";" statt ":"
+```
+
 ## Nutzung
 
 ```bash

@@ -1,0 +1,70 @@
+name: Build executables
+
+# Baut eigenständige Binaries für Linux und Windows.
+# - bei Tag "v*": Binaries werden ans zugehörige Release gehängt
+# - manuell (workflow_dispatch): nur bauen + als Artefakt hochladen (zum Testen, ohne Release)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            sep: ":"
+            asset: loop-cr-review-linux
+          - os: windows-latest
+            sep: ";"
+            asset: loop-cr-review-windows.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build (onefile, Template gebündelt)
+        run: >
+          pyinstaller --onefile --name loop-cr-review
+          --add-data "templates/report.html.j2${{ matrix.sep }}templates"
+          loop_cr_review.py
+
+      - name: Smoke-Test (Report aus Beispieldaten erzeugen)
+        run: dist/loop-cr-review example-data -o smoke.html
+
+      - name: Artefakt benennen
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv dist/loop-cr-review.exe "${{ matrix.asset }}"
+          else
+            mv dist/loop-cr-review "${{ matrix.asset }}"
+          fi
+
+      # Manuell: als CI-Artefakt (kein Release)
+      - name: Upload als Artefakt
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+      # Tag: ans Release anhängen
+      - name: Ans Release anhängen
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}
