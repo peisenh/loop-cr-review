@@ -11,6 +11,8 @@ import argparse
 import base64
 import csv
 import io
+import logging
+import os
 import re
 import sys
 from collections import defaultdict
@@ -19,9 +21,14 @@ from pathlib import Path
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import matplotlib
+
+# Font-Cache an festen Ort legen (im Onefile-Binary sonst pro Start neu gebaut) und die
+# "building font cache"-Meldung stummschalten — vor dem matplotlib-Import setzen.
+os.environ.setdefault("MPLCONFIGDIR", str(Path.home() / ".cache" / "loop-cr-review-mpl"))
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+import matplotlib  # noqa: E402  pylint: disable=wrong-import-position
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # pylint: disable=wrong-import-position
+import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-position
 
 # --- Methoden-Parameter (datenunabhaengig) ---------------------------------
 SLOTS = [("Fruehstueck", "Frühstück", 5, 10), ("Mittag", "Mittag", 11, 15),
