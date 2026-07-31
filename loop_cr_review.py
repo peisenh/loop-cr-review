@@ -183,6 +183,23 @@ def read_meals(base):
     return meals, pump
 
 
+def read_bolus_events(base):
+    """Alle einzelnen Bolus-/KH-Einträge (unzusammengefasst) für die Tagesübersicht."""
+    events = []
+    for path in numbered_csvs(base / "Insulin data", "bolus_data"):
+        with open(path, encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            next(reader)
+            next(reader)
+            for row in reader:
+                cho, ins = num(row[3]), num(row[5])
+                cho = 0.0 if np.isnan(cho) else cho
+                ins = 0.0 if np.isnan(ins) else ins
+                if cho > 0 or ins > 0:
+                    events.append({"time": parse_ts(row[0]), "cho": cho, "bolus": ins})
+    return events
+
+
 def read_basal_timeline(base):
     """-> (rate[np.array U/h je Minute], t0, minutes, fasting_basal)."""
     segs = []
@@ -454,6 +471,72 @@ def slot_curves_chart(meals, window, val_at):
 
 
 # --- Context / Rendering ----------------------------------------------------
+WEEKDAYS_DE = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_ROW, DAILY_MIN_GAP = 452, 388, 18, 0.9
+
+
+def _draw_labels(axg, items, base_y, color, bold=False):
+    """Labels (hour, text) einer Sorte platzieren; nur bei echter Nähe in Zeilen versetzen."""
+    lanes = []
+    for hour, text in sorted(items):
+        lane = next((i for i, last in enumerate(lanes) if hour - last >= DAILY_MIN_GAP), None)
+        if lane is None:
+            lane = len(lanes)
+            lanes.append(hour)
+        else:
+            lanes[lane] = hour
+        axg.axvline(hour, color=color, lw=.4, alpha=.18)
+        axg.text(hour, base_y - lane * DAILY_ROW, text, fontsize=5.5,
+                 color=color, ha="center", va="top", fontweight="bold" if bold else "normal")
+
+
+def _draw_day_events(axg, events):
+    """Alle Bolus-Einträge (dunkelblau/fett, oben) und KH-Einträge (rot, darunter) eines Tages."""
+    def hour(event):
+        return event["time"].hour + event["time"].minute / 60
+    _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} E") for e in events if e["bolus"] > 0],
+                 DAILY_BOLUS_Y, "#0b2e6b", bold=True)
+    _draw_labels(axg, [(hour(e), f"{e['cho']:.0f} g") for e in events if e["cho"] > 0],
+                 DAILY_CARB_Y, "#c0392b")
+
+
+def daily_charts(times, gluc, events, basal):
+    """Ein seitenbreites Panel je Tag (CGM + alle Bolus-/KH-Einträge + Basal), neueste zuerst."""
+    rate, t0, minutes = basal[:3]
+    gmax = float(np.nanmax(rate)) or 1.0           # globale Basal-Skala für alle Tage gleich
+    cgm_by, ev_by = defaultdict(list), defaultdict(list)
+    for time, value in zip(times, gluc):
+        cgm_by[time.date()].append((time.hour + time.minute / 60, value))
+    for event in events:
+        ev_by[event["time"].date()].append(event)
+    out = []
+    for day in sorted(cgm_by, reverse=True):
+        fig, axg = plt.subplots(figsize=(11, 2.5))
+        axg.axhspan(70, 180, color="#dff0df")
+        axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]], color="#0b2e6b", lw=1.0)
+        axg.set_xlim(0, 24)
+        axg.set_ylim(40, 470)
+        axg.set_xticks(range(0, 25, 3))
+        axg.set_yticks([70, 180, 300])
+        axg.tick_params(labelsize=7)
+        axg.grid(axis="x", alpha=.15)
+        axg.set_title(f"{WEEKDAYS_DE[day.weekday()]}, {day:%d.%m.%Y}",
+                      fontsize=8, loc="left", color="#1a2233")
+        i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
+        bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
+        byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0 for mnt in range(0, 24 * 60, 5)]
+        ax2 = axg.twinx()
+        ax2.fill_between(bxx, byy, step="pre", color="#5b8def", alpha=.35, lw=0)
+        ax2.set_ylim(0, gmax * 2.2)                 # unteres ~45 %, für alle Tage gleiche Skala
+        ax2.set_xlim(0, 24)
+        ax2.set_yticks([0, round(gmax, 1)])
+        ax2.set_ylabel("U/h", fontsize=6, color="#3a63a8")
+        ax2.tick_params(labelsize=6, colors="#3a63a8")
+        _draw_day_events(axg, ev_by.get(day, []))
+        out.append({"img": fig_to_b64(fig)})
+    return out
+
+
 def _slots_context(by_slot):
     out = []
     for slot in ("Fruehstueck", "Mittag", "Abend", "Sonstige"):
@@ -527,7 +610,7 @@ def _recommendations_context(meals, by_slot, window, val_at):
     return recs, example
 
 
-def build_context(base, window, wlab):
+def build_context(base, window, wlab, daily=False):
     """Alle Daten lesen, analysieren und den Template-Context zusammenstellen."""
     times, gluc, name, sensor = read_cgm(base)
     meals, pump = read_meals(base)
@@ -558,6 +641,7 @@ def build_context(base, window, wlab):
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in tir_bands],
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
+        "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "recs": recs, "cr_example": cr_example,
@@ -583,6 +667,8 @@ def parse_args():
                         help="Postprandiales Fenster in Stunden (Default 4.0; z.B. 3, 3.5, 4)")
     parser.add_argument("-t", "--template-dir", default=None,
                         help="Ordner mit report.html.j2 (Default: ./templates neben diesem Script)")
+    parser.add_argument("-d", "--daily", action="store_true",
+                        help="Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben")
     return parser.parse_args()
 
 
@@ -600,7 +686,7 @@ def main():
     template_dir = (Path(args.template_dir) if args.template_dir
                     else resource_dir() / "templates")
 
-    context = build_context(Path(args.export_dir), window, wlab)
+    context = build_context(Path(args.export_dir), window, wlab, args.daily)
     html = render(context, template_dir)
 
     slug = re.sub(r"[^a-z0-9]+", "_", context["name"].lower()).strip("_") or "patient"

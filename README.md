@@ -102,6 +102,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | --- | --- | --- |
 | `export_dir` | entpackter Glooko/CamAPS-Export | `.` |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
+| `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
 | `-o, --out` | Ausgabe-HTML | `<name>_loop-cr-review_<fenster>.html` |
 | `-t, --template-dir` | Ordner mit `report.html.j2` | `./templates` |
 
