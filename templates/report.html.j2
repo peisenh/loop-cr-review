@@ -176,8 +176,9 @@ img { width: 100%; border-radius: 8px }
 
 {% if daily_days %}
 <div class="card"><h2>Tagesübersicht — CGM · Bolus · Basal (neueste zuerst)</h2>
-  <div class="note">Grünes Band = Zielbereich 70–180 mg/dL · ▽ = Bolus (Einheiten) ·
-    blaue Fläche unten = Basalrate. Ein Panel je Tag.</div></div>
+  <div class="note">Grünes Band = Zielbereich 70–180 mg/dL · <b style="color:#0b2e6b">Einheiten</b>
+    = Bolus · <span style="color:#c0392b">Gramm</span> = Kohlenhydrate (alle Einzeleinträge) ·
+    blaue Fläche unten = Basalrate (U/h-Skala rechts, für alle Tage gleich). Ein Panel je Tag.</div></div>
 {% for d in daily_days %}
 <div class="dailyrow"><img src="data:image/png;base64,{{ d.img }}"></div>
 {% endfor %}
