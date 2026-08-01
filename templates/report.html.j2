@@ -55,7 +55,7 @@ img { width: 100%; border-radius: 8px }
 <p class="tool">{{ tool }}</p>
 <h1>Ambulatory Glucose Profile &amp; CR-Beurteilung</h1>
 <div class="sub">{{ name }} · {{ span }} · {{ days }} Tage · {{ device }} · Sensor-Wear {{ wear }}%</div>
-<div class="gen">Erstellt mit {{ tool }} · {{ generated }} · {{ wlab }}-Fenster ·
+<div class="gen">Erstellt mit {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {{ wlab }}-Fenster ·
   <a href="{{ repo }}">{{ repo | replace('https://', '') }}</a></div>
 
 <div class="disclaimer">

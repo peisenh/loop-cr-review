@@ -27,6 +27,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0    # volle Historie + Tags, sonst liefert 'git describe' nichts
 
       - uses: actions/setup-python@v7
         with:
@@ -36,6 +38,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
+
+      - name: Version einbacken
+        shell: bash
+        run: echo "VERSION = \"$(git describe --tags --always)\"" > _version.py
 
       - name: Build (onefile, Template gebündelt)
         run: >

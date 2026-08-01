@@ -14,6 +14,7 @@ import io
 import logging
 import os
 import re
+import subprocess
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -104,6 +105,31 @@ def resource_dir():
     if getattr(sys, "frozen", False):
         return Path(getattr(sys, "_MEIPASS", "."))
     return Path(__file__).resolve().parent
+
+
+def tool_version():
+    """Version für die Kopfzeile, oder "" wenn nicht bestimmbar.
+
+    Reihenfolge: 1) _version.py via 'git archive'/export-subst aufgelöst (Source-Zip)
+    2) _version.py von der CI vorab befüllt (Binary)  3) 'git describe' im Checkout
+    4) nichts -> Aufrufer blendet die Versionsangabe dann aus.
+    """
+    try:
+        from _version import VERSION            # pylint: disable=import-outside-toplevel
+        if VERSION and "$Format" not in VERSION:
+            return VERSION.strip()
+    except ImportError:
+        pass
+    if not getattr(sys, "frozen", False):
+        try:
+            result = subprocess.run(
+                ["git", "describe", "--tags", "--dirty", "--always"],
+                cwd=resource_dir(), capture_output=True, text=True, timeout=2, check=True)
+            if result.stdout.strip():
+                return result.stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return ""
 
 
 def numbered_csvs(directory, stem):
@@ -635,6 +661,7 @@ def build_context(base, window, wlab, daily=False):
     return {
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
         "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
+        "version": tool_version(),
         "days": f"{met['days']:.0f}", "device": f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": f"{met['mean']:.0f}", "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
