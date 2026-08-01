@@ -209,6 +209,22 @@ def read_meals(base):
     return meals, pump
 
 
+def read_tdd(base):
+    """Tages-Insulinsummen aus insulin_data_*.csv: {date: (bolus, gesamt, basal)} oder {}."""
+    out = {}
+    for path in numbered_csvs(base / "Insulin data", "insulin_data"):
+        with open(path, encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            next(reader)
+            next(reader)
+            for row in reader:
+                if len(row) >= 4 and row[0].strip():
+                    bolus, total, basal = num(row[1]), num(row[2]), num(row[3])
+                    if not np.isnan(total):
+                        out[parse_ts(row[0]).date()] = (bolus, total, basal)
+    return out
+
+
 def read_bolus_events(base):
     """Alle einzelnen Bolus-/KH-Einträge (unzusammengefasst) für die Tagesübersicht."""
     events = []
@@ -526,8 +542,17 @@ def _draw_day_events(axg, events):
                  DAILY_CARB_Y, "#c0392b")
 
 
-def daily_charts(times, gluc, events, basal):
-    """Ein seitenbreites Panel je Tag (CGM + alle Bolus-/KH-Einträge + Basal), neueste zuerst."""
+def _day_title(day, tdd):
+    """Panel-Titel: Wochentag + Datum, plus TDD (Bolus/Basal) falls vorhanden."""
+    title = f"{WEEKDAYS_DE[day.weekday()]}, {day:%d.%m.%Y}"
+    if day in tdd:
+        bolus, total, basal_u = tdd[day]
+        title += f"   ·   TDD {total:.1f} U (Bolus {bolus:.1f} / Basal {basal_u:.1f})"
+    return title
+
+
+def daily_charts(times, gluc, events, basal, tdd):
+    """Ein seitenbreites Panel je Tag (CGM + alle Bolus-/KH-Einträge + Basal + TDD), neueste zuerst."""
     rate, t0, minutes = basal[:3]
     gmax = float(np.nanmax(rate)) or 1.0           # globale Basal-Skala für alle Tage gleich
     cgm_by, ev_by = defaultdict(list), defaultdict(list)
@@ -546,8 +571,7 @@ def daily_charts(times, gluc, events, basal):
         axg.set_yticks([70, 180, 300])
         axg.tick_params(labelsize=7)
         axg.grid(axis="x", alpha=.15)
-        axg.set_title(f"{WEEKDAYS_DE[day.weekday()]}, {day:%d.%m.%Y}",
-                      fontsize=8, loc="left", color="#1a2233")
+        axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color="#1a2233")
         i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
         bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
         byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0 for mnt in range(0, 24 * 60, 5)]
@@ -668,7 +692,8 @@ def build_context(base, window, wlab, daily=False):
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in tir_bands],
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
-        "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal) if daily else [],
+        "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal,
+                                   read_tdd(base)) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "recs": recs, "cr_example": cr_example,
