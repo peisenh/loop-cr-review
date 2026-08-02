@@ -415,12 +415,15 @@ def slot_levers(agg, met, window):
 
 
 def slot_headline(agg, met):
-    """Befund-bewusste Kurzbeschreibung der Slot-Form (konsistent zum Befund)."""
+    """Befund-bewusste Kurzbeschreibung der Slot-Form (konsistent zum Befund UND zur Kurve)."""
     rise_end = met["end"] - met["start"]
     early_high = met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH
     if agg["cls"] == "strong":
-        return ("hoher Peak, danach Abfall unter die Ausgangslage" if met["nadir"] < NADIR_LOW
-                else "fällt unter den Ausgangswert")
+        if rise_end < -25:                          # Kurve liegt bei 4h wirklich unter Start
+            return ("hoher Peak, danach Abfall unter die Ausgangslage" if met["nadir"] < NADIR_LOW
+                    else "fällt unter den Ausgangswert")
+        # Verdict "strong" kam vom Loop-Signal, nicht von einem tatsächlichen Kurvenabfall
+        return "kehrt nahe zum Ausgangswert zurück, Loop drosselt spürbar"
     if agg["cls"] == "weak":
         return "klettert und kehrt nicht zum Ausgangswert zurück"
     if rise_end > 20:
