@@ -536,7 +536,7 @@ def _draw_day_events(axg, events):
     """Alle Bolus-Einträge (dunkelblau/fett, oben) und KH-Einträge (rot, darunter) eines Tages."""
     def hour(event):
         return event["time"].hour + event["time"].minute / 60
-    _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} E") for e in events if e["bolus"] > 0],
+    _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} U") for e in events if e["bolus"] > 0],
                  DAILY_BOLUS_Y, "#0b2e6b", bold=True)
     _draw_labels(axg, [(hour(e), f"{e['cho']:.0f} g") for e in events if e["cho"] > 0],
                  DAILY_CARB_Y, "#c0392b")
