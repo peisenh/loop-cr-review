@@ -391,8 +391,16 @@ def slot_levers(agg, met, window):
     if agg["cls"] != "ok" and met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
         levers.append(("SEA", "sea", "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen "
                                      "(kappt die Spitze ohne mehr Dosis)"))
+    ratio = agg["exc"] / agg["bol"] if agg["bol"] else 0
     if agg["cls"] == "weak":
-        levers.append(("Dosis", "cr", f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}"))
+        if ratio > LOOP_RATIO:
+            levers.append(("Dosis", "cr",
+                           f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}"))
+        else:
+            levers.append(("Achtung", "obs",
+                           "BZ am Fensterende deutlich erhöht, aber Loop hat eher gedrosselt "
+                           "(widersprüchliches Signal) → möglicherweise Ausreißer/geringe Fallzahl "
+                           "statt CR-Problem; vor Straffen Einzelmahlzeiten prüfen"))
     elif agg["cls"] == "strong":
         levers.append(("Dosis", "cr", "überdeckt/Abfall → Dosis dieser Mahlzeit eher reduzieren; "
                                       "SEA und Dosis zusammen betrachten"))
