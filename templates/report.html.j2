@@ -30,6 +30,8 @@ table { width: 100%; border-collapse: collapse; font-size: 12px }
 th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #eef1f6 }
 th { color: #5a6b82; font-weight: 600 }
 tr.weak { background: #fff3e8 } tr.strong { background: #fdeaea } tr.ok { background: #eef8ef }
+tr.lowconf { background: repeating-linear-gradient(135deg, #f2f2f2, #f2f2f2 8px, #e8e8e8 8px, #e8e8e8 16px) }
+tr.lowconf td:last-child { color: #7a6a2a }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: #fafbfd }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
@@ -97,7 +99,7 @@ img { width: 100%; border-radius: 8px }
     <tr><th>Slot</th><th>n (clean)</th><th>Ø CHO</th><th>CR abgel.</th><th>Bolus</th>
         <th>Loop {{ wlab }}</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>Befund</th></tr>
     {% for s in slots %}
-    <tr class="{{ s.cls }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
+    <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
         <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}</td></tr>
     {% endfor %}
@@ -106,7 +108,9 @@ img { width: 100%; border-radius: 8px }
     <b>Methode:</b> Loop {{ wlab }} = zusätzlich vom Auto-Mode geliefertes Basal über der
     Fasten-Basalrate ({{ fb }} U/h) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
     aus (CR zu schwach). CR_eff = CHO / (Bolus + Loop-Mehrbasal). Δ{{ wlab }} = Glukose bei
-    {{ wlab }} minus prämahlzeitlich. „clean" = Mahlzeiten ohne weitere Mahlzeit im {{ wlab }}-Fenster.</div>
+    {{ wlab }} minus prämahlzeitlich. „clean" = Mahlzeiten ohne weitere Mahlzeit im {{ wlab }}-Fenster.
+    <b>⚠︎</b> beim Befund = weniger als 3 saubere Mahlzeiten; die Aussage stützt sich (mit)
+    auf kontaminierte Fenster und ist entsprechend unsicherer.</div>
 </div>
 
 <div class="card">

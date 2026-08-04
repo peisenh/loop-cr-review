@@ -338,6 +338,7 @@ def aggregate_slot(slot_rows):
     use = clean if len(clean) >= 3 else slot_rows
     if not use:
         return None
+    low_confidence = len(clean) < 3     # Befund stützt sich (auch) auf kontaminierte Mahlzeiten
 
     def med(key):
         return float(np.nanmedian([r[key] for r in use if not np.isnan(r[key])]))
@@ -350,8 +351,11 @@ def aggregate_slot(slot_rows):
         flag, cls = "zu stark → lockern", "strong"
     else:
         flag, cls = "plausibel passend", "ok"
+    if low_confidence:
+        flag += " ⚠︎ (wenig saubere Mahlzeiten)"
     return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
-            "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls}
+            "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls,
+            "low_confidence": low_confidence}
 
 
 def slot_median_curve(meals, slot, window, val_at):

@@ -8,6 +8,13 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-08-04
+### Neu
+- Slot-Befund als „⚠︎ (wenig saubere Mahlzeiten)" gekennzeichnet, wenn weniger
+  als 3 unkontaminierte Mahlzeiten vorliegen und die Aussage deshalb (mit) auf
+  Fenstern beruht, in denen eine weitere Mahlzeit hineinspielt. Tabellenzeile
+  entsprechend visuell abgeschwächt statt in voller Signalfarbe.
+
 ## [0.4.3] - 2026-08-04
 ### Neu
 - Changelog (Keep a Changelog) eingeführt; Release-Notes werden jetzt aus dem
@@ -82,7 +89,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.4.4...HEAD
+[0.4.4]: https://github.com/peisenh/loop-cr-review/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/peisenh/loop-cr-review/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/peisenh/loop-cr-review/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/peisenh/loop-cr-review/compare/v0.4.0...v0.4.1

@@ -101,7 +101,7 @@ jobs:
       - name: Entwurf-Release mit Binaries
         uses: softprops/action-gh-release@v3
         with:
-          draft: true
+          draft: false
           body_path: release-body.md
           files: dist-assets/*
           # Pre-Release nur bei '-' im Tag (z. B. v0.5.0-rc1)
