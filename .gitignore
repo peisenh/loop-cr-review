@@ -24,3 +24,7 @@ smoke.html
 # eigene Exporte / echte Daten — NIEMALS committen (PHI)
 /data/*
 !/data/README.md
+
+# eigene Slot-Konfiguration (beliebiger Name, z. B. slots-schule.json,
+# slots-urlaub.json) — nur die Vorlage in example-data/ ist versioniert
+/slots*.json

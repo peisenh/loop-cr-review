@@ -11,6 +11,7 @@ import argparse
 import base64
 import csv
 import io
+import json
 import logging
 import os
 import re
@@ -34,15 +35,63 @@ import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-posi
 # --- Methoden-Parameter (datenunabhaengig) ---------------------------------
 SLOTS = [("Fruehstueck", "Frühstück", 5, 10), ("Mittag", "Mittag", 11, 15),
          ("Abend", "Abend", 17, 22), ("Sonstige", "Sonstige", -1, -1)]
+_SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
+
+
+def _derive_slot_globals(slots):
+    """Aus einer SLOTS-Liste MAIN_SLOTS/SLOT_LABEL/SLOT_COLOR ableiten.
+
+    "Sonstige"-artige Auffangbecken-Eintraege (Start < 0) bleiben aussen vor;
+    alle anderen Slots landen automatisch in MAIN_SLOTS und bekommen eine
+    Farbe aus der Palette zugewiesen.
+    """
+    main_slots = tuple(k for k, _, start, _ in slots if start >= 0)
+    label = {k: lab for k, lab, _, _ in slots}
+    color = {k: _SLOT_PALETTE[i % len(_SLOT_PALETTE)] for i, k in enumerate(main_slots)}
+    return main_slots, label, color
+
+
 # Alle Slots mit echtem Zeitfenster (Start >= 0); "Sonstige" (-1,-1) ist bewusst
 # der Auffangbecken-Slot und bleibt aussen vor. Neue Slots in SLOTS eintragen --
 # MAIN_SLOTS und alle davon abhaengigen Auswertungen ziehen automatisch nach.
-MAIN_SLOTS = tuple(k for k, _, start, _ in SLOTS if start >= 0)
-SLOT_LABEL = {k: lab for k, lab, _, _ in SLOTS}
-_SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
-SLOT_COLOR = {k: _SLOT_PALETTE[i % len(_SLOT_PALETTE)] for i, k in enumerate(MAIN_SLOTS)}
+MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
 MEAL_MIN_CHO = 20          # g, Untergrenze fuer "echte" Mahlzeit
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
+
+
+def load_slots_file(path):
+    """Eigene Slot-Zeitfenster aus einer JSON-Datei laden (Liste von Objekten).
+
+    Erwartet: [{"key": "...", "label": "...", "start": H, "end": H}, ...],
+    Reihenfolge = Prioritaet (erster Treffer gewinnt). Genau ein Auffangbecken-
+    Eintrag mit start=-1/end=-1 ist Pflicht. Bricht mit klarer Fehlermeldung ab,
+    statt still falsche Slots zu verwenden.
+    """
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        sys.exit(f"Slots-Datei '{path}' nicht lesbar/kein gueltiges JSON: {exc}")
+    if not isinstance(raw, list) or not raw:
+        sys.exit(f"Slots-Datei '{path}': erwarte eine nicht-leere Liste von Slot-Objekten.")
+    slots, seen_keys, catchall = [], set(), 0
+    for i, entry in enumerate(raw):
+        missing = [f for f in ("key", "label", "start", "end") if f not in entry]
+        if missing:
+            sys.exit(f"Slots-Datei '{path}', Eintrag {i}: fehlende Felder {missing}.")
+        key, label, start, end = entry["key"], entry["label"], entry["start"], entry["end"]
+        if key in seen_keys:
+            sys.exit(f"Slots-Datei '{path}': doppelter key '{key}'.")
+        seen_keys.add(key)
+        if start == -1 and end == -1:
+            catchall += 1
+        elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
+            sys.exit(f"Slots-Datei '{path}', '{key}': start/end muss 0<=start<end<=24 "
+                     "sein (oder beide -1 fuer den Auffangbecken-Slot).")
+        slots.append((key, label, start, end))
+    if catchall != 1:
+        sys.exit(f"Slots-Datei '{path}': genau ein Auffangbecken-Eintrag "
+                 f"(start=-1, end=-1) noetig, gefunden: {catchall}.")
+    return slots
 FASTING_HOURS = (0, 1, 2, 3, 4)
 LOOP_RATIO = 0.12          # |Loop-Mehrbasal / Bolus| ab hier auffaellig
 D4_WEAK, D4_STRONG = 15, -30
@@ -752,6 +801,9 @@ def parse_args():
                         help="Ordner mit report.html.j2 (Default: ./templates neben diesem Script)")
     parser.add_argument("-d", "--daily", action="store_true",
                         help="Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben")
+    parser.add_argument("--slots-file", default=None,
+                        help="Eigene Tageszeit-Slots aus JSON-Datei statt der eingebauten "
+                        "Frühstück/Mittag/Abend/Sonstige (siehe example-data/slots.example.json)")
     return parser.parse_args()
 
 
@@ -763,6 +815,10 @@ def main():
         except (AttributeError, ValueError):
             pass
     args = parse_args()
+    if args.slots_file:
+        global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
+        SLOTS = load_slots_file(args.slots_file)
+        MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
     window = int(round(args.window_hours * 60))
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
             else f"{args.window_hours:g}h")

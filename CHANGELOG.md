@@ -8,6 +8,11 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 ### Neu
+- Eigene Tageszeit-Slots über `--slots-file <pfad.json>` — funktioniert auch mit
+  den PyInstaller-Binaries (reine JSON-Datei, kein Codezugriff nötig). Vorlage
+  liegt unter `example-data/slots.example.json`; die eigene Kopie (üblicherweise
+  `slots.json`) ist per `.gitignore` von der Versionierung ausgenommen. Klare
+  Fehlermeldungen bei ungültigem Format statt stillem Falschverhalten.
 - Report zeigt jetzt die Slot-Zeitfenster als Legende unter der
   CR-Beurteilungs-Tabelle (z. B. „Frühstück = 05:00–10:00 Uhr"), direkt aus
   `SLOTS` abgeleitet — bei geänderten Zeiten automatisch aktuell.
