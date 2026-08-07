@@ -7,6 +7,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+
+## [0.4.5] - 2026-08-07
 ### Neu
 - Eigene Tageszeit-Slots über `--slots-file <pfad.json>` — funktioniert auch mit
   den PyInstaller-Binaries (reine JSON-Datei, kein Codezugriff nötig). Vorlage
@@ -106,7 +108,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/peisenh/loop-cr-review/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/peisenh/loop-cr-review/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/peisenh/loop-cr-review/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/peisenh/loop-cr-review/compare/v0.4.1...v0.4.2
