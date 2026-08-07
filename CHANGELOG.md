@@ -7,6 +7,11 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Neu
+- Report zeigt jetzt die Slot-Zeitfenster als Legende unter der
+  CR-Beurteilungs-Tabelle (z. B. „Frühstück = 05:00–10:00 Uhr"), direkt aus
+  `SLOTS` abgeleitet — bei geänderten Zeiten automatisch aktuell.
+
 ### Behoben
 - Ein neuer Eintrag in `SLOTS` tauchte bisher nicht überall auf: `MAIN_SLOTS`,
   die CR-Beurteilungs-Tabelle und die stdout-Zusammenfassung pflegten je eine

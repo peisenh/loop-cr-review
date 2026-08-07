@@ -606,6 +606,17 @@ def daily_charts(times, gluc, events, basal, tdd):
     return out
 
 
+def slot_definitions():
+    """Menschenlesbare Slot-Zeitfenster fuer die Report-Legende, aus SLOTS abgeleitet."""
+    out = []
+    for _key, label, start, end in SLOTS:
+        if start < 0:
+            out.append(f"{label} = alles außerhalb der übrigen Fenster")
+        else:
+            out.append(f"{label} = {start:02d}:00–{end:02d}:00 Uhr")
+    return out
+
+
 def _slots_context(by_slot):
     out = []
     for slot, _label, _start, _end in SLOTS:
@@ -715,6 +726,7 @@ def build_context(base, window, wlab, daily=False):
                                    read_tdd(base)) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
+        "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
         "fb": f"{basal[3]:.2f}", "wlab": wlab,
     }

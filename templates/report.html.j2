@@ -104,6 +104,8 @@ img { width: 100%; border-radius: 8px }
         <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}</td></tr>
     {% endfor %}
   </table>
+  <div class="note" style="margin: 6px 0 0">
+    <b>Zeitfenster:</b> {{ slot_defs | join(' · ') }}</div>
   <div class="note" style="margin-top: 8px">
     <b>Methode:</b> Loop {{ wlab }} = zusätzlich vom Auto-Mode geliefertes Basal über der
     Fasten-Basalrate ({{ fb }} U/h) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
