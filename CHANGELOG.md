@@ -7,6 +7,13 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Behoben
+- Ein neuer Eintrag in `SLOTS` tauchte bisher nicht überall auf: `MAIN_SLOTS`,
+  die CR-Beurteilungs-Tabelle und die stdout-Zusammenfassung pflegten je eine
+  eigene, unabhängige hart codierte Slot-Liste. Alle drei leiten sich jetzt aus
+  `SLOTS` ab; ein neuer Slot mit echtem Zeitfenster erscheint automatisch
+  überall (Tabelle, Ableitungen, Kurven-Chart, stdout) und bekommt automatisch
+  eine Farbe aus einer Palette zugewiesen.
 
 ## [0.4.4] - 2026-08-04
 ### Neu

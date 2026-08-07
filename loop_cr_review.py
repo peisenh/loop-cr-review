@@ -34,9 +34,13 @@ import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-posi
 # --- Methoden-Parameter (datenunabhaengig) ---------------------------------
 SLOTS = [("Fruehstueck", "Frühstück", 5, 10), ("Mittag", "Mittag", 11, 15),
          ("Abend", "Abend", 17, 22), ("Sonstige", "Sonstige", -1, -1)]
-MAIN_SLOTS = ("Fruehstueck", "Mittag", "Abend")
+# Alle Slots mit echtem Zeitfenster (Start >= 0); "Sonstige" (-1,-1) ist bewusst
+# der Auffangbecken-Slot und bleibt aussen vor. Neue Slots in SLOTS eintragen --
+# MAIN_SLOTS und alle davon abhaengigen Auswertungen ziehen automatisch nach.
+MAIN_SLOTS = tuple(k for k, _, start, _ in SLOTS if start >= 0)
 SLOT_LABEL = {k: lab for k, lab, _, _ in SLOTS}
-SLOT_COLOR = {"Fruehstueck": "#c0392b", "Mittag": "#e0913a", "Abend": "#3a9b46"}
+_SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
+SLOT_COLOR = {k: _SLOT_PALETTE[i % len(_SLOT_PALETTE)] for i, k in enumerate(MAIN_SLOTS)}
 MEAL_MIN_CHO = 20          # g, Untergrenze fuer "echte" Mahlzeit
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 FASTING_HOURS = (0, 1, 2, 3, 4)
@@ -604,7 +608,7 @@ def daily_charts(times, gluc, events, basal, tdd):
 
 def _slots_context(by_slot):
     out = []
-    for slot in ("Fruehstueck", "Mittag", "Abend", "Sonstige"):
+    for slot, _label, _start, _end in SLOTS:
         agg = aggregate_slot(by_slot.get(slot, []))
         if not agg:
             continue
@@ -760,8 +764,9 @@ def main():
     out = Path(args.out) if args.out else Path(f"{slug}_loop-cr-review_{wlab}.html")
     out.write_text(html, encoding="utf-8")
     print(f"geschrieben: {out} | {len(html)} bytes")
+    main_labels = {SLOT_LABEL[k] for k in MAIN_SLOTS}
     print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]
-                     if s["label"] in ("Frühstück", "Mittag", "Abend")))
+                     if s["label"] in main_labels))
 
 
 if __name__ == "__main__":
