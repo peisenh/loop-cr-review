@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Liest die oberste veroeffentlichte Version aus CHANGELOG.md, taggt sie
-# annotiert und pusht den Tag. Die Version steht NUR im Changelog; der Tag
-# ist reine Ableitung. Der Build-/Release-Workflow erledigt den Rest.
+# Schritt 2 des Release-Ablaufs (nach ./prepare-release.sh X.Y.Z): liest die
+# oberste veroeffentlichte Version aus CHANGELOG.md, taggt sie annotiert und
+# pusht den Tag. Die Version steht NUR im Changelog; der Tag ist reine
+# Ableitung. Der Build-/Release-Workflow erledigt den Rest.
 #
 # Aufruf:  ./release.sh [remote ...]     (Default-Remote: origin)
 set -euo pipefail
