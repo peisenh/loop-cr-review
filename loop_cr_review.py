@@ -445,7 +445,7 @@ def curve_metrics(curve, grid):
 def slot_levers(agg, met, window):
     """Kandidaten-Stellschrauben (Tag, CSS-Klasse, Text) aus Befund + Kurvenform."""
     levers = []
-    if agg["cls"] != "ok" and met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
+    if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
         levers.append(("SEA", "sea", "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen "
                                      "(kappt die Spitze ohne mehr Dosis)"))
     ratio = agg["exc"] / agg["bol"] if agg["bol"] else 0
@@ -471,9 +471,14 @@ def slot_levers(agg, met, window):
     if met["nadir"] < NADIR_LOW and met["nadir_t"] >= NADIR_LATE:
         levers.append(("Achtung", "obs", f"Tief ~{met['nadir']:.0f} mg/dL gegen {met['nadir_t']} min "
                                          "→ Hypo-Fenster zuerst absichern"))
+    has_sea = any(t == "SEA" for t, _, _ in levers)
     if agg["cls"] == "ok" and not any(t == "Dosis" for t, _, _ in levers):
-        levers.append(("Referenz", "obs", "Dosis & Timing passen — so belassen; "
-                                          "dient als Vergleich für die anderen Slots"))
+        if has_sea:
+            levers.append(("Referenz", "obs", "Dosis passt — so belassen; Timing siehe SEA-Hinweis "
+                                              "oben"))
+        else:
+            levers.append(("Referenz", "obs", "Dosis & Timing passen — so belassen; "
+                                              "dient als Vergleich für die anderen Slots"))
     if not levers:
         levers.append(("—", "obs", "keine auffällige Form"))
     return levers

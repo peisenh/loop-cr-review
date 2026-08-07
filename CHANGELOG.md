@@ -7,6 +7,13 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Behoben
+- SEA-Hinweis (früher hoher Peak → Spritz-Ess-Abstand prüfen) erschien bisher
+  nicht bei Slots mit „passend"-Befund, selbst wenn die Kurve einen deutlichen
+  frühen Peak zeigte (Dosis-Ampel und Timing-Hinweis sind unabhängig
+  voneinander). Der Referenz-Text passt sich entsprechend an („Dosis passt —
+  so belassen; Timing siehe SEA-Hinweis oben") statt weiterhin pauschal
+  „Dosis & Timing passen" zu behaupten.
 
 ## [0.4.5] - 2026-08-07
 ### Neu
