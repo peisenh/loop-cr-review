@@ -17,7 +17,9 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   übersprungen und das Release entsteht mit der Linux-Binary allein, statt
   endlos auf einen nicht vorhandenen Runner zu warten. Auf GitHub bleibt das
   Verhalten unverändert streng: ein echter Windows-Build-Fehler blockiert das
-  Release weiterhin.
+  Release weiterhin. Die Artefakt-Actions sind auf `upload-artifact@v3.2.2` /
+  `download-artifact@v3.1.0` (Node 24) festgelegt, da v4+ auf Gitea fälschlich
+  als GHES erkannt wird und abbricht.
 
 ## [0.4.6] - 2026-08-07
 ### Behoben

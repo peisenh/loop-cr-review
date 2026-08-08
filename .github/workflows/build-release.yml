@@ -63,7 +63,10 @@ jobs:
       - name: Artefakt benennen
         run: mv dist/loop-cr-review loop-cr-review-linux
 
-      - uses: actions/upload-artifact@v7
+      # v3.2.2 (Node 24) bewusst statt v4+: v4+ meldet auf Gitea faelschlich
+      # "GHESNotSupportedError" und bricht ab. v3.2.2 nutzt das aeltere
+      # Artefakt-Protokoll ohne diesen Check und laeuft auf GitHub UND Gitea.
+      - uses: actions/upload-artifact@v3.2.2
         with:
           name: loop-cr-review-linux
           path: loop-cr-review-linux
@@ -104,7 +107,7 @@ jobs:
         shell: bash
         run: mv dist/loop-cr-review.exe loop-cr-review-windows.exe
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v3.2.2
         with:
           name: loop-cr-review-windows.exe
           path: loop-cr-review-windows.exe
@@ -125,11 +128,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7   # CHANGELOG.md + Footer vom getaggten Stand
 
+      # v3.1.0 (Node 24) passend zu upload-artifact@v3.2.2 (GHES/Gitea-tauglich).
+      # v3 legt beim Download ALLER Artefakte flach in 'path' ab (kein Unterordner
+      # je Artefakt -- das kam erst mit v4), daher braucht/kennt es kein
+      # 'merge-multiple'; das nachfolgende dist-assets/* findet die Binaries direkt.
       - name: Artefakte einsammeln (was auch immer verfuegbar ist)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v3.1.0
         with:
           path: dist-assets
-          merge-multiple: true
 
       - name: Release-Notes bauen (Changelog-Abschnitt + fester Footer)
         run: |
