@@ -1,11 +1,28 @@
 name: Build executables
 
-# Baut eigenständige Binaries für Linux und Windows.
+# Baut eigenstaendige Binaries fuer Linux und Windows.
 # - manuell (workflow_dispatch): nur bauen + als CI-Artefakt (kein Release)
-# - bei Tag "v*": zusätzlich ein ENTWURF-Release mit beiden Binaries; der Text
-#   wird aus dem passenden CHANGELOG.md-Abschnitt erzeugt und um einen festen
-#   Hinweis-Footer (Disclaimer + Binaries) ergänzt. Als Entwurf, damit du vor dem
-#   Publish nochmal drüberschaust — Text und Assets sind dann schon fertig drin.
+# - bei Tag "v*": Release erstellen (Text aus CHANGELOG.md + fester Footer)
+#   und die verfuegbaren Binaries anhaengen.
+#
+# Laeuft auf GitHub Actions und auf Gitea Actions:
+# - Release-Erstellung per curl direkt gegen die REST-API der jeweiligen
+#   Plattform (erkannt an GITHUB_SERVER_URL zur Laufzeit) -- keine
+#   plattformspezifische Marketplace-Action noetig.
+# - build-linux und build-windows sind bewusst ZWEI EIGENSTAENDIGE Jobs statt
+#   einer Matrix: eine Matrix haette bei uebersprungenem Windows-Zweig einen
+#   uneindeutigen Gesamt-Status ergeben (needs: build wartet standardmaessig
+#   auf ALLE Matrix-Zweige UND verlangt von jedem "success" -- ein
+#   uebersprungener Zweig haette dadurch das ganze Release mit blockiert,
+#   nicht nur den Windows-Teil). Als getrennte Jobs liefert
+#   needs.build-windows.result einen eindeutigen Wert (success/skipped/
+#   failure), den der release-Job gezielt auswerten kann.
+# - build-windows laeuft nur, wenn ein Windows-Runner realistisch verfuegbar
+#   ist (auf GitHub: immer, gehostete Runner). Ohne eigenen Windows-Runner
+#   (z. B. Gitea-Homelab mit nur einem Linux-Runner) wird der Job sauber
+#   UEBERSPRUNGEN statt endlos auf einen nie erscheinenden Runner zu warten
+#   ("Waiting"-Hang). Das Release entsteht dann mit der Linux-Binary allein.
+#   Sobald ein Windows-Runner verfuegbar ist, in der Bedingung unten ergaenzen.
 on:
   push:
     tags: ["v*"]
@@ -15,22 +32,51 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            sep: ":"
-            asset: loop-cr-review-linux
-          - os: windows-latest
-            sep: ";"
-            asset: loop-cr-review-windows.exe
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0    # volle Historie + Tags, sonst liefert 'git describe' nichts
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Version einbacken
+        run: echo "VERSION = \"$(git describe --tags --always)\"" > _version.py
+
+      - name: Build (onefile, Template gebündelt)
+        run: >
+          pyinstaller --onefile --name loop-cr-review
+          --add-data "templates/report.html.j2:templates"
+          loop_cr_review.py
+
+      - name: Smoke-Test (Report aus Beispieldaten erzeugen)
+        run: dist/loop-cr-review example-data -o smoke.html
+
+      - name: Artefakt benennen
+        run: mv dist/loop-cr-review loop-cr-review-linux
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: loop-cr-review-linux
+          path: loop-cr-review-linux
+
+  build-windows:
+    # Nur auf einer Plattform mit tatsaechlich verfuegbarem Windows-Runner
+    # versuchen (siehe Erklaerung oben). Auf GitHub Actions immer wahr.
+    if: github.server_url == 'https://github.com'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v7
         with:
@@ -48,7 +94,7 @@ jobs:
       - name: Build (onefile, Template gebündelt)
         run: >
           pyinstaller --onefile --name loop-cr-review
-          --add-data "templates/report.html.j2${{ matrix.sep }}templates"
+          --add-data "templates/report.html.j2;templates"
           loop_cr_review.py
 
       - name: Smoke-Test (Report aus Beispieldaten erzeugen)
@@ -56,29 +102,30 @@ jobs:
 
       - name: Artefakt benennen
         shell: bash
-        run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            mv dist/loop-cr-review.exe "${{ matrix.asset }}"
-          else
-            mv dist/loop-cr-review "${{ matrix.asset }}"
-          fi
+        run: mv dist/loop-cr-review.exe loop-cr-review-windows.exe
 
-      - name: Upload
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
+          name: loop-cr-review-windows.exe
+          path: loop-cr-review-windows.exe
 
-  # Nur bei Tag: Changelog-Abschnitt + Footer als Text, beide Binaries als Assets,
-  # alles in EINEN Entwurf.
   release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-linux, build-windows]
+    # always(): loest die STANDARDMAESSIGE success()-Pruefung ab, die sonst
+    # bei einem uebersprungenen build-windows auch dieses Release blockieren
+    # wuerde. Stattdessen gezielt: Linux MUSS erfolgreich sein: Windows darf
+    # erfolgreich ODER uebersprungen sein, aber NICHT fehlgeschlagen (ein
+    # echter Build-Fehler auf GitHub soll das Release weiterhin verhindern).
+    if: >
+      always() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build-linux.result == 'success' &&
+      needs.build-windows.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7   # CHANGELOG.md + Footer vom getaggten Stand
 
-      - name: Artefakte einsammeln
+      - name: Artefakte einsammeln (was auch immer verfuegbar ist)
         uses: actions/download-artifact@v7
         with:
           path: dist-assets
@@ -86,7 +133,7 @@ jobs:
 
       - name: Release-Notes bauen (Changelog-Abschnitt + fester Footer)
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"        # v0.4.3 -> 0.4.3
+          VERSION="${GITHUB_REF_NAME#v}"        # v0.4.6 -> 0.4.6
           awk -v ver="$VERSION" '
             $0 ~ "^## \\[" ver "\\]" { f=1; next }   # Versions-Header: ab hier drucken
             f && /^## \[/            { exit }         # naechster Block: Schluss
@@ -98,11 +145,89 @@ jobs:
           fi
           cat .github/release-footer.md >> release-body.md
 
-      - name: Entwurf-Release mit Binaries
-        uses: softprops/action-gh-release@v3
-        with:
-          draft: false
-          body_path: release-body.md
-          files: dist-assets/*
-          # Pre-Release nur bei '-' im Tag (z. B. v0.5.0-rc1)
-          prerelease: ${{ contains(github.ref_name, '-') }}
+      - name: Create release + upload assets
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}       # owner/repo
+        run: |
+          set -euo pipefail
+
+          # --- Plattform erkennen ----------------------------------------------
+          # GITHUB_SERVER_URL ist https://github.com auf GitHub Actions und die
+          # Instanz-URL (z. B. https://gitea.example.com) auf Gitea Actions.
+          if [ "${GITHUB_SERVER_URL:-}" = "https://github.com" ]; then
+            PLATFORM="github"
+            API="https://api.github.com/repos/${REPO}/releases"
+            AUTH="Authorization: Bearer ${TOKEN}"
+            echo "Plattform: GitHub -> ${API}"
+          else
+            PLATFORM="gitea"
+            API="${GITHUB_SERVER_URL%/}/api/v1/repos/${REPO}/releases"
+            AUTH="Authorization: token ${TOKEN}"
+            echo "Plattform: Gitea -> ${API}"
+          fi
+
+          # --- Pre-Release? (Tag enthaelt '-', z. B. v0.5.0-rc1) ---------------
+          case "$GITHUB_REF_NAME" in
+            *-*) PRE=true ;;
+            *)   PRE=false ;;
+          esac
+
+          # --- JSON-Body bauen (python3 escaped sicher; jq ist auf Gitea nicht
+          #     garantiert vorhanden) ----------------------------------------
+          cat > build_body.py <<'PYEOF'
+          import json, os
+          tag = os.environ["GITHUB_REF_NAME"]
+          pre = os.environ["PRE"] == "true"
+          notes = open("release-body.md", encoding="utf-8").read()
+          print(json.dumps({
+              "tag_name": tag, "name": tag, "body": notes,
+              "draft": False, "prerelease": pre,
+          }))
+          PYEOF
+          BODY_JSON=$(PRE="$PRE" python3 build_body.py)
+
+          # --- Release erstellen -------------------------------------------
+          HTTP=$(curl -sS -o response.json -w '%{http_code}' \
+            -X POST "$API" \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d "$BODY_JSON")
+          echo "HTTP $HTTP"
+          if [ "$HTTP" != "201" ]; then
+            echo "Release-Erstellung fehlgeschlagen:" >&2
+            cat response.json >&2
+            exit 1
+          fi
+
+          RELEASE_ID=$(python3 -c "import json;print(json.load(open('response.json'))['id'])")
+          echo "Release erstellt, id=$RELEASE_ID"
+
+          # --- Binaries anhaengen (was in dist-assets/ liegt -- 1 oder 2
+          #     Dateien, je nachdem ob Windows verfuegbar war) --------------
+          #     GitHub: eigener Upload-Host (uploads.github.com), roher Binaer-Body.
+          #     Gitea:  gleicher API-Host, multipart/form-data.
+          for FILE in dist-assets/*; do
+            NAME=$(basename "$FILE")
+            echo "Lade Asset hoch: $NAME"
+            if [ "$PLATFORM" = "github" ]; then
+              UPLOAD_HTTP=$(curl -sS -o upload_response.json -w '%{http_code}' \
+                -X POST "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}" \
+                -H "$AUTH" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary "@${FILE}")
+            else
+              UPLOAD_HTTP=$(curl -sS -o upload_response.json -w '%{http_code}' \
+                -X POST "${GITHUB_SERVER_URL%/}/api/v1/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}" \
+                -H "$AUTH" \
+                -F "attachment=@${FILE}")
+            fi
+            echo "  HTTP $UPLOAD_HTTP"
+            if [ "$UPLOAD_HTTP" != "201" ]; then
+              echo "Asset-Upload fehlgeschlagen ($NAME):" >&2
+              cat upload_response.json >&2
+              exit 1
+            fi
+          done
+
+          echo "Release $GITHUB_REF_NAME erstellt mit $(ls dist-assets | wc -l) Assets."

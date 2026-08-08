@@ -7,6 +7,17 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Geändert
+- Release-Workflow läuft jetzt unverändert sowohl auf GitHub Actions als auch
+  auf Gitea Actions: das Release wird per `curl` direkt gegen die REST-API der
+  jeweiligen Plattform erstellt (erkannt an `GITHUB_SERVER_URL`), statt über
+  eine GitHub-spezifische Marketplace-Action. `build-linux`/`build-windows`
+  sind jetzt getrennte Jobs statt einer Matrix; ohne verfügbaren
+  Windows-Runner (z. B. Gitea-Homelab) wird der Windows-Build sauber
+  übersprungen und das Release entsteht mit der Linux-Binary allein, statt
+  endlos auf einen nicht vorhandenen Runner zu warten. Auf GitHub bleibt das
+  Verhalten unverändert streng: ein echter Windows-Build-Fehler blockiert das
+  Release weiterhin.
 
 ## [0.4.6] - 2026-08-07
 ### Behoben
