@@ -31,7 +31,7 @@ jobs:
             echo "Kein CHANGELOG-Abschnitt fuer $VERSION gefunden." >&2
             exit 1
           fi
-          cat .github/release-footer.md >> release-body.md
+          cat .gitea/release-footer.md >> release-body.md
       - name: Create release (ohne Binaries)
         env:
           TOKEN: ${{ github.token }}
