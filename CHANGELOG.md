@@ -8,18 +8,24 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 ### Geändert
-- Release-Workflow läuft jetzt unverändert sowohl auf GitHub Actions als auch
-  auf Gitea Actions: das Release wird per `curl` direkt gegen die REST-API der
-  jeweiligen Plattform erstellt (erkannt an `GITHUB_SERVER_URL`), statt über
-  eine GitHub-spezifische Marketplace-Action. `build-linux`/`build-windows`
-  sind jetzt getrennte Jobs statt einer Matrix; ohne verfügbaren
-  Windows-Runner (z. B. Gitea-Homelab) wird der Windows-Build sauber
-  übersprungen und das Release entsteht mit der Linux-Binary allein, statt
-  endlos auf einen nicht vorhandenen Runner zu warten. Auf GitHub bleibt das
-  Verhalten unverändert streng: ein echter Windows-Build-Fehler blockiert das
-  Release weiterhin. Die Artefakt-Actions sind auf `upload-artifact@v3.2.2` /
-  `download-artifact@v3.1.0` (Node 24) festgelegt, da v4+ auf Gitea fälschlich
-  als GHES erkannt wird und abbricht.
+- Release-CI in zwei plattformspezifische Dateien getrennt, weil Gitea Actions
+  an `if:`-Ausdrücken nur `always()` unterstützt und Jobs mit `needs` auf
+  übersprungene Jobs dort in „Wartend" hängen bleiben — eine gemeinsame Datei
+  mit Plattform-Weichen funktioniert deshalb nicht zuverlässig.
+  `.github/workflows/build-release.yml` (nur GitHub) baut Linux- und
+  Windows-Binary und hängt sie über die bewährte Action
+  `softprops/action-gh-release` ans Release (Build-Matrix + ein separater
+  Release-Job, damit die parallelen Matrix-Jobs nicht um denselben Release
+  konkurrieren). `.gitea/workflows/release.yml` (nur Gitea) erstellt einen
+  schlanken Quellcode-Release **ohne** Binaries in einem einzelnen Job ohne
+  `needs`, per `curl` gegen die Gitea-REST-API (dort gibt es keine
+  gleichwertige Release-Action). Wer auf Gitea ein Binary braucht, nimmt es von
+  GitHub oder baut per `pip install` + PyInstaller selbst.
+- DCO-Sign-off-Prüfung auch für Gitea gespiegelt (`.gitea/workflows/dco.yml`),
+  da Gitea bei vorhandenem `.gitea/`-Verzeichnis das `.github/`-Verzeichnis
+  vollständig ignoriert. Die Gitea-Variante ermittelt die Commit-Basis robust
+  über die Branch-Referenzen, falls der PR-Event-Kontext die SHAs nicht wie auf
+  GitHub bereitstellt.
 
 ## [0.4.6] - 2026-08-07
 ### Behoben

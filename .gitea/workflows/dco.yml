@@ -1,0 +1,75 @@
+name: DCO (Gitea)
+
+# NUR fuer Gitea (liegt unter .gitea/workflows/). Inhaltlich dieselbe Pruefung
+# wie .github/workflows/dco.yml, aber robuster gegenueber dem PR-Event-Kontext:
+# Gitea befuellt github.event.pull_request.base/head.sha nicht garantiert
+# identisch zu GitHub. Daher werden die SHAs primaer aus dem Event genommen und
+# fallen sonst auf die Branch-Referenzen (base_ref/head_ref) zurueck.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Signed-off-by on all commits
+        env:
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          # SHAs bestimmen: bevorzugt aus dem Event, sonst ueber die Branch-Refs.
+          BASE_SHA="$EVENT_BASE_SHA"
+          HEAD_SHA="$EVENT_HEAD_SHA"
+          if [ -z "$BASE_SHA" ] && [ -n "$BASE_REF" ]; then
+            git fetch --no-tags origin "$BASE_REF" || true
+            BASE_SHA="$(git rev-parse "origin/${BASE_REF}" 2>/dev/null || echo '')"
+          fi
+          if [ -z "$HEAD_SHA" ] && [ -n "$HEAD_REF" ]; then
+            git fetch --no-tags origin "$HEAD_REF" || true
+            HEAD_SHA="$(git rev-parse "origin/${HEAD_REF}" 2>/dev/null || echo '')"
+          fi
+          [ -z "$HEAD_SHA" ] && HEAD_SHA="$(git rev-parse HEAD)"
+
+          if [ -z "$BASE_SHA" ] || [ -z "$HEAD_SHA" ]; then
+            echo "Konnte BASE_SHA/HEAD_SHA nicht bestimmen (BASE='$BASE_SHA' HEAD='$HEAD_SHA')." >&2
+            exit 1
+          fi
+
+          echo "Checking commits ${BASE_SHA}..${HEAD_SHA}"
+          fail=0
+          for sha in $(git rev-list "${BASE_SHA}..${HEAD_SHA}"); do
+            subject="$(git show -s --format='%s' "$sha")"
+            author="$(git show -s --format='%an <%ae>' "$sha")"
+            # Merge-Commits (mehr als ein Parent) sind ausgenommen.
+            if [ "$(git show -s --format='%P' "$sha" | wc -w)" -gt 1 ]; then
+              echo "skip merge   $sha  $subject"
+              continue
+            fi
+            if git show -s --format='%B' "$sha" \
+                 | grep -Eq '^Signed-off-by: .+ <.+@.+>$'; then
+              echo "ok           $sha  $subject"
+            else
+              echo "MISSING DCO  $sha  $subject  (author: $author)"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "Ein oder mehrere Commits haben keine Signed-off-by-Zeile."
+            echo "Mit -s committen, z. B.:              git commit -s"
+            echo "Bestehende Commits nachtraeglich:     git rebase --signoff <base>"
+            exit 1
+          fi
+          echo "Alle Commits sind signiert (Signed-off-by)."

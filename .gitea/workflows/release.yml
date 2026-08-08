@@ -1,0 +1,68 @@
+name: Release (Gitea)
+
+# NUR fuer Gitea Actions (liegt unter .gitea/workflows/, das GitHub ignoriert).
+# Schlanker Quellcode-Release OHNE Binaries: Gitea bringt beim Binary-Bauen zu
+# viele Stolperfallen mit (Artefakt-Store-404, ROOT-URL-/Docker-Themen,
+# v3/v4-Inkompatibilitaet, kein Windows-Runner) und unterstuetzt an 'if:' nur
+# always(). Deshalb hier bewusst EIN einzelner Job ohne 'needs' und ohne
+# plattform-if -- nichts, was in "Wartend" haengen bleiben koennte.
+#
+# Wer ein Binary braucht: von GitHub laden oder per 'pip install' + PyInstaller
+# selbst bauen (siehe README).
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release-Notes bauen (Changelog-Abschnitt + fester Footer)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { f=1; next }
+            f && /^## \[/            { exit }
+            f                        { print }
+          ' CHANGELOG.md > release-body.md
+          if [ ! -s release-body.md ]; then
+            echo "Kein CHANGELOG-Abschnitt fuer $VERSION gefunden." >&2
+            exit 1
+          fi
+          cat .github/release-footer.md >> release-body.md
+      - name: Create release (ohne Binaries)
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          API="${GITHUB_SERVER_URL%/}/api/v1/repos/${REPO}/releases"
+          AUTH="Authorization: token ${TOKEN}"
+
+          case "$GITHUB_REF_NAME" in
+            *-*) PRE=true ;;
+            *)   PRE=false ;;
+          esac
+
+          cat > build_body.py <<'PYEOF'
+          import json, os
+          tag = os.environ["GITHUB_REF_NAME"]
+          pre = os.environ["PRE"] == "true"
+          notes = open("release-body.md", encoding="utf-8").read()
+          print(json.dumps({
+              "tag_name": tag, "name": tag, "body": notes,
+              "draft": False, "prerelease": pre,
+          }))
+          PYEOF
+          BODY_JSON=$(PRE="$PRE" python3 build_body.py)
+
+          HTTP=$(curl -sS -o response.json -w '%{http_code}' \
+            -X POST "$API" -H "$AUTH" \
+            -H "Content-Type: application/json" -d "$BODY_JSON")
+          echo "HTTP $HTTP"
+          if [ "$HTTP" != "201" ]; then
+            echo "Release-Erstellung fehlgeschlagen:" >&2; cat response.json >&2; exit 1
+          fi
+          echo "Gitea-Release $GITHUB_REF_NAME erstellt (ohne Binaries)."
