@@ -116,6 +116,21 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 <div class="card">
+  <h2>Verlauf relativ zum Mahlzeitbeginn (baseline-normalisiert)</h2>
+  <img src="data:image/png;base64,{{ slot_norm_img }}">
+  <div class="note" style="margin-top: 8px">
+    Hier ist jede Mahlzeit auf ihren <b>eigenen Ausgangswert bei Minute 0</b> bezogen
+    (Start = 0), erst danach wird der Median gebildet. Die Kurve zeigt damit den typischen
+    <b>Netto-Verlauf</b> und passt direkt zur Spalte Δ{{ wlab }} der Tabelle oben: Endet eine
+    Kurve deutlich im Minus, kehrt der Zucker im Schnitt <i>unter</i> den Ausgangswert zurück
+    (Hinweis auf Überdeckung); bleibt sie oben, bleibt er erhöht (Unterdeckung).
+    Die absolute Kurve weiter oben kann einen solchen Netto-Abfall <b>verbergen</b>, weil dort
+    Start- und Endpunkt unabhängig über alle Mahlzeiten gemittelt werden und ein hoher Peak
+    dazwischen die Rückkehr optisch überlagert. Mahlzeiten ohne CGM-Wert genau bei Minute 0
+    fließen hier nicht ein, daher kann die Fallzahl (n) leicht von der Tabelle abweichen.</div>
+</div>
+
+<div class="card">
   <h2>Ableitungen aus der Kurvenform &amp; mögliche Ansätze</h2>
   {% for r in recs %}
   <div class="slot {{ r.cls }}">

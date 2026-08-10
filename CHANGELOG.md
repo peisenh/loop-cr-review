@@ -7,6 +7,15 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Neu
+- Zusätzliche baseline-normalisierte Kurve unter der CR-Tabelle („Verlauf
+  relativ zum Mahlzeitbeginn"): Jede Mahlzeit wird auf ihren eigenen
+  Ausgangswert bei Minute 0 bezogen, dann erst gemittelt. Damit wird der
+  typische Netto-Verlauf sichtbar, der zur Spalte Δ4h passt — die absolute
+  Median-Kurve kann einen Netto-Abfall verbergen, weil dort Start und Ende
+  unabhängig über alle Mahlzeiten gemittelt werden. Kurze Erläuterung im Report
+  ergänzt.
+
 ### Geändert
 - Release-CI in zwei plattformspezifische Dateien getrennt, weil Gitea Actions
   an `if:`-Ausdrücken nur `always()` unterstützt und Jobs mit `needs` auf

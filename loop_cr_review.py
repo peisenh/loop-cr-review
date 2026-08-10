@@ -419,6 +419,28 @@ def slot_median_curve(meals, slot, window, val_at):
     return np.nanmedian(np.array(stacks), axis=0) if stacks else None
 
 
+def slot_norm_curve(meals, slot, window, val_at):
+    """Baseline-normalisierte Median-Kurve eines Slots (Start je Mahlzeit = 0).
+
+    Jede Einzelmahlzeit wird auf ihren eigenen Ausgangswert bei t=0 bezogen,
+    DANN wird der Median gebildet. Dadurch zeigt die Kurve den typischen Verlauf
+    RELATIV zum Mahlzeitbeginn -- anders als die absolute Median-Kurve, deren
+    Start und Ende unabhaengig aggregiert werden und einen echten Netto-Abfall
+    (Δ4h) verschlucken koennen. Mahlzeiten ohne Startwert (kein CGM bei t=0)
+    fallen raus. Rueckgabe: (kurve oder None, n verwendete Mahlzeiten).
+    """
+    grid = np.arange(0, window + 1, 10)
+    rows = []
+    for m in meals:
+        if slot_of(m["time"].hour) != slot:
+            continue
+        row = np.array([val_at(m["time"], int(g), 6) for g in grid], dtype=float)
+        if np.isnan(row[0]):
+            continue
+        rows.append(row - row[0])
+    return (np.nanmedian(np.array(rows), axis=0) if rows else None), len(rows)
+
+
 def shape_description(curve):
     """Kurze, datengetriebene Formbeschreibung einer Postprandialkurve."""
     if curve is None or np.all(np.isnan(curve)):
@@ -580,6 +602,29 @@ def slot_curves_chart(meals, window, val_at):
     ax.set_ylim(60, 240)
     ax.set_xlabel("Minuten ab Mahlzeit")
     ax.set_ylabel("mg/dL")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=.25)
+    return fig_to_b64(fig)
+
+
+def slot_norm_curves_chart(meals, window, val_at):
+    """Baseline-normalisierte Median-Kurven je Slot als base64-PNG.
+
+    Zeigt den Verlauf relativ zum Mahlzeitbeginn (Start = 0), macht damit den
+    typischen Netto-Abfall/-Anstieg (Δ4h) sichtbar, den die absolute Kurve
+    verschlucken kann.
+    """
+    grid = np.arange(0, window + 1, 10)
+    fig, ax = plt.subplots(figsize=(10, 3.6))
+    ax.axhline(0, color="#888", lw=1)
+    for slot in MAIN_SLOTS:
+        curve, n = slot_norm_curve(meals, slot, window, val_at)
+        if curve is not None:
+            ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
+                    label=f"{SLOT_LABEL[slot]} (n={n})")
+    ax.set_xlim(0, window)
+    ax.set_xlabel("Minuten ab Mahlzeit")
+    ax.set_ylabel("Δ mg/dL ggü. Mahlzeitbeginn")
     ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
@@ -776,6 +821,7 @@ def build_context(base, window, wlab, daily=False):
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in tir_bands],
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
+        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
         "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal,
                                    read_tdd(base)) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
