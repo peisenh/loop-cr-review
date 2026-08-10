@@ -7,6 +7,12 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Behoben
+- „Zu schwach → straffen"-Befund wirkte widersprüchlich, wenn er allein aus dem
+  Loop-Mehrbasal kam, das Δ4h in der Tabelle daneben aber negativ war (BZ am
+  Fensterende gefallen, weil der Loop kräftig nachgeschoben hat). Die Ableitungen
+  ergänzen jetzt einen Achtung-Hinweis, der diesen scheinbaren Widerspruch
+  benennt und rät, vor dem Straffen Einzelmahlzeiten und Kontamination zu prüfen.
 
 ## [0.5.2] - 2026-08-10
 ### Geändert

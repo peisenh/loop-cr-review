@@ -485,22 +485,35 @@ def curve_metrics(curve, grid):
             "rising_end": float(curve[-1]) - float(curve[-3]) > 5}
 
 
+def _weak_levers(agg, window):
+    """Stellschrauben fuer einen 'weak'-Slot (unterdeckt / Loop schiebt nach)."""
+    ratio = agg["exc"] / agg["bol"] if agg["bol"] else 0
+    if ratio <= LOOP_RATIO:
+        return [("Achtung", "obs",
+                 "BZ am Fensterende deutlich erhöht, aber Loop hat eher gedrosselt "
+                 "(widersprüchliches Signal) → möglicherweise Ausreißer/geringe Fallzahl "
+                 "statt CR-Problem; vor Straffen Einzelmahlzeiten prüfen")]
+    out = [("Dosis", "cr",
+            f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}")]
+    if agg["d4"] < 0:
+        # Befund kommt allein aus der Loop-Aktivitaet; der BZ ist am Fensterende
+        # aber sogar gefallen (Loop hat das aufgefangen). Fuer den Leser sieht
+        # "straffen" neben negativem Δ4h wie ein Fehler aus -- Widerspruch benennen.
+        out.append(("Achtung", "obs",
+                    f"Δ{window // 60}h ist negativ (BZ am Ende gefallen), der Befund stützt sich "
+                    "hier allein auf das kräftige Loop-Mehrbasal — der Loop hat die zu schwache "
+                    "CR aufgefangen. Vor dem Straffen Einzelmahlzeiten und Kontamination prüfen"))
+    return out
+
+
 def slot_levers(agg, met, window):
     """Kandidaten-Stellschrauben (Tag, CSS-Klasse, Text) aus Befund + Kurvenform."""
     levers = []
     if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
         levers.append(("SEA", "sea", "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen "
                                      "(kappt die Spitze ohne mehr Dosis)"))
-    ratio = agg["exc"] / agg["bol"] if agg["bol"] else 0
     if agg["cls"] == "weak":
-        if ratio > LOOP_RATIO:
-            levers.append(("Dosis", "cr",
-                           f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}"))
-        else:
-            levers.append(("Achtung", "obs",
-                           "BZ am Fensterende deutlich erhöht, aber Loop hat eher gedrosselt "
-                           "(widersprüchliches Signal) → möglicherweise Ausreißer/geringe Fallzahl "
-                           "statt CR-Problem; vor Straffen Einzelmahlzeiten prüfen"))
+        levers.extend(_weak_levers(agg, window))
     elif agg["cls"] == "strong":
         levers.append(("Dosis", "cr", "überdeckt/Abfall → Dosis dieser Mahlzeit eher reduzieren; "
                                       "SEA und Dosis zusammen betrachten"))
