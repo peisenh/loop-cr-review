@@ -1,10 +1,11 @@
 # Changelog
 
-Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
-Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
-das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
+All notable changes to this project are documented here.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
+Entries up to and including 0.5.3 are in German; newer entries are in English.
 
-> Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
+> Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
 

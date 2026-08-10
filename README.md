@@ -1,5 +1,7 @@
 # loop-cr-review
 
+**🇩🇪 Deutsch** · [🇬🇧 English](README.en.md)
+
 **Loop-aware Carb-Ratio Review** — CR-Beurteilung aus realen CamAPS-FX-Daten.
 
 Wertet einen CamAPS/Glooko-Export aus und erzeugt einen eigenständigen HTML-Report mit Ambulatory Glucose Profile (AGP), Konsens-Metriken und einer **Loop-aware Beurteilung der Kohlenhydrat-Verhältnisse (CR)** pro Tageszeit-Slot.
@@ -162,7 +164,7 @@ Als benannte Konstanten oben in `loop_cr_review.py` gebündelt und anpassbar: Sl
 ## Grenzen
 
 - Gültig für **angesagte Mahlzeiten**; Confounder (Fett/Protein, Bewegung, Pre-Bolus-Timing, gesplittete/überlappende Boli) sind über Mediane gedämpft, nicht eliminiert.
-- Das **Fasten-Basal** als Referenz setzt mahlzeit-/korrekturfreie Nächte (00–05 h) voraus.
+- Das **Fasten-Basal** als Referenz (Mittel der Nächte) setzt mahlzeit-/korrekturfreie Nächte (00:00–06:00 Uhr) voraus.
 - Die aus `CHO/Bolus` abgeleitete CR kann vom Bolusrechner beigemischte Korrekturen enthalten (das Tool weist darauf hin, wenn ein Slot auffällig abweicht).
 - CamAPS' Adaption über Tage kann länger bestehende Fehleinstellungen teilweise glätten.
 
