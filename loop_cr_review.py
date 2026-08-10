@@ -92,7 +92,7 @@ def load_slots_file(path):
         sys.exit(f"Slots-Datei '{path}': genau ein Auffangbecken-Eintrag "
                  f"(start=-1, end=-1) noetig, gefunden: {catchall}.")
     return slots
-FASTING_HOURS = (0, 1, 2, 3, 4)
+FASTING_HOURS = (0, 1, 2, 3, 4, 5)
 LOOP_RATIO = 0.12          # |Loop-Mehrbasal / Bolus| ab hier auffaellig
 D4_WEAK, D4_STRONG = 15, -30
 D4_HIGH = 40               # Δ4h ab hier klar zu hoch (auch ohne Loop-Signal)
@@ -321,9 +321,23 @@ def read_basal_timeline(base):
             rate[i] = last
         else:
             last = rate[i]
-    fasting = float(np.median([rate[i] for i in range(minutes)
-                               if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS]))
-    return rate, t0, minutes, fasting
+    fasting_idx = [i for i in range(minutes)
+                   if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS]
+    # Mittelwert (nicht Median): unter Auto Mode setzt der Loop die Basalrate
+    # haeufig auf 0 aus und faehrt dazwischen Spitzen. Der Median bildet dann eher
+    # ab, WIE OFT ausgesetzt wird, der Mittelwert die tatsaechlich gelieferte
+    # Insulin-MENGE -- und als Referenz fuers Loop-Mehrbasal (eine Menge/Flaeche)
+    # ist der Mittelwert die konsistente Bezugsgroesse.
+    fasting = float(np.mean([rate[i] for i in fasting_idx]))
+    # Streuung ueber die Naechte: Mittel je Nacht, dann Spannweite. Bei stark
+    # schwankenden Naechten ist eine einzige Fasten-Basalrate wenig aussagekraeftig.
+    per_night = defaultdict(list)
+    for i in fasting_idx:
+        per_night[(t0 + timedelta(minutes=i)).date()].append(rate[i])
+    night_means = [float(np.mean(v)) for v in per_night.values() if v]
+    fasting_lo = min(night_means) if night_means else fasting
+    fasting_hi = max(night_means) if night_means else fasting
+    return rate, t0, minutes, fasting, fasting_lo, fasting_hi
 
 
 # --- Analyse ----------------------------------------------------------------
@@ -359,9 +373,9 @@ def make_glucose_lookup(times, gluc):
 def analyze_meals(meals, basal, window, val_at):
     """Pro Mahlzeit: Loop-Mehrbasal im Fenster, CR_eff, Return Δ, Kontamination.
 
-    basal: (rate, t0, minutes, fasting) aus read_basal_timeline.
+    basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) aus read_basal_timeline.
     """
-    rate, t0, minutes, fasting = basal
+    rate, t0, minutes, fasting = basal[:4]
     meal_times = [m["time"] for m in meals]
     rows = []
     for meal in meals:
@@ -846,7 +860,13 @@ def build_context(base, window, wlab, daily=False):
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
-        "fb": f"{basal[3]:.2f}", "wlab": wlab,
+        "fb": f"{basal[3]:.2f}", "fb_lo": f"{basal[4]:.2f}", "fb_hi": f"{basal[5]:.2f}",
+        # stark schwankend, wenn die Spannweite der Nacht-Mediane mindestens 30%
+        # des Gesamt-Medians betraegt. Absolute Spannweite (nicht Faktor hi/lo),
+        # damit auch Naechte mit Median 0.00 (voll gedrosselt) korrekt erfasst
+        # werden -- ein Faktor waere dort undefiniert.
+        "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
+        "wlab": wlab,
     }
 
 

@@ -7,6 +7,24 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Geändert
+- Fasten-Basalrate wird jetzt als **Mittelwert** der nächtlichen Basalraten
+  berechnet (vorher Median). Unter Auto Mode setzt der Loop die Basalrate häufig
+  auf 0 aus und fährt dazwischen Spitzen; der Median bildet dann eher ab, wie oft
+  ausgesetzt wird, der Mittelwert die tatsächlich gelieferte Insulinmenge — und
+  als Referenz fürs Loop-Mehrbasal (eine Menge/Fläche) ist der Mittelwert die
+  konsistente Bezugsgröße. Die Slot-Befunde ändern sich dadurch praktisch nicht
+  (an zwei realen Datensätzen kein einziger Verdikt-Wechsel), nur die Loop-4h-
+  Zahlen verschieben sich leicht.
+- Fasten-Fenster um die 5. Stunde erweitert (jetzt 00:00–05:59 statt 00:00–04:59),
+  für eine etwas breitere Datenbasis.
+
+### Neu
+- Fasten-Basalrate im Report zeigt zusätzlich die nächtliche Streuung
+  („Nächte X–Y U/h") und bei stark schwankenden Nächten (Spannweite der
+  Nacht-Mittel ≥ 30% des Gesamt-Mittels) einen Vorsicht-Hinweis. So ist
+  sichtbar, wie belastbar die Referenz ist — unter Auto Mode kann die
+  nächtliche Rate von Nacht zu Nacht stark schwanken.
 
 ## [0.5.1] - 2026-08-10
 ### Behoben

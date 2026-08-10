@@ -108,7 +108,7 @@ img { width: 100%; border-radius: 8px }
     <b>Zeitfenster:</b> {{ slot_defs | join(' · ') }}</div>
   <div class="note" style="margin-top: 8px">
     <b>Methode:</b> Loop {{ wlab }} = zusätzlich vom Auto-Mode geliefertes Basal über der
-    Fasten-Basalrate ({{ fb }} U/h) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
+    Fasten-Basalrate ({{ fb }} U/h{% if fb_lo != fb_hi %}, Mittel; Nächte {{ fb_lo }}–{{ fb_hi }} U/h{% if fb_spread %} — stark schwankend, Referenz mit Vorsicht{% endif %}{% endif %}) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
     aus (CR zu schwach). CR_eff = CHO / (Bolus + Loop-Mehrbasal). Δ{{ wlab }} = Glukose bei
     {{ wlab }} minus prämahlzeitlich. „clean" = Mahlzeiten ohne weitere Mahlzeit im {{ wlab }}-Fenster.
     <b>⚠︎</b> beim Befund = weniger als 3 saubere Mahlzeiten; die Aussage stützt sich (mit)
@@ -195,7 +195,7 @@ img { width: 100%; border-radius: 8px }
       Fehleinstellungen teilweise glätten.<br>
     • Confounder (Fett/Protein, Bewegung, gesplittete Boli, überlappende Mahlzeiten) sind über Mediane
       gedämpft, nicht eliminiert; Slots mit wenigen „clean"-Mahlzeiten{{ clean_note }} sind unsicherer.<br>
-    • Fasten-Basal als Referenz setzt mahlzeit-/korrekturfreie Nächte 00–05h voraus.
+    • Fasten-Basal als Referenz (Mittel der Nächte) setzt mahlzeit-/korrekturfreie Nächte 00:00–06:00 Uhr voraus.
   </div>
 </div>
 
