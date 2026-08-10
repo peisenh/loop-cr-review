@@ -7,6 +7,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+
+## [0.5.2] - 2026-08-10
 ### Geändert
 - Fasten-Basalrate wird jetzt als **Mittelwert** der nächtlichen Basalraten
   berechnet (vorher Median). Unter Auto Mode setzt der Loop die Basalrate häufig
@@ -177,7 +179,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/peisenh/loop-cr-review/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/peisenh/loop-cr-review/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/peisenh/loop-cr-review/compare/v0.4.6...v0.5.0
 [0.4.6]: https://github.com/peisenh/loop-cr-review/compare/v0.4.5...v0.4.6
