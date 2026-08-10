@@ -7,6 +7,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+
+## [0.5.3] - 2026-08-10
 ### Behoben
 - „Zu schwach → straffen"-Befund wirkte widersprüchlich, wenn er allein aus dem
   Loop-Mehrbasal kam, das Δ4h in der Tabelle daneben aber negativ war (BZ am
@@ -185,7 +187,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/peisenh/loop-cr-review/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/peisenh/loop-cr-review/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/peisenh/loop-cr-review/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/peisenh/loop-cr-review/compare/v0.4.6...v0.5.0
