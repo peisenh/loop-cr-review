@@ -7,6 +7,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+
+## [0.5.1] - 2026-08-10
 ### Behoben
 - Baseline-normalisierte Kurve nutzt jetzt dieselbe kontaminationsbereinigte
   Mahlzeitenauswahl wie die Δ4h-Spalte der Tabelle (nur saubere Mahlzeiten,
@@ -157,7 +159,8 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/peisenh/loop-cr-review/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/peisenh/loop-cr-review/compare/v0.4.6...v0.5.0
 [0.4.6]: https://github.com/peisenh/loop-cr-review/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/peisenh/loop-cr-review/compare/v0.4.4...v0.4.5
