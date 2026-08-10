@@ -126,8 +126,12 @@ img { width: 100%; border-radius: 8px }
     (Hinweis auf Überdeckung); bleibt sie oben, bleibt er erhöht (Unterdeckung).
     Die absolute Kurve weiter oben kann einen solchen Netto-Abfall <b>verbergen</b>, weil dort
     Start- und Endpunkt unabhängig über alle Mahlzeiten gemittelt werden und ein hoher Peak
-    dazwischen die Rückkehr optisch überlagert. Mahlzeiten ohne CGM-Wert genau bei Minute 0
-    fließen hier nicht ein, daher kann die Fallzahl (n) leicht von der Tabelle abweichen.</div>
+    dazwischen die Rückkehr optisch überlagert. Diese Kurve nutzt dieselben (sauberen)
+    Mahlzeiten wie die Δ{{ wlab }}-Spalte oben, damit beide nicht auseinanderlaufen; liegen
+    weniger als 3 saubere Mahlzeiten vor, greift dieselbe Ausnahme wie in der Tabelle (alle
+    Mahlzeiten) — die Legende weist das je Slot als „sauber" bzw. „alle" aus. Mahlzeiten
+    ohne CGM-Wert genau bei Minute 0 fließen nicht ein, daher kann die Fallzahl (n) leicht von
+    der Tabelle abweichen.</div>
 </div>
 
 <div class="card">

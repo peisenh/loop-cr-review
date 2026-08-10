@@ -7,6 +7,16 @@ das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Kein Medizinprodukt — nur Analyse. Keine Diagnose, keine Therapieempfehlung.
 
 ## [Unreleased]
+### Behoben
+- Baseline-normalisierte Kurve nutzt jetzt dieselbe kontaminationsbereinigte
+  Mahlzeitenauswahl wie die Δ4h-Spalte der Tabelle (nur saubere Mahlzeiten,
+  Fallback auf alle bei weniger als 3 sauberen). Vorher bezog die Kurve auch
+  kontaminierte Mahlzeiten ein und konnte der Tabelle dadurch widersprechen —
+  z. B. ein Slot mit „passend"-Befund, dessen Kurve tiefer abfiel als ein als
+  „zu stark" bewerteter Slot. Die Legende der normalisierten Kurve weist jetzt
+  je Slot aus, ob n saubere Mahlzeiten sind („sauber") oder — bei aktivem
+  Fallback — alle („alle"), damit sie nicht widersprüchlich zur „clean"-Spalte
+  der Tabelle wirkt.
 
 ## [0.5.0] - 2026-08-10
 ### Neu

@@ -419,20 +419,27 @@ def slot_median_curve(meals, slot, window, val_at):
     return np.nanmedian(np.array(stacks), axis=0) if stacks else None
 
 
-def slot_norm_curve(meals, slot, window, val_at):
+def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
     """Baseline-normalisierte Median-Kurve eines Slots (Start je Mahlzeit = 0).
 
     Jede Einzelmahlzeit wird auf ihren eigenen Ausgangswert bei t=0 bezogen,
     DANN wird der Median gebildet. Dadurch zeigt die Kurve den typischen Verlauf
     RELATIV zum Mahlzeitbeginn -- anders als die absolute Median-Kurve, deren
     Start und Ende unabhaengig aggregiert werden und einen echten Netto-Abfall
-    (Δ4h) verschlucken koennen. Mahlzeiten ohne Startwert (kein CGM bei t=0)
-    fallen raus. Rueckgabe: (kurve oder None, n verwendete Mahlzeiten).
+    (Δ4h) verschlucken koennen.
+
+    clean_times: optionale Menge von Mahlzeit-Startzeitpunkten. Wenn gesetzt,
+    werden NUR diese Mahlzeiten verwendet -- so nutzt die Kurve dieselbe
+    (kontaminationsbereinigte) Datengrundlage wie die Δ4h-Spalte der Tabelle und
+    kann ihr nicht widersprechen. Mahlzeiten ohne Startwert (kein CGM bei t=0)
+    fallen zusaetzlich raus. Rueckgabe: (kurve oder None, n verwendete Mahlzeiten).
     """
     grid = np.arange(0, window + 1, 10)
     rows = []
     for m in meals:
         if slot_of(m["time"].hour) != slot:
+            continue
+        if clean_times is not None and m["time"] not in clean_times:
             continue
         row = np.array([val_at(m["time"], int(g), 6) for g in grid], dtype=float)
         if np.isnan(row[0]):
@@ -607,21 +614,32 @@ def slot_curves_chart(meals, window, val_at):
     return fig_to_b64(fig)
 
 
-def slot_norm_curves_chart(meals, window, val_at):
+def slot_norm_curves_chart(meals, window, val_at, by_slot):
     """Baseline-normalisierte Median-Kurven je Slot als base64-PNG.
 
     Zeigt den Verlauf relativ zum Mahlzeitbeginn (Start = 0), macht damit den
     typischen Netto-Abfall/-Anstieg (Δ4h) sichtbar, den die absolute Kurve
-    verschlucken kann.
+    verschlucken kann. Nutzt pro Slot dieselbe kontaminationsbereinigte
+    Mahlzeitenauswahl wie die Δ4h-Tabelle (nur saubere Mahlzeiten; Fallback auf
+    alle, falls weniger als 3 saubere vorliegen), damit Kurve und Tabelle nicht
+    auseinanderlaufen.
     """
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
     ax.axhline(0, color="#888", lw=1)
     for slot in MAIN_SLOTS:
-        curve, n = slot_norm_curve(meals, slot, window, val_at)
+        srows = by_slot.get(slot, [])
+        clean = [r for r in srows if not r["contam"]]
+        used = clean if len(clean) >= 3 else srows
+        clean_times = {r["time"] for r in used}
+        curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
         if curve is not None:
+            # transparent machen, ob n saubere Mahlzeiten sind oder (Fallback bei
+            # weniger als 3 sauberen) alle -- sonst wirkt die Legende widerspruechlich
+            # zur "clean"-Spalte der Tabelle.
+            basis = "sauber" if len(clean) >= 3 else "alle"
             ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
-                    label=f"{SLOT_LABEL[slot]} (n={n})")
+                    label=f"{SLOT_LABEL[slot]} (n={n}, {basis})")
     ax.set_xlim(0, window)
     ax.set_xlabel("Minuten ab Mahlzeit")
     ax.set_ylabel("Δ mg/dL ggü. Mahlzeitbeginn")
@@ -821,7 +839,7 @@ def build_context(base, window, wlab, daily=False):
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in tir_bands],
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
-        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
+        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at, by_slot),
         "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal,
                                    read_tdd(base)) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
