@@ -1,38 +1,38 @@
 #!/usr/bin/env bash
-# Schritt 1 des Release-Ablaufs: die "## [Unreleased]"-Sektion in CHANGELOG.md
-# zu einem echten Versionsblock machen (mit heutigem Datum), eine frische leere
-# Unreleased-Sektion oben ergaenzen, die Compare-Links unten aktualisieren --
-# und das Ganze committen und pushen. Taggen passiert separat in release.sh.
+# Step 1 of the release flow: turn the "## [Unreleased]" section in CHANGELOG.md
+# into a real version block (with today's date), add a fresh empty Unreleased
+# section on top, update the compare links at the bottom -- then commit and push.
+# Tagging happens separately in release.sh.
 #
-# Aufruf:  ./prepare-release.sh X.Y.Z [remote ...]     (Default-Remote: origin)
+# Usage:  ./prepare-release.sh X.Y.Z [remote ...]     (default remote: origin)
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-  echo "Aufruf: ./prepare-release.sh X.Y.Z [remote ...]" >&2
+  echo "Usage: ./prepare-release.sh X.Y.Z [remote ...]" >&2
   exit 1
 fi
 VERSION="$1"; shift || true
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Version '$VERSION' sieht nicht wie X.Y.Z aus." >&2
+  echo "Version '$VERSION' does not look like X.Y.Z." >&2
   exit 1
 fi
 TAG="v$VERSION"
 
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "Tag $TAG existiert bereits." >&2
+  echo "Tag $TAG already exists." >&2
   exit 1
 fi
 if ! git diff --quiet -- CHANGELOG.md || ! git diff --cached --quiet -- CHANGELOG.md; then
-  echo "CHANGELOG.md hat bereits uncommittete Aenderungen -- erst klaeren." >&2
+  echo "CHANGELOG.md already has uncommitted changes -- resolve first." >&2
   exit 1
 fi
 if ! grep -q '^## \[Unreleased\]$' CHANGELOG.md; then
-  echo "Keine '## [Unreleased]'-Sektion in CHANGELOG.md gefunden." >&2
+  echo "No '## [Unreleased]' section found in CHANGELOG.md." >&2
   exit 1
 fi
 UNRELEASED_BODY=$(sed -n '/^## \[Unreleased\]$/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
 if [ -z "$(echo "$UNRELEASED_BODY" | tr -d '[:space:]')" ]; then
-  echo "'## [Unreleased]' ist leer -- nichts zu releasen." >&2
+  echo "'## [Unreleased]' is empty -- nothing to release." >&2
   exit 1
 fi
 
@@ -41,9 +41,9 @@ DATE=$(date +%Y-%m-%d)
 REPO_URL=$(grep -oP '(?<=\[0\.1\.0\]: )https://\S+(?=/releases/tag/v0\.1\.0)' CHANGELOG.md \
   || echo "https://github.com/OWNER/REPO")
 
-# 1) "## [Unreleased]" -> "## [Unreleased]\n\n## [X.Y.Z] - DATUM" (frische leere
-#    Unreleased-Sektion bleibt oben stehen, der bisherige Inhalt wandert in den
-#    neuen Versionsblock darunter -- die Kopfzeile allein reicht als Ersetzung).
+# 1) "## [Unreleased]" -> "## [Unreleased]\n\n## [X.Y.Z] - DATE" (fresh empty
+#    Unreleased section stays on top, the previous content moves into the new
+#    version block below -- replacing the header line alone is enough).
 python3 - "$VERSION" "$DATE" <<'PYEOF'
 import re
 import sys
@@ -57,7 +57,7 @@ text = text.replace(
 open("CHANGELOG.md", "w", encoding="utf-8").write(text)
 PYEOF
 
-# 2) Compare-Links unten ergaenzen/aktualisieren.
+# 2) Add/update the compare links at the bottom.
 if [ -n "$PREV_VERSION" ]; then
   NEW_UNRELEASED_LINK="[Unreleased]: ${REPO_URL}/compare/v${VERSION}...HEAD"
   NEW_VERSION_LINK="[${VERSION}]: ${REPO_URL}/compare/v${PREV_VERSION}...v${VERSION}"
@@ -66,14 +66,14 @@ if [ -n "$PREV_VERSION" ]; then
   else
     printf '\n%s\n' "$NEW_UNRELEASED_LINK" >> CHANGELOG.md
   fi
-  # neue Versionszeile direkt nach der Unreleased-Link-Zeile einfuegen
+  # insert the new version line right after the Unreleased link line
   awk -v newline="$NEW_VERSION_LINK" '
     { print }
     /^\[Unreleased\]: / && !done { print newline; done=1 }
   ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
 fi
 
-echo "--- CHANGELOG.md (Ausschnitt) ---"
+echo "--- CHANGELOG.md (excerpt) ---"
 sed -n '1,20p' CHANGELOG.md
 echo "..."
 
@@ -85,5 +85,5 @@ for remote in "${@:-origin}"; do
 done
 
 echo
-echo "Vorbereitet und gepusht: $VERSION (noch kein Tag)."
-echo "Naechster Schritt: ./release.sh"
+echo "Prepared and pushed: $VERSION (no tag yet)."
+echo "Next step: ./release.sh"

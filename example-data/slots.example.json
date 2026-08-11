@@ -1,6 +1,6 @@
 [
-  {"key": "Fruehstueck", "label": "Frühstück", "start": 5, "end": 10},
-  {"key": "Mittag",      "label": "Mittag",     "start": 11, "end": 15},
-  {"key": "Abend",       "label": "Abend",       "start": 17, "end": 22},
-  {"key": "Sonstige",    "label": "Sonstige",    "start": -1, "end": -1}
+  {"key": "breakfast", "label": "Breakfast", "start": 5,  "end": 10},
+  {"key": "lunch",     "label": "Lunch",     "start": 11, "end": 15},
+  {"key": "dinner",    "label": "Dinner",    "start": 17, "end": 22},
+  {"key": "other",     "label": "Other",     "start": -1, "end": -1}
 ]

@@ -1,7 +1,11 @@
 [MAIN]
 max-line-length=120
-# Daten-Lese-/Analyse-/Assemblierungsfunktionen halten legitim etwas mehr Lokale.
+# Data reading/analysis/assembly functions legitimately hold a few more locals.
 max-locals=22
+# i18n infrastructure (gettext setup, catalogs) pushed the single file past 1000.
+max-module-lines=1100
+# N_ is the conventional gettext_noop marker for deferred translation.
+good-names=N_
 
 [MESSAGES CONTROL]
 disable=missing-module-docstring,

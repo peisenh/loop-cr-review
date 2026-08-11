@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Peter Eisenhauer <github@peter-e.de>
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""AGP + Loop-aware CR-Report aus einem CamAPS/Glooko-Export.
+"""AGP + loop-aware CR report from a CamAPS/Glooko export.
 
-Trennt Logik (dieses Modul) von Darstellung (report_template.html.j2). Liest CGM-,
-Bolus- und Basaldaten, berechnet Konsens-Metriken sowie eine Loop-aware CR-Beurteilung
-pro Tageszeit-Slot und rendert einen eigenstaendigen HTML-Report.
+Separates logic (this module) from presentation (report_template.html.j2). Reads CGM,
+bolus and basal data, computes consensus metrics plus a loop-aware CR assessment
+per time-of-day slot and renders a self-contained HTML report.
 """
 import argparse
 import base64
 import csv
+import gettext as _gettext_module
 import io
 import json
 import logging
@@ -24,48 +25,99 @@ from pathlib import Path
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-# Font-Cache an festen Ort legen (im Onefile-Binary sonst pro Start neu gebaut) und die
-# "building font cache"-Meldung stummschalten — vor dem matplotlib-Import setzen.
+# Put the font cache in a fixed location (otherwise rebuilt on every start in the
+# onefile binary) and silence the "building font cache" message — set before importing matplotlib.
 os.environ.setdefault("MPLCONFIGDIR", str(Path.home() / ".cache" / "loop-cr-review-mpl"))
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 import matplotlib  # noqa: E402  pylint: disable=wrong-import-position
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-position
 
-# --- Methoden-Parameter (datenunabhaengig) ---------------------------------
-SLOTS = [("Fruehstueck", "Frühstück", 5, 10), ("Mittag", "Mittag", 11, 15),
-         ("Abend", "Abend", 17, 22), ("Sonstige", "Sonstige", -1, -1)]
+# --- i18n -------------------------------------------------------------------
+# gettext-based localisation. Source strings (msgids) are English; the German
+# and English catalogs live under locale/<lang>/LC_MESSAGES/messages.mo.
+# _() is installed into builtins by setup_i18n() so it is available everywhere
+# (module functions and the Jinja2 template) without threading a translator
+# object through every call.
+
+
+def _(message):
+    """Identity translation fallback until setup_i18n() installs the real one.
+
+    setup_i18n() replaces this with the real gettext translator; the identity
+    version returns the English msgid (used on import and by static analysis).
+    """
+    return message
+
+
+def N_(message):
+    """Mark a string for extraction without translating it yet (gettext_noop).
+
+    Used for strings defined at import time (e.g. slot labels) that must be
+    translated later, once the catalog is loaded.
+    """
+    return message
+
+
+# Active gettext translation for the Jinja2 i18n extension; set by setup_i18n().
+_ACTIVE_TRANSLATION = _gettext_module.NullTranslations()
+
+
+def setup_i18n(lang):
+    """Install the gettext translation for `lang` (e.g. 'de', 'en') as _().
+
+    Falls back to a no-op translator (msgid == msgstr) if no catalog is found,
+    so an English source string is always shown even without compiled .mo files.
+    """
+    localedir = resource_dir() / "locale"
+    try:
+        trans = _gettext_module.translation("messages", localedir=str(localedir),
+                                            languages=[lang])
+    except FileNotFoundError:
+        trans = _gettext_module.NullTranslations()
+    # Replace the module-level _ (the identity fallback above would otherwise
+    # shadow a builtins install and defeat the translation). Also install into
+    # builtins so the Jinja2 i18n extension picks it up.
+    globals()["_"] = trans.gettext
+    globals()["_ACTIVE_TRANSLATION"] = trans
+    trans.install()
+    return trans
+
+
+# --- Method parameters (data-independent) ----------------------------------
+SLOTS = [("breakfast", N_("Breakfast"), 5, 10), ("lunch", N_("Lunch"), 11, 15),
+         ("dinner", N_("Dinner"), 17, 22), ("other", N_("Other"), -1, -1)]
 _SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
 
 
 def _derive_slot_globals(slots):
-    """Aus einer SLOTS-Liste MAIN_SLOTS/SLOT_LABEL/SLOT_COLOR ableiten.
+    """Derive MAIN_SLOTS/SLOT_LABEL/SLOT_COLOR from a SLOTS list.
 
-    "Sonstige"-artige Auffangbecken-Eintraege (Start < 0) bleiben aussen vor;
-    alle anderen Slots landen automatisch in MAIN_SLOTS und bekommen eine
-    Farbe aus der Palette zugewiesen.
+    "other"-like catch-all entries (start < 0) stay out;
+    all other slots automatically land in MAIN_SLOTS and get a
+    colour assigned from the palette.
     """
-    main_slots = tuple(k for k, _, start, _ in slots if start >= 0)
-    label = {k: lab for k, lab, _, _ in slots}
+    main_slots = tuple(k for k, _lab, start, _end in slots if start >= 0)
+    label = {k: _(lab) for k, lab, _start, _end in slots}
     color = {k: _SLOT_PALETTE[i % len(_SLOT_PALETTE)] for i, k in enumerate(main_slots)}
     return main_slots, label, color
 
 
-# Alle Slots mit echtem Zeitfenster (Start >= 0); "Sonstige" (-1,-1) ist bewusst
-# der Auffangbecken-Slot und bleibt aussen vor. Neue Slots in SLOTS eintragen --
-# MAIN_SLOTS und alle davon abhaengigen Auswertungen ziehen automatisch nach.
+# All slots with a real time window (start >= 0); "other" (-1,-1) is deliberately
+# the catch-all slot and stays out. Add new slots to SLOTS --
+# MAIN_SLOTS and all derived analyses follow automatically.
 MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
-MEAL_MIN_CHO = 20          # g, Untergrenze fuer "echte" Mahlzeit
+MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 
 
 def load_slots_file(path):
-    """Eigene Slot-Zeitfenster aus einer JSON-Datei laden (Liste von Objekten).
+    """Load custom slot time windows from a JSON file (list of objects).
 
-    Erwartet: [{"key": "...", "label": "...", "start": H, "end": H}, ...],
-    Reihenfolge = Prioritaet (erster Treffer gewinnt). Genau ein Auffangbecken-
-    Eintrag mit start=-1/end=-1 ist Pflicht. Bricht mit klarer Fehlermeldung ab,
-    statt still falsche Slots zu verwenden.
+    Expected: [{"key": "...", "label": "...", "start": H, "end": H}, ...],
+    order = priority (first match wins). Exactly one catch-all
+    entry with start=-1/end=-1 is required. Aborts with a clear error message
+    instead of silently using wrong slots.
     """
     try:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -93,24 +145,24 @@ def load_slots_file(path):
                  f"(start=-1, end=-1) noetig, gefunden: {catchall}.")
     return slots
 FASTING_HOURS = (0, 1, 2, 3, 4, 5)
-LOOP_RATIO = 0.12          # |Loop-Mehrbasal / Bolus| ab hier auffaellig
+LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
 D4_WEAK, D4_STRONG = 15, -30
-D4_HIGH = 40               # Δ4h ab hier klar zu hoch (auch ohne Loop-Signal)
+D4_HIGH = 40               # Δ4h clearly too high from here (even without loop signal)
 CR_DEV_LOW, CR_DEV_HIGH = 0.75, 1.33
 PRE_BG_HIGH = 150
-# Schwellen fuer die Kurvenform-Ableitungen
-PEAK_EARLY = 75            # min: Peak vor dieser Zeit gilt als "frueh"
-PEAK_RISE_HIGH = 55        # mg/dL Anstieg ueber Start: "hoher Peak"
-NADIR_LOW = 85             # mg/dL: Tiefpunkt darunter = auffaellig
-NADIR_LATE = 120           # min: Tief nach dieser Zeit = spaet (Insulin-Tail)
+# Thresholds for the curve-shape derivations
+PEAK_EARLY = 75            # min: peak before this time counts as "early"
+PEAK_RISE_HIGH = 55        # mg/dL rise above start: "high peak"
+NADIR_LOW = 85             # mg/dL: nadir below this = notable
+NADIR_LATE = 120           # min: nadir after this time = late (insulin tail)
 TIME_FMTS = ("%d.%m.%Y %H:%M",)
 TOOL_NAME = "Loop-CR-Review"
 REPO_URL = "https://github.com/peisenh/loop-cr-review"
 
 
-# --- kleine Helfer ----------------------------------------------------------
+# --- small helpers ----------------------------------------------------------
 def num(val):
-    """Deutsches Zahlformat ('57,0') -> float; leer -> nan."""
+    """German number format ('57,0') -> float; empty -> nan."""
     val = val.strip().strip('"')
     if val == "":
         return np.nan
@@ -118,7 +170,7 @@ def num(val):
 
 
 def parse_ts(val):
-    """Zeitstempel aus dem Export nach datetime."""
+    """Timestamp from the export to datetime."""
     for fmt in TIME_FMTS:
         try:
             return datetime.strptime(val.strip(), fmt)
@@ -128,7 +180,7 @@ def parse_ts(val):
 
 
 def fig_to_b64(fig):
-    """Matplotlib-Figur -> base64-PNG-String."""
+    """Matplotlib figure -> base64 PNG string."""
     buf = io.BytesIO()
     fig.tight_layout()
     fig.savefig(buf, format="png", dpi=120)
@@ -137,23 +189,24 @@ def fig_to_b64(fig):
 
 
 def fmt_cr(value):
-    """Carb-Ratio als '1:x.x' oder '—' bei nan."""
+    """Carb ratio as '1:x.x' or '—' for nan."""
     return f"1:{value:.1f}" if value and not np.isnan(value) else "—"
 
 
 def slot_of(hour):
-    """Tageszeit-Slot fuer eine Stunde."""
+    """Time-of-day slot for an hour."""
     for key, _lab, start, end in SLOTS:
-        if start <= hour < end:
+        if 0 <= start <= hour < end:
             return key
-    return "Sonstige"
+    # catch-all: the slot with start < 0 (only one is allowed, see load_slots_file)
+    return next(key for key, _lab, start, _end in SLOTS if start < 0)
 
 
-# --- Einlesen ---------------------------------------------------------------
+# --- Reading ----------------------------------------------------------------
 def resource_dir():
-    """Basisverzeichnis für mitgelieferte Dateien (Template).
+    """Base directory for bundled files (template).
 
-    Als PyInstaller-Binary liegen die Daten in sys._MEIPASS, sonst neben diesem Modul.
+    As a PyInstaller binary the data lives in sys._MEIPASS, otherwise next to this module.
     """
     if getattr(sys, "frozen", False):
         return Path(getattr(sys, "_MEIPASS", "."))
@@ -161,11 +214,11 @@ def resource_dir():
 
 
 def tool_version():
-    """Version für die Kopfzeile, oder "" wenn nicht bestimmbar.
+    """Version for the header, or "" if not determinable.
 
-    Reihenfolge: 1) _version.py via 'git archive'/export-subst aufgelöst (Source-Zip)
-    2) _version.py von der CI vorab befüllt (Binary)  3) 'git describe' im Checkout
-    4) nichts -> Aufrufer blendet die Versionsangabe dann aus.
+    Order: 1) _version.py resolved via 'git archive'/export-subst (source zip)
+    2) _version.py pre-filled by CI (binary)  3) 'git describe' in the checkout
+    4) nothing -> caller then hides the version string.
     """
     try:
         from _version import VERSION            # pylint: disable=import-outside-toplevel
@@ -186,7 +239,7 @@ def tool_version():
 
 
 def numbered_csvs(directory, stem):
-    """Alle nummerierten Export-Dateien <stem>_N.csv, numerisch sortiert.
+    """All numbered export files <stem>_N.csv, sorted numerically.
 
     Glooko zerlegt grosse Exporte in cgm_data_1.csv, cgm_data_2.csv, ...
     """
@@ -202,7 +255,7 @@ def numbered_csvs(directory, stem):
 def read_cgm(base):
     """-> (times[np.array], glucose[np.array], patient_name, sensor).
 
-    Liest alle cgm_data_*.csv (Glooko splittet lange Zeitraeume auf mehrere Dateien).
+    Reads all cgm_data_*.csv (Glooko splits long periods across several files).
     """
     times, gluc, sensor, name = [], [], "", "Patient"
     files = numbered_csvs(base, "cgm_data")
@@ -234,7 +287,7 @@ def read_cgm(base):
 
 
 def read_meals(base):
-    """-> (meals[list], pump). Mahlzeit = zusammengefasste Boli >= MEAL_MIN_CHO g mit Bolus."""
+    """-> (meals[list], pump). Meal = merged boluses >= MEAL_MIN_CHO g with bolus."""
     raw, pump = [], ""
     for path in numbered_csvs(base / "Insulin data", "bolus_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -263,7 +316,7 @@ def read_meals(base):
 
 
 def read_tdd(base):
-    """Tages-Insulinsummen aus insulin_data_*.csv: {date: (bolus, gesamt, basal)} oder {}."""
+    """Daily insulin totals from insulin_data_*.csv: {date: (bolus, total, basal)} or {}."""
     out = {}
     for path in numbered_csvs(base / "Insulin data", "insulin_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -279,7 +332,7 @@ def read_tdd(base):
 
 
 def read_bolus_events(base):
-    """Alle einzelnen Bolus-/KH-Einträge (unzusammengefasst) für die Tagesübersicht."""
+    """All individual bolus/carb entries (unmerged) for the daily overview."""
     events = []
     for path in numbered_csvs(base / "Insulin data", "bolus_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -296,7 +349,7 @@ def read_bolus_events(base):
 
 
 def read_basal_timeline(base):
-    """-> (rate[np.array U/h je Minute], t0, minutes, fasting_basal)."""
+    """-> (rate[np.array U/h per minute], t0, minutes, fasting_basal)."""
     segs = []
     for path in numbered_csvs(base / "Insulin data", "basal_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -323,14 +376,14 @@ def read_basal_timeline(base):
             last = rate[i]
     fasting_idx = [i for i in range(minutes)
                    if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS]
-    # Mittelwert (nicht Median): unter Auto Mode setzt der Loop die Basalrate
-    # haeufig auf 0 aus und faehrt dazwischen Spitzen. Der Median bildet dann eher
-    # ab, WIE OFT ausgesetzt wird, der Mittelwert die tatsaechlich gelieferte
-    # Insulin-MENGE -- und als Referenz fuers Loop-Mehrbasal (eine Menge/Flaeche)
-    # ist der Mittelwert die konsistente Bezugsgroesse.
+    # Mean (not median): under Auto Mode the loop frequently suspends the basal
+    # rate to 0 and runs peaks in between. The median then reflects rather HOW OFTEN
+    # it is suspended, the mean the actually delivered insulin AMOUNT -- and as the
+    # reference for the loop extra basal (an amount/area) the mean is the
+    # consistent reference quantity.
     fasting = float(np.mean([rate[i] for i in fasting_idx]))
-    # Streuung ueber die Naechte: Mittel je Nacht, dann Spannweite. Bei stark
-    # schwankenden Naechten ist eine einzige Fasten-Basalrate wenig aussagekraeftig.
+    # Spread across nights: mean per night, then range. For strongly varying
+    # nights a single fasting basal rate is not very meaningful.
     per_night = defaultdict(list)
     for i in fasting_idx:
         per_night[(t0 + timedelta(minutes=i)).date()].append(rate[i])
@@ -340,9 +393,9 @@ def read_basal_timeline(base):
     return rate, t0, minutes, fasting, fasting_lo, fasting_hi
 
 
-# --- Analyse ----------------------------------------------------------------
+# --- Analysis ---------------------------------------------------------------
 def consensus_metrics(times, gluc):
-    """Konsens-Metriken (Battelino 2019) als dict."""
+    """Consensus metrics (Battelino 2019) as a dict."""
     mean, sd = float(gluc.mean()), float(gluc.std())
     days = (times[-1] - times[0]).total_seconds() / 86400
     step = np.median(np.diff([t.timestamp() for t in times])) / 60
@@ -362,7 +415,7 @@ def consensus_metrics(times, gluc):
 
 
 def make_glucose_lookup(times, gluc):
-    """Closure: mediane Glukose ~minutes nach ref (+-tol)."""
+    """Closure: median glucose ~minutes after ref (+-tol)."""
     def val_at(ref, minutes, tol=12):
         lo, hi = ref + timedelta(minutes=minutes - tol), ref + timedelta(minutes=minutes + tol)
         mask = (times >= lo) & (times <= hi)
@@ -371,9 +424,9 @@ def make_glucose_lookup(times, gluc):
 
 
 def analyze_meals(meals, basal, window, val_at):
-    """Pro Mahlzeit: Loop-Mehrbasal im Fenster, CR_eff, Return Δ, Kontamination.
+    """Per meal: loop extra basal in the window, CR_eff, return Δ, contamination.
 
-    basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) aus read_basal_timeline.
+    basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) from read_basal_timeline.
     """
     rate, t0, minutes, fasting = basal[:4]
     meal_times = [m["time"] for m in meals]
@@ -400,12 +453,12 @@ def analyze_meals(meals, basal, window, val_at):
 
 
 def aggregate_slot(slot_rows):
-    """Median-Aggregation eines Slots + Befund. -> dict oder None."""
+    """Median aggregation of a slot + verdict. -> dict or None."""
     clean = [r for r in slot_rows if not r["contam"]]
     use = clean if len(clean) >= 3 else slot_rows
     if not use:
         return None
-    low_confidence = len(clean) < 3     # Befund stützt sich (auch) auf kontaminierte Mahlzeiten
+    low_confidence = len(clean) < 3     # verdict relies (also) on contaminated meals
 
     def med(key):
         return float(np.nanmedian([r[key] for r in use if not np.isnan(r[key])]))
@@ -413,20 +466,20 @@ def aggregate_slot(slot_rows):
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     ratio = exc / bol if bol else 0
     if ratio > LOOP_RATIO or d4 > D4_HIGH:
-        flag, cls = "zu schwach → straffen", "weak"
+        flag, cls = _("too weak → tighten"), "weak"
     elif ratio < -LOOP_RATIO or d4 < D4_STRONG:
-        flag, cls = "zu stark → lockern", "strong"
+        flag, cls = _("too strong → loosen"), "strong"
     else:
-        flag, cls = "plausibel passend", "ok"
+        flag, cls = _("plausibly adequate"), "ok"
     if low_confidence:
-        flag += " ⚠︎ (wenig saubere Mahlzeiten)"
+        flag += _(" ⚠︎ (few clean meals)")
     return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
             "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls,
             "low_confidence": low_confidence}
 
 
 def slot_median_curve(meals, slot, window, val_at):
-    """Median-Postprandialkurve (0..window) eines Slots oder None."""
+    """Median postprandial curve (0..window) of a slot or None."""
     grid = np.arange(0, window + 1, 10)
     stacks = [[val_at(m["time"], int(g), 6) for g in grid]
               for m in meals if slot_of(m["time"].hour) == slot]
@@ -434,19 +487,19 @@ def slot_median_curve(meals, slot, window, val_at):
 
 
 def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
-    """Baseline-normalisierte Median-Kurve eines Slots (Start je Mahlzeit = 0).
+    """Baseline-normalised median curve of a slot (start of each meal = 0).
 
-    Jede Einzelmahlzeit wird auf ihren eigenen Ausgangswert bei t=0 bezogen,
-    DANN wird der Median gebildet. Dadurch zeigt die Kurve den typischen Verlauf
-    RELATIV zum Mahlzeitbeginn -- anders als die absolute Median-Kurve, deren
-    Start und Ende unabhaengig aggregiert werden und einen echten Netto-Abfall
-    (Δ4h) verschlucken koennen.
+    Each individual meal is referenced to its own baseline at t=0,
+    THEN the median is taken. This shows the typical course
+    RELATIVE to the meal start -- unlike the absolute median curve, whose
+    start and end are aggregated independently and can swallow a real net drop
+    (Δ4h).
 
-    clean_times: optionale Menge von Mahlzeit-Startzeitpunkten. Wenn gesetzt,
-    werden NUR diese Mahlzeiten verwendet -- so nutzt die Kurve dieselbe
-    (kontaminationsbereinigte) Datengrundlage wie die Δ4h-Spalte der Tabelle und
-    kann ihr nicht widersprechen. Mahlzeiten ohne Startwert (kein CGM bei t=0)
-    fallen zusaetzlich raus. Rueckgabe: (kurve oder None, n verwendete Mahlzeiten).
+    clean_times: optional set of meal start times. If provided,
+    ONLY these meals are used -- so the curve uses the same
+    (contamination-cleaned) data basis as the Δ4h column of the table and
+    cannot contradict it. Meals without a baseline value (no CGM at t=0)
+    are additionally dropped. Returns: (curve or None, n meals used).
     """
     grid = np.arange(0, window + 1, 10)
     rows = []
@@ -463,21 +516,21 @@ def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
 
 
 def shape_description(curve):
-    """Kurze, datengetriebene Formbeschreibung einer Postprandialkurve."""
+    """Short, data-driven shape description of a postprandial curve."""
     if curve is None or np.all(np.isnan(curve)):
         return None
     start, end, low = np.nanmedian(curve[:2]), np.nanmedian(curve[-2:]), np.nanmin(curve)
     if low < 75:
-        return "steigt an und fällt anschließend in tiefe Werte"
+        return _("rises and then falls to low values")
     if end - start > 25:
-        return "klettert und kehrt nicht zum Ausgangswert zurück"
+        return _("climbs and does not return to baseline")
     if end - start < -25:
-        return "fällt deutlich unter den Ausgangswert"
-    return "kehrt nahe zum Ausgangswert zurück (ausgewogen)"
+        return _("falls clearly below baseline")
+    return _("returns close to baseline (balanced)")
 
 
 def curve_metrics(curve, grid):
-    """Peak/Nadir/Start/Ende + 'steigt am Ende noch' aus einer Postprandialkurve."""
+    """Peak/nadir/start/end + 'still rising at the end' from a postprandial curve."""
     pk, nd = int(np.nanargmax(curve)), int(np.nanargmin(curve))
     return {"start": float(np.nanmedian(curve[:2])), "end": float(np.nanmedian(curve[-2:])),
             "peak": float(curve[pk]), "peak_t": int(grid[pk]),
@@ -486,81 +539,82 @@ def curve_metrics(curve, grid):
 
 
 def _weak_levers(agg, window):
-    """Stellschrauben fuer einen 'weak'-Slot (unterdeckt / Loop schiebt nach)."""
+    """Levers for a 'weak' slot (underdosed / loop pushes extra)."""
     ratio = agg["exc"] / agg["bol"] if agg["bol"] else 0
     if ratio <= LOOP_RATIO:
-        return [("Achtung", "obs",
-                 "BZ am Fensterende deutlich erhöht, aber Loop hat eher gedrosselt "
-                 "(widersprüchliches Signal) → möglicherweise Ausreißer/geringe Fallzahl "
-                 "statt CR-Problem; vor Straffen Einzelmahlzeiten prüfen")]
-    out = [("Dosis", "cr",
-            f"unterdeckt → CR straffen, grobe Richtung CR_eff {fmt_cr(agg['cre'])}")]
+        return [(_("Caution"), "obs",
+                 _("BG clearly elevated at the end of the window, but the loop rather throttled "
+                   "(contradictory signal) → possibly an outlier/small sample size "
+                   "rather than a CR problem; check individual meals before tightening"))]
+    out = [(_("Dose"), "cr",
+            _("underdosed → tighten CR, rough direction CR_eff %(cre)s") % {"cre": fmt_cr(agg["cre"])})]
     if agg["d4"] < 0:
-        # Befund kommt allein aus der Loop-Aktivitaet; der BZ ist am Fensterende
-        # aber sogar gefallen (Loop hat das aufgefangen). Fuer den Leser sieht
-        # "straffen" neben negativem Δ4h wie ein Fehler aus -- Widerspruch benennen.
-        out.append(("Achtung", "obs",
-                    f"Δ{window // 60}h ist negativ (BZ am Ende gefallen), der Befund stützt sich "
-                    "hier allein auf das kräftige Loop-Mehrbasal — der Loop hat die zu schwache "
-                    "CR aufgefangen. Vor dem Straffen Einzelmahlzeiten und Kontamination prüfen"))
+        # The verdict comes solely from the loop activity; but the BG has even
+        # fallen at the end of the window (the loop caught it). To the reader,
+        # "tighten" next to a negative Δ4h looks like an error -- name the contradiction.
+        out.append((_("Caution"), "obs",
+                    _("Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely on "
+                      "the strong loop extra basal — the loop caught the too-weak CR. Before "
+                      "tightening, check individual meals and contamination") % {"h": window // 60}))
     return out
 
 
 def slot_levers(agg, met, window):
-    """Kandidaten-Stellschrauben (Tag, CSS-Klasse, Text) aus Befund + Kurvenform."""
+    """Candidate levers (tag, CSS class, text) from verdict + curve shape."""
     levers = []
     if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
-        levers.append(("SEA", "sea", "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen "
-                                     "(kappt die Spitze ohne mehr Dosis)"))
+        levers.append((_("Pre-bolus"), "sea", _("early high peak → try a longer bolus-meal interval "
+                                                  "(caps the spike without more dose)")))
     if agg["cls"] == "weak":
         levers.extend(_weak_levers(agg, window))
     elif agg["cls"] == "strong":
-        levers.append(("Dosis", "cr", "überdeckt/Abfall → Dosis dieser Mahlzeit eher reduzieren; "
-                                      "SEA und Dosis zusammen betrachten"))
+        levers.append((_("Dose"), "cr", _("overdosed/drop → rather reduce the dose of this meal; "
+                                           "consider pre-bolus and dose together")))
     late_rise = met["peak_t"] >= window * 0.66 and met["end"] - met["start"] > 20
     if late_rise and agg["cls"] != "ok":
-        levers.append(("Fett/Protein", "fp", "monotoner Spätanstieg (kein Umkehrpunkt) → Fett/Protein "
-                                             "prüfen; ggf. verzögerter/Dual-Bolus statt nur straffen"))
+        levers.append((_("Fat/protein"), "fp", _("monotonic late rise (no turning point) → check fat/protein; "
+                                                   "possibly delayed/dual bolus instead of only tightening")))
     elif late_rise:
-        levers.append(("Beobachten", "obs", "leichter später Wiederanstieg → ggf. Fett/Protein oder "
-                                            "Basalrate in diesem Zeitfenster, nur im Auge behalten"))
+        levers.append((_("Observe"), "obs", _("slight late re-rise → possibly fat/protein or "
+                                                "basal rate in this window; just keep an eye on it")))
     if met["nadir"] < NADIR_LOW and met["nadir_t"] >= NADIR_LATE:
-        levers.append(("Achtung", "obs", f"Tief ~{met['nadir']:.0f} mg/dL gegen {met['nadir_t']} min "
-                                         "→ Hypo-Fenster zuerst absichern"))
-    has_sea = any(t == "SEA" for t, _, _ in levers)
-    if agg["cls"] == "ok" and not any(t == "Dosis" for t, _, _ in levers):
+        levers.append((_("Caution"), "obs", _("nadir ~%(n).0f mg/dL around %(t)d min "
+                                               "→ secure the hypo window first")
+                       % {"n": met["nadir"], "t": met["nadir_t"]}))
+    has_sea = any(c == "sea" for _, c, _ in levers)
+    if agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers):
         if has_sea:
-            levers.append(("Referenz", "obs", "Dosis passt — so belassen; Timing siehe SEA-Hinweis "
-                                              "oben"))
+            levers.append((_("Reference"), "obs", _("dose fits — leave as is; for timing see the "
+                                                     "pre-bolus note above")))
         else:
-            levers.append(("Referenz", "obs", "Dosis & Timing passen — so belassen; "
-                                              "dient als Vergleich für die anderen Slots"))
+            levers.append((_("Reference"), "obs", _("dose & timing fit — leave as is; "
+                                                     "serves as a comparison for the other slots")))
     if not levers:
-        levers.append(("—", "obs", "keine auffällige Form"))
+        levers.append(("—", "obs", _("no notable shape")))
     return levers
 
 
 def slot_headline(agg, met):
-    """Befund-bewusste Kurzbeschreibung der Slot-Form (konsistent zum Befund UND zur Kurve)."""
+    """Verdict-aware short description of the slot shape (consistent with verdict AND curve)."""
     rise_end = met["end"] - met["start"]
     early_high = met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH
     if agg["cls"] == "strong":
         if rise_end < -25:                          # Kurve liegt bei 4h wirklich unter Start
-            return ("hoher Peak, danach Abfall unter die Ausgangslage" if met["nadir"] < NADIR_LOW
-                    else "fällt unter den Ausgangswert")
-        # Verdict "strong" kam vom Loop-Signal, nicht von einem tatsächlichen Kurvenabfall
-        return "kehrt nahe zum Ausgangswert zurück, Loop drosselt spürbar"
+            return (_("high peak, then drop below baseline") if met["nadir"] < NADIR_LOW
+                    else _("falls below baseline"))
+        # Verdict "strong" came from the loop signal, not from an actual curve drop
+        return _("returns close to baseline, loop throttles noticeably")
     if agg["cls"] == "weak":
-        return "klettert und kehrt nicht zum Ausgangswert zurück"
+        return _("climbs and does not return to baseline")
     if rise_end > 20:
-        return "leichter Spätanstieg, netto aber ausgewogen"
+        return _("slight late rise, but net balanced")
     if early_high:
-        return "früher Peak, kehrt anschließend sauber zurück"
-    return "kehrt nahe zum Ausgangswert zurück (ausgewogen)"
+        return _("early peak, then returns cleanly")
+    return _("returns close to baseline (balanced)")
 
 
 def build_cr_note(rows, by_slot):
-    """Datengetriebener Hinweis zu auffaelligen abgeleiteten CR-Werten (HTML-Snippet)."""
+    """Data-driven hint about notable derived CR values (HTML snippet)."""
     all_cr = [r["cr"] for r in rows if not np.isnan(r["cr"])]
     med_cr = float(np.median(all_cr)) if all_cr else float("nan")
     dev = []
@@ -574,25 +628,29 @@ def build_cr_note(rows, by_slot):
         if not np.isnan(scr) and (scr < CR_DEV_LOW * med_cr or scr > CR_DEV_HIGH * med_cr):
             dev.append((slot, scr, spre))
     if not dev:
-        return f"• Abgeleitete CR = CHO/Bolus; kein Slot weicht auffällig vom Median (1:{med_cr:.1f}) ab.<br>"
+        return _("• Derived CR = CHO/bolus; no slot deviates notably from the median "
+                 "(1:%(m).1f).<br>") % {"m": med_cr}
     parts = []
     for slot, scr, spre in dev:
-        direction = "straffer" if scr < med_cr else "lockerer"
+        direction = _("tighter") if scr < med_cr else _("looser")
         if not np.isnan(spre) and spre > PRE_BG_HIGH:
-            hint = ("erhöhter prä-BZ → vom Rechner beigemischte Korrektur wahrscheinlich, "
-                    "abgeleitete CR unterschätzt die programmierte Ratio")
+            hint = _("elevated pre-meal BG → correction likely blended in by the calculator, "
+                     "derived CR underestimates the programmed ratio")
         else:
-            hint = "prä-BZ nicht deutlich erhöht → eher genuin andere programmierte Ratio als reine Korrektur"
-        parts.append(f"{SLOT_LABEL[slot]}: abgeleitete CR 1:{scr:.1f} ({direction} als "
-                     f"Median 1:{med_cr:.1f}), prä-BZ ~{spre:.0f} mg/dL – {hint}")
-    return ("• Abgeleitete CR = CHO/Bolus (enthält ggf. beigemischte Korrekturen). Auffällige "
-            "Abweichungen: " + "; ".join(parts) + ". Klärung (programmierte Ratio vs. "
-            "Korrekturfaktor vs. Timing) durch das Team.<br>")
+            hint = _("pre-meal BG not clearly elevated → rather a genuinely different programmed "
+                     "ratio than a pure correction")
+        parts.append(_("%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), "
+                       "pre-meal BG ~%(bg).0f mg/dL – %(hint)s")
+                     % {"slot": SLOT_LABEL[slot], "scr": scr, "dir": direction,
+                        "m": med_cr, "bg": spre, "hint": hint})
+    return (_("• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
+              "deviations: ") + "; ".join(parts) + _(". Clarification (programmed ratio vs. "
+              "correction factor vs. timing) by the care team.<br>"))
 
 
 # --- Charts -----------------------------------------------------------------
 def agp_chart(times, gluc):
-    """AGP-Perzentilgrafik als base64-PNG."""
+    """AGP percentile chart as base64 PNG."""
     minute = np.array([t.hour * 60 + t.minute for t in times])
     bins = np.arange(0, 1441, 15)
     idx = np.digitize(minute, bins) - 1
@@ -622,7 +680,7 @@ def agp_chart(times, gluc):
 
 
 def slot_curves_chart(meals, window, val_at):
-    """Mediane Postprandialkurven je Slot als base64-PNG."""
+    """Median postprandial curves per slot as base64 PNG."""
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
     ax.axhspan(70, 180, color="#dff0df")
@@ -634,7 +692,7 @@ def slot_curves_chart(meals, window, val_at):
                     label=f"{SLOT_LABEL[slot]} (n={n})")
     ax.set_xlim(0, window)
     ax.set_ylim(60, 240)
-    ax.set_xlabel("Minuten ab Mahlzeit")
+    ax.set_xlabel(_("Minutes after meal"))
     ax.set_ylabel("mg/dL")
     ax.legend(fontsize=8)
     ax.grid(alpha=.25)
@@ -642,14 +700,14 @@ def slot_curves_chart(meals, window, val_at):
 
 
 def slot_norm_curves_chart(meals, window, val_at, by_slot):
-    """Baseline-normalisierte Median-Kurven je Slot als base64-PNG.
+    """Baseline-normalised median curves per slot as base64 PNG.
 
-    Zeigt den Verlauf relativ zum Mahlzeitbeginn (Start = 0), macht damit den
-    typischen Netto-Abfall/-Anstieg (Δ4h) sichtbar, den die absolute Kurve
-    verschlucken kann. Nutzt pro Slot dieselbe kontaminationsbereinigte
-    Mahlzeitenauswahl wie die Δ4h-Tabelle (nur saubere Mahlzeiten; Fallback auf
-    alle, falls weniger als 3 saubere vorliegen), damit Kurve und Tabelle nicht
-    auseinanderlaufen.
+    Shows the course relative to the meal start (start = 0), thereby making the
+    typical net drop/rise (Δ4h) visible that the absolute curve can
+    swallow. Uses the same contamination-cleaned meal selection per slot
+    as the Δ4h table (only clean meals; fallback to
+    all if fewer than 3 clean ones exist), so curve and table do not
+    diverge.
     """
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
@@ -661,27 +719,28 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
         clean_times = {r["time"] for r in used}
         curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
         if curve is not None:
-            # transparent machen, ob n saubere Mahlzeiten sind oder (Fallback bei
-            # weniger als 3 sauberen) alle -- sonst wirkt die Legende widerspruechlich
-            # zur "clean"-Spalte der Tabelle.
+            # make transparent whether n are clean meals or (fallback with fewer
+            # than 3 clean) all -- otherwise the legend looks contradictory
+            # to the "clean" column of the table.
             basis = "sauber" if len(clean) >= 3 else "alle"
             ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
                     label=f"{SLOT_LABEL[slot]} (n={n}, {basis})")
     ax.set_xlim(0, window)
-    ax.set_xlabel("Minuten ab Mahlzeit")
-    ax.set_ylabel("Δ mg/dL ggü. Mahlzeitbeginn")
+    ax.set_xlabel(_("Minutes after meal"))
+    ax.set_ylabel(_("Δ mg/dL vs. meal start"))
     ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
 
 
 # --- Context / Rendering ----------------------------------------------------
-WEEKDAYS_DE = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+WEEKDAYS = (N_("Monday"), N_("Tuesday"), N_("Wednesday"), N_("Thursday"),
+            N_("Friday"), N_("Saturday"), N_("Sunday"))
 DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_ROW, DAILY_MIN_GAP = 452, 388, 18, 0.9
 
 
 def _draw_labels(axg, items, base_y, color, bold=False):
-    """Labels (hour, text) einer Sorte platzieren; nur bei echter Nähe in Zeilen versetzen."""
+    """Place labels (hour, text) of one kind; stagger into rows only on real proximity."""
     lanes = []
     for hour, text in sorted(items):
         lane = next((i for i, last in enumerate(lanes) if hour - last >= DAILY_MIN_GAP), None)
@@ -696,7 +755,7 @@ def _draw_labels(axg, items, base_y, color, bold=False):
 
 
 def _draw_day_events(axg, events):
-    """Alle Bolus-Einträge (dunkelblau/fett, oben) und KH-Einträge (rot, darunter) eines Tages."""
+    """All bolus entries (dark blue/bold, top) and carb entries (red, below) of a day."""
     def hour(event):
         return event["time"].hour + event["time"].minute / 60
     _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} U") for e in events if e["bolus"] > 0],
@@ -706,8 +765,8 @@ def _draw_day_events(axg, events):
 
 
 def _day_title(day, tdd):
-    """Panel-Titel: Wochentag + Datum, plus TDD (Bolus/Basal) falls vorhanden."""
-    title = f"{WEEKDAYS_DE[day.weekday()]}, {day:%d.%m.%Y}"
+    """Panel title: weekday + date, plus TDD (bolus/basal) if available."""
+    title = f"{_(WEEKDAYS[day.weekday()])}, {day:%d.%m.%Y}"
     if day in tdd:
         bolus, total, basal_u = tdd[day]
         title += f"   ·   TDD {total:.1f} U (Bolus {bolus:.1f} / Basal {basal_u:.1f})"
@@ -715,9 +774,9 @@ def _day_title(day, tdd):
 
 
 def daily_charts(times, gluc, events, basal, tdd):
-    """Ein seitenbreites Panel je Tag (CGM + alle Bolus-/KH-Einträge + Basal + TDD), neueste zuerst."""
+    """One page-wide panel per day (CGM + all bolus/carb entries + basal + TDD), newest first."""
     rate, t0, minutes = basal[:3]
-    gmax = float(np.nanmax(rate)) or 1.0           # globale Basal-Skala für alle Tage gleich
+    gmax = float(np.nanmax(rate)) or 1.0           # global basal scale, same for all days
     cgm_by, ev_by = defaultdict(list), defaultdict(list)
     for time, value in zip(times, gluc):
         cgm_by[time.date()].append((time.hour + time.minute / 60, value))
@@ -740,7 +799,7 @@ def daily_charts(times, gluc, events, basal, tdd):
         byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0 for mnt in range(0, 24 * 60, 5)]
         ax2 = axg.twinx()
         ax2.fill_between(bxx, byy, step="pre", color="#5b8def", alpha=.35, lw=0)
-        ax2.set_ylim(0, gmax * 2.2)                 # unteres ~45 %, für alle Tage gleiche Skala
+        ax2.set_ylim(0, gmax * 2.2)                 # lower ~45%, same scale for all days
         ax2.set_xlim(0, 24)
         ax2.set_yticks([0, round(gmax, 1)])
         ax2.set_ylabel("U/h", fontsize=6, color="#3a63a8")
@@ -751,11 +810,11 @@ def daily_charts(times, gluc, events, basal, tdd):
 
 
 def slot_definitions():
-    """Menschenlesbare Slot-Zeitfenster fuer die Report-Legende, aus SLOTS abgeleitet."""
+    """Human-readable slot time windows for the report legend, derived from SLOTS."""
     out = []
     for _key, label, start, end in SLOTS:
         if start < 0:
-            out.append(f"{label} = alles außerhalb der übrigen Fenster")
+            out.append(_("%(label)s = everything outside the other windows") % {"label": label})
         else:
             out.append(f"{label} = {start:02d}:00–{end:02d}:00 Uhr")
     return out
@@ -794,14 +853,14 @@ def _meals_context(rows):
 
 
 def _captions(meals, by_slot, window, val_at):
-    """(curve_cap, clean_note) datengetrieben aus den Slot-Kurven/Kontaminationen."""
+    """(curve_cap, clean_note) data-driven from the slot curves/contaminations."""
     caps = []
     for slot in MAIN_SLOTS:
         desc = shape_description(slot_median_curve(meals, slot, window, val_at))
         if desc:
             caps.append(f"{SLOT_LABEL[slot]} {desc}")
     curve_cap = "; ".join(caps) + "." if caps else \
-        "Zu wenige Mahlzeiten je Slot für eine belastbare Formbeschreibung."
+        _("Too few meals per slot for a robust shape description.")
     low_clean = [SLOT_LABEL[s] for s in MAIN_SLOTS if by_slot.get(s)
                  and sum(not r["contam"] for r in by_slot[s]) / len(by_slot[s]) < 0.5]
     clean_note = f" (v.a. {', '.join(low_clean)})" if low_clean else ""
@@ -809,7 +868,7 @@ def _captions(meals, by_slot, window, val_at):
 
 
 def _recommendations_context(meals, by_slot, window, val_at):
-    """Pro Slot: Kurven-Metriken + abgeleitete Stellschrauben; plus CR_eff-Beispiel."""
+    """Per slot: curve metrics + derived levers; plus CR_eff example."""
     grid = np.arange(0, window + 1, 10)
     recs, example, example_exc = [], None, 0.0
     for slot in MAIN_SLOTS:
@@ -835,7 +894,7 @@ def _recommendations_context(meals, by_slot, window, val_at):
 
 
 def build_context(base, window, wlab, daily=False):
-    """Alle Daten lesen, analysieren und den Template-Context zusammenstellen."""
+    """Read all data, analyse, and assemble the template context."""
     times, gluc, name, sensor = read_cgm(base)
     meals, pump = read_meals(base)
     basal = read_basal_timeline(base)
@@ -849,7 +908,7 @@ def build_context(base, window, wlab, daily=False):
 
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
     recs, cr_example = _recommendations_context(meals, by_slot, window, val_at)
-    device = " · ".join(p for p in (pump, sensor) if p) or "Gerät unbekannt"
+    device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
     tir_bands = [("Very High &gt;250", met["tar2"], "#b23b3b"),
                  ("High 181–250", met["tar1"], "#e0913a"),
                  ("Target 70–180", met["tir"], "#3a9b46"),
@@ -874,53 +933,61 @@ def build_context(base, window, wlab, daily=False):
         "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
         "fb": f"{basal[3]:.2f}", "fb_lo": f"{basal[4]:.2f}", "fb_hi": f"{basal[5]:.2f}",
-        # stark schwankend, wenn die Spannweite der Nacht-Mediane mindestens 30%
-        # des Gesamt-Medians betraegt. Absolute Spannweite (nicht Faktor hi/lo),
-        # damit auch Naechte mit Median 0.00 (voll gedrosselt) korrekt erfasst
-        # werden -- ein Faktor waere dort undefiniert.
+        # strongly varying if the range of the nightly means is at least 30%
+        # of the overall mean. Absolute range (not factor hi/lo),
+        # so that nights with a mean of 0.00 (fully suspended) are also captured
+        # correctly -- a factor would be undefined there.
         "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
         "wlab": wlab,
     }
 
 
 def render(context, template_dir):
-    """Template mit dem Context rendern und HTML zurueckgeben."""
+    """Render the template with the context and return HTML."""
     env = Environment(loader=FileSystemLoader(str(template_dir)),
+                      extensions=["jinja2.ext.i18n"],
                       autoescape=select_autoescape(["html", "j2"]))
+    env.install_gettext_translations(_ACTIVE_TRANSLATION, newstyle=True)  # pylint: disable=no-member
     return env.get_template("report.html.j2").render(**context)
 
 
 def parse_args():
-    """CLI-Argumente parsen."""
-    parser = argparse.ArgumentParser(description="AGP + Loop-aware CR-Report aus CamAPS/Glooko-Export")
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(
+        description="AGP + loop-aware CR report from a CamAPS/Glooko export")
     parser.add_argument("export_dir", nargs="?", default=".",
-                        help="entpackter Export-Ordner (nummerierte Dateien werden zusammengeführt)")
+                        help="unpacked export folder (numbered files are merged)")
     parser.add_argument("-o", "--out", default=None,
-                        help="Ausgabe-HTML (Default: ./<name>_loop-cr-review_<fenster>.html)")
+                        help="output HTML (default: ./<name>_loop-cr-review_<window>.html)")
     parser.add_argument("-w", "--window-hours", type=float, default=4.0,
-                        help="Postprandiales Fenster in Stunden (Default 4.0; z.B. 3, 3.5, 4)")
+                        help="postprandial window in hours (default 4.0; e.g. 3, 3.5, 4)")
     parser.add_argument("-t", "--template-dir", default=None,
-                        help="Ordner mit report.html.j2 (Default: ./templates neben diesem Script)")
+                        help="folder containing report.html.j2 (default: ./templates next to this script)")
     parser.add_argument("-d", "--daily", action="store_true",
-                        help="Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben")
+                        help="also output a daily overview (small day profiles per calendar day)")
     parser.add_argument("--slots-file", default=None,
-                        help="Eigene Tageszeit-Slots aus JSON-Datei statt der eingebauten "
-                        "Frühstück/Mittag/Abend/Sonstige (siehe example-data/slots.example.json)")
+                        help="custom time-of-day slots from a JSON file instead of the built-in "
+                        "breakfast/lunch/dinner/other (see example-data/slots.example.json)")
+    parser.add_argument("--lang", default="de", choices=["de", "en"],
+                        help="report language (default: de)")
     return parser.parse_args()
 
 
 def main():
-    """Report bauen und schreiben."""
-    for stream in (sys.stdout, sys.stderr):        # Windows-Konsole (cp1252) sonst Crash bei '→'
+    """Build and write the report."""
+    for stream in (sys.stdout, sys.stderr):        # Windows console (cp1252) else crashes on '→'
         try:
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
     args = parse_args()
+    setup_i18n(args.lang)
+    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
     if args.slots_file:
-        global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
         SLOTS = load_slots_file(args.slots_file)
-        MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
+    # Re-derive after setup_i18n so the labels go through the real translator
+    # (at import time the identity fallback froze them to the English msgids).
+    MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
     window = int(round(args.window_hours * 60))
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
             else f"{args.window_hours:g}h")

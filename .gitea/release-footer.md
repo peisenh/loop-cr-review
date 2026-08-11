@@ -1,5 +1,5 @@
 
 ---
 
-⚠️ **Kein Medizinprodukt — nur Analyse.** Keine Diagnose, keine Therapieempfehlung.
-Insulin-/CR-Einstellungen niemals ohne das behandelnde Diabetes-Team ändern. Keine Gewähr.
+⚠️ **Not a medical device — analysis only.** No diagnosis, no treatment recommendation.
+Never change insulin/CR settings without your treating diabetes care team. No warranty.

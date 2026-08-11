@@ -8,6 +8,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Added
+- Multilingual report output via gettext (`--lang de|en`, default `de`). All
+  user-facing strings in the code and template are now translatable; German and
+  English catalogs live under `locale/`. English source strings (msgids), German
+  and English `.mo` files are bundled into the binaries. The report language is
+  selected at runtime; the German output is unchanged from before.
+### Changed
+- All code comments and docstrings, the CLI help, the release footers and the
+  release scripts are now in English; the changelog is kept in English going
+  forward (entries up to 0.5.3 remain German).
 
 ## [0.5.3] - 2026-08-10
 ### Behoben

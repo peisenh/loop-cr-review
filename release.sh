@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
-# Schritt 2 des Release-Ablaufs (nach ./prepare-release.sh X.Y.Z): liest die
-# oberste veroeffentlichte Version aus CHANGELOG.md, taggt sie annotiert und
-# pusht den Tag. Die Version steht NUR im Changelog; der Tag ist reine
-# Ableitung. Der Build-/Release-Workflow erledigt den Rest.
+# Step 2 of the release flow (after ./prepare-release.sh X.Y.Z): reads the
+# topmost published version from CHANGELOG.md, tags it annotated and pushes the
+# tag. The version lives ONLY in the changelog; the tag is a pure derivation.
+# The build/release workflow does the rest.
 #
-# Aufruf:  ./release.sh [remote ...]     (Default-Remote: origin)
+# Usage:  ./release.sh [remote ...]     (default remote: origin)
 set -euo pipefail
 
 VERSION=$(grep -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
 
 if [ -z "${VERSION:-}" ]; then
-  echo "Keine Version in CHANGELOG.md gefunden." >&2
+  echo "No version found in CHANGELOG.md." >&2
   exit 1
 fi
 
 TAG="v$VERSION"
 
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "Tag $TAG existiert bereits." >&2
+  echo "Tag $TAG already exists." >&2
   exit 1
 fi
 
-# Warnen, falls uncommittete Changelog-Aenderungen vorliegen: der Workflow
-# liest CHANGELOG.md vom getaggten Commit, nicht vom Arbeitsverzeichnis.
+# Warn if there are uncommitted changelog changes: the workflow reads
+# CHANGELOG.md from the tagged commit, not from the working directory.
 if ! git diff --quiet -- CHANGELOG.md || ! git diff --cached --quiet -- CHANGELOG.md; then
-  echo "Warnung: CHANGELOG.md hat uncommittete Aenderungen — erst committen," >&2
-  echo "sonst zeigt der Tag auf einen Stand ohne den ${VERSION}-Abschnitt." >&2
+  echo "Warning: CHANGELOG.md has uncommitted changes — commit first," >&2
+  echo "otherwise the tag points to a state without the ${VERSION} section." >&2
   exit 1
 fi
 
@@ -35,4 +35,4 @@ for remote in "${@:-origin}"; do
   git push "$remote" "$TAG"
 done
 
-echo "Getaggt und gepusht: $TAG"
+echo "Tagged and pushed: $TAG"

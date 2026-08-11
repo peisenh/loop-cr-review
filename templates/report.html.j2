@@ -55,23 +55,23 @@ img { width: 100%; border-radius: 8px }
 <body>
 <div class="wrap">
 <p class="tool">{{ tool }}</p>
-<h1>Ambulatory Glucose Profile &amp; CR-Beurteilung</h1>
-<div class="sub">{{ name }} · {{ span }} · {{ days }} Tage · {{ device }} · Sensor-Wear {{ wear }}%</div>
-<div class="gen">Erstellt mit {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {{ wlab }}-Fenster ·
+<h1>{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}</h1>
+<div class="sub">{{ name }} · {{ span }} · {% trans %}{{ days }} days{% endtrans %} · {{ device }} · {% trans %}sensor wear{% endtrans %} {{ wear }}%</div>
+<div class="gen">{% trans %}Created with{% endtrans %} {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {% trans %}{{ wlab }} window{% endtrans %} ·
   <a href="{{ repo }}">{{ repo | replace('https://', '') }}</a></div>
 
 <div class="disclaimer">
-  <b>⚠︎ Kein Medizinprodukt — nur Analyse.</b> Dieses Werkzeug wertet vorhandene CGM-/Pumpendaten
-  statistisch aus. Es stellt <b>keine Diagnose</b> und <b>keine Therapieempfehlung</b> dar und ersetzt
-  nicht die ärztliche Beurteilung. <b>Insulin-, CR- oder sonstige Einstellungen niemals ohne das
-  Diabetes-Team ändern.</b> Alle Werte dienen ausschließlich als Gesprächsgrundlage; <b>keine Gewähr</b>
-  für Richtigkeit oder Vollständigkeit.
+  {% trans %}<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a statistical analysis of
+  existing CGM/pump data. It does <b>not</b> provide a diagnosis and <b>no</b> treatment recommendation and
+  does not replace medical judgement. <b>Never change insulin, CR, or other settings without your
+  diabetes care team.</b> All values serve solely as a basis for discussion; <b>no warranty</b> for
+  correctness or completeness.{% endtrans %}
 </div>
 
 <div class="grid">
-  <div class="kpi"><div class="v">{{ mean }}</div><div class="l">Ø Glukose mg/dL</div></div>
+  <div class="kpi"><div class="v">{{ mean }}</div><div class="l">{% trans %}mean glucose mg/dL{% endtrans %}</div></div>
   <div class="kpi"><div class="v">{{ gmi }}%</div><div class="l">GMI</div></div>
-  <div class="kpi"><div class="v">{{ cv }}%</div><div class="l">CV (Ziel ≤36%)</div></div>
+  <div class="kpi"><div class="v">{{ cv }}%</div><div class="l">{% trans %}CV (target ≤36%){% endtrans %}</div></div>
   <div class="kpi"><div class="v">{{ tir }}%</div><div class="l">Time in Range</div></div>
 </div>
 
@@ -83,21 +83,21 @@ img { width: 100%; border-radius: 8px }
     <b>{{ band.val }}%</b></div>
   {% endfor %}
   <div class="note" style="margin-top: 6px">
-    Ziele: TIR ≥70% · TBR&lt;70 &lt;4% · TBR&lt;54 &lt;1% · CV ≤36%. TITR(70–140) {{ titr }}%.</div>
+    {% trans %}Targets: TIR ≥70% · TBR&lt;70 &lt;4% · TBR&lt;54 &lt;1% · CV ≤36%. TITR(70–140){% endtrans %} {{ titr }}%.</div>
 </div>
 
-<div class="card"><h2>AGP (Perzentile 5/25/50/75/95)</h2>
+<div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
   <img src="data:image/png;base64,{{ agp_img }}"></div>
 
-<div class="card"><h2>Reale Postprandial-Verläufe je Mahlzeit (Median)</h2>
+<div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
   <img src="data:image/png;base64,{{ slot_img }}">
   <div class="note" style="margin-top: 6px">{{ curve_cap }}</div></div>
 
 <div class="card">
-  <h2>CR-Beurteilung pro Slot (Loop-aware)</h2>
+  <h2>{% trans %}CR assessment per slot (loop-aware){% endtrans %}</h2>
   <table>
-    <tr><th>Slot</th><th>n (clean)</th><th>Ø CHO</th><th>CR abgel.</th><th>Bolus</th>
-        <th>Loop {{ wlab }}</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>Befund</th></tr>
+    <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR derived{% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
+        <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
     {% for s in slots %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
@@ -105,105 +105,105 @@ img { width: 100%; border-radius: 8px }
     {% endfor %}
   </table>
   <div class="note" style="margin: 6px 0 0">
-    <b>Zeitfenster:</b> {{ slot_defs | join(' · ') }}</div>
+    <b>{% trans %}Time windows:{% endtrans %}</b> {{ slot_defs | join(' · ') }}</div>
   <div class="note" style="margin-top: 8px">
-    <b>Methode:</b> Loop {{ wlab }} = zusätzlich vom Auto-Mode geliefertes Basal über der
-    Fasten-Basalrate ({{ fb }} U/h{% if fb_lo != fb_hi %}, Mittel; Nächte {{ fb_lo }}–{{ fb_hi }} U/h{% if fb_spread %} — stark schwankend, Referenz mit Vorsicht{% endif %}{% endif %}) im {{ wlab }}-Fenster. Positiv → Loop gleicht zu schwache CR
-    aus (CR zu schwach). CR_eff = CHO / (Bolus + Loop-Mehrbasal). Δ{{ wlab }} = Glukose bei
-    {{ wlab }} minus prämahlzeitlich. „clean" = Mahlzeiten ohne weitere Mahlzeit im {{ wlab }}-Fenster.
-    <b>⚠︎</b> beim Befund = weniger als 3 saubere Mahlzeiten; die Aussage stützt sich (mit)
-    auf kontaminierte Fenster und ist entsprechend unsicherer.</div>
+    {% trans w=wlab %}<b>Method:</b> Loop {{ w }} = basal delivered by Auto Mode in addition to the
+    fasting basal rate{% endtrans %} ({{ fb }} U/h{% if fb_lo != fb_hi %}, {% trans lo=fb_lo, hi=fb_hi %}mean; nights {{ lo }}–{{ hi }} U/h{% endtrans %}{% if fb_spread %} — {% trans %}strongly varying, use reference with caution{% endtrans %}{% endif %}{% endif %}) {% trans w=wlab %}in the {{ w }} window. Positive → the loop is compensating for a too-weak CR
+    (CR too weak). CR_eff = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
+    {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window.{% endtrans %}
+    {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
+    on contaminated windows and is correspondingly less certain.{% endtrans %}</div>
 </div>
 
 <div class="card">
-  <h2>Verlauf relativ zum Mahlzeitbeginn (baseline-normalisiert)</h2>
+  <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
   <img src="data:image/png;base64,{{ slot_norm_img }}">
   <div class="note" style="margin-top: 8px">
-    Hier ist jede Mahlzeit auf ihren <b>eigenen Ausgangswert bei Minute 0</b> bezogen
-    (Start = 0), erst danach wird der Median gebildet. Die Kurve zeigt damit den typischen
-    <b>Netto-Verlauf</b> und passt direkt zur Spalte Δ{{ wlab }} der Tabelle oben: Endet eine
-    Kurve deutlich im Minus, kehrt der Zucker im Schnitt <i>unter</i> den Ausgangswert zurück
-    (Hinweis auf Überdeckung); bleibt sie oben, bleibt er erhöht (Unterdeckung).
-    Die absolute Kurve weiter oben kann einen solchen Netto-Abfall <b>verbergen</b>, weil dort
-    Start- und Endpunkt unabhängig über alle Mahlzeiten gemittelt werden und ein hoher Peak
-    dazwischen die Rückkehr optisch überlagert. Diese Kurve nutzt dieselben (sauberen)
-    Mahlzeiten wie die Δ{{ wlab }}-Spalte oben, damit beide nicht auseinanderlaufen; liegen
-    weniger als 3 saubere Mahlzeiten vor, greift dieselbe Ausnahme wie in der Tabelle (alle
-    Mahlzeiten) — die Legende weist das je Slot als „sauber" bzw. „alle" aus. Mahlzeiten
-    ohne CGM-Wert genau bei Minute 0 fließen nicht ein, daher kann die Fallzahl (n) leicht von
-    der Tabelle abweichen.</div>
+    {% trans w=wlab %}Here each meal is referenced to its <b>own baseline at minute 0</b>
+    (start = 0), and only then is the median taken. The curve thus shows the typical
+    <b>net course</b> and matches the Δ{{ w }} column of the table above directly: if a
+    curve ends clearly in the negative, glucose on average returns <i>below</i> baseline
+    (a sign of overdosing); if it stays up, it remains elevated (underdosing).
+    The absolute curve further above can <b>hide</b> such a net drop, because there
+    start and end are averaged independently over all meals and a high peak
+    in between visually overlays the return. This curve uses the same (clean)
+    meals as the Δ{{ w }} column above, so the two do not diverge; if
+    fewer than 3 clean meals are available, the same exception as in the table applies (all
+    meals) — the legend marks this per slot as "clean" or "all". Meals
+    without a CGM value exactly at minute 0 are not included, so the count (n) may differ slightly
+    from the table.{% endtrans %}</div>
 </div>
 
 <div class="card">
-  <h2>Ableitungen aus der Kurvenform &amp; mögliche Ansätze</h2>
+  <h2>{% trans %}Derivations from the curve shape &amp; possible approaches{% endtrans %}</h2>
   {% for r in recs %}
   <div class="slot {{ r.cls }}">
     <h3>{{ r.label }} — {{ r.headline }}</h3>
-    <div class="mline">Peak <b>~{{ r.peak }} mg/dL</b> nach <b>~{{ r.peak_t }} min</b> ·
-      Tief <b>~{{ r.nadir }} mg/dL</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
-      Loop {{ r.loop }} U · CR abgel. {{ r.cr }} · CR_eff {{ r.cre }}</div>
+    <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} mg/dL</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
+      {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} mg/dL</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
+      {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR derived{% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}
   </div>
   {% endfor %}
-  <div class="note" style="margin-top: 8px">Hypothesen/Kandidaten fürs Team-Gespräch, keine
-    Dosieranweisung. Unter Auto Mode prägt der Loop die Kurvenform mit.</div>
+  <div class="note" style="margin-top: 8px">{% trans %}Hypotheses/candidates for the team discussion, not a
+    dosing instruction. Under Auto Mode the loop co-shapes the curve.{% endtrans %}</div>
 </div>
 
 <div class="card">
-  <h2>Was bedeutet CR_eff — und was nicht</h2>
+  <h2>{% trans %}What CR_eff means — and what it does not{% endtrans %}</h2>
   <div class="eff">
-    <b>CR_eff ist ein Ansatz, kein Zielwert.</b> Er rechnet das vom Loop nachgeschobene Basal in eine
-    „effektiv gebrauchte" Ratio um: <code>CR_eff = CHO / (Bolus + Loop-Mehrbasal)</code>.
-    {% if cr_example %}<br><br>Beispiel {{ cr_example.label }}: {{ cr_example.cho }} g auf
-    ({{ cr_example.bol }} U Bolus + {{ cr_example.loop }} U Loop) ≈ <b>{{ cr_example.cre }}</b>
-    statt der angesetzten Ratio.{% if cr_example.underdosed %} Und selbst damit liegt der BZ bei
-    {{ wlab }} noch <b>{{ cr_example.d4 }} mg/dL</b> über dem Ausgangswert — die loop-verstärkte Menge
-    reichte im Fenster also nicht. <b>CR_eff ist hier eine Untergrenze</b>: die tatsächlich nötige CR
-    liegt noch straffer (grob: zusätzlich ~Δ/ISF Einheiten).{% endif %}{% endif %}
-    <br><br><b>So gemeint:</b> Richtung und Größenordnung („eher straffer, ungefähr so viel") —
-    <b>nicht</b> „stell die CR exakt auf diesen Wert". <b>Warum nur Näherung:</b> unterstellt, das
-    Loop-Extra gehöre ganz zur Mahlzeit (ignoriert Korrektur vorbestehender Hochwerte, Bewegung,
-    Adaption); die abgeleitete CR kann beigemischte Korrekturen enthalten; Einzelfenster-Betrachtung.
-    Deshalb: Richtung + grobe Größe ablesen, den Schritt klein und iterativ mit dem Team festlegen
-    und je ~1–2 Wochen nachmessen.</div>
+    {% trans %}<b>CR_eff is an approach, not a target value.</b> It converts the basal the loop pushed in
+    into an "effectively used" ratio: <code>CR_eff = CHO / (bolus + loop extra basal)</code>.{% endtrans %}
+    {% if cr_example %}<br><br>{% trans label=cr_example.label, cho=cr_example.cho, bol=cr_example.bol, loop=cr_example.loop, cre=cr_example.cre %}Example {{ label }}: {{ cho }} g on
+    ({{ bol }} U bolus + {{ loop }} U loop) ≈ <b>{{ cre }}</b>
+    instead of the configured ratio.{% endtrans %}{% if cr_example.underdosed %} {% trans w=wlab, d4=cr_example.d4 %}And even then the BG at
+    {{ w }} is still <b>{{ d4 }} mg/dL</b> above baseline — the loop-boosted amount
+    was not enough within the window. <b>CR_eff is a lower bound here</b>: the actually needed CR
+    is even tighter (roughly: an additional ~Δ/ISF units).{% endtrans %}{% endif %}{% endif %}
+    <br><br>{% trans %}<b>Meant as:</b> direction and order of magnitude ("rather tighter, roughly this much") —
+    <b>not</b> "set the CR exactly to this value". <b>Why only an approximation:</b> it assumes the
+    loop extra belongs entirely to the meal (ignores correction of pre-existing highs, exercise,
+    adaptation); the derived CR may contain blended-in corrections; single-window view.
+    Therefore: read off direction + rough magnitude, decide the step small and iteratively with the team
+    and re-measure every ~1–2 weeks.{% endtrans %}</div>
 </div>
 
 <div class="card">
-  <h2>Per-Mahlzeit-Detail</h2>
+  <h2>{% trans %}Per-meal detail{% endtrans %}</h2>
   <table>
-    <tr><th>Zeit</th><th>Slot</th><th>CHO g</th><th>Bolus U</th><th>CR</th>
-        <th>Loop {{ wlab }} U</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
+    <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>CR</th>
+        <th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
     {% for m in meals %}
     <tr class="{{ m.cls }}"><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
         <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
         <td>{{ m.d4 }}</td><td>{{ '⚠︎' if m.contam else '' }}</td></tr>
     {% endfor %}
   </table>
-  <div class="note" style="margin-top: 6px">⚠︎ = kontaminiertes Fenster (weitere Mahlzeit &lt;{{ wlab }} danach).</div>
+  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards).{% endtrans %}</div>
 </div>
 
 <div class="card">
-  <h2>Einordnung &amp; Grenzen</h2>
+  <h2>{% trans %}Interpretation &amp; limitations{% endtrans %}</h2>
   <div class="note">
-    <span class="tag ts">zu stark</span><span class="tag tw">zu schwach</span><span class="tag to">passend</span><br><br>
-    Dies ist <b>Entscheidungs-Evidenz für das Diabetes-Team</b>, keine Dosieranweisung.<br>
+    <span class="tag ts">{% trans %}too strong{% endtrans %}</span><span class="tag tw">{% trans %}too weak{% endtrans %}</span><span class="tag to">{% trans %}adequate{% endtrans %}</span><br><br>
+    {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
     {{ cr_note | safe }}
-    • Unter CamAPS Auto Mode kompensiert der Loop laufend; das Loop-Mehrbasal ist gerade deshalb das
-      aussagekräftige Signal. Der Algorithmus adaptiert über Tage und kann länger bestehende
-      Fehleinstellungen teilweise glätten.<br>
-    • Confounder (Fett/Protein, Bewegung, gesplittete Boli, überlappende Mahlzeiten) sind über Mediane
-      gedämpft, nicht eliminiert; Slots mit wenigen „clean"-Mahlzeiten{{ clean_note }} sind unsicherer.<br>
-    • Fasten-Basal als Referenz (Mittel der Nächte) setzt mahlzeit-/korrekturfreie Nächte 00:00–06:00 Uhr voraus.
+    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
+      basal is the meaningful signal. The algorithm adapts over days and can partly smooth out
+      longer-standing misconfigurations.{% endtrans %}<br>
+    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
+      not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
+    {% trans %}• The fasting basal as a reference (mean of the nights) assumes meal-/correction-free nights 00:00–06:00.{% endtrans %}
   </div>
 </div>
 
 {% if daily_days %}
-<div class="card"><h2>Tagesübersicht — CGM · Bolus · Basal (neueste zuerst)</h2>
-  <div class="note">Grünes Band = Zielbereich 70–180 mg/dL · <b style="color:#0b2e6b">Einheiten</b>
-    = Bolus · <span style="color:#c0392b">Gramm</span> = Kohlenhydrate (alle Einzeleinträge) ·
-    blaue Fläche unten = Basalrate (U/h-Skala rechts, für alle Tage gleich). Ein Panel je Tag.</div></div>
+<div class="card"><h2>{% trans %}Daily overview — CGM · bolus · basal (newest first){% endtrans %}</h2>
+  <div class="note">{% trans %}Green band = target range 70–180 mg/dL · <b style="color:#0b2e6b">units</b>
+    = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
+    blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>
 {% for d in daily_days %}
 <div class="dailyrow"><img src="data:image/png;base64,{{ d.img }}"></div>
 {% endfor %}

@@ -1,20 +1,20 @@
 name: Build executables
 
-# GitHub-Release: baut eigenstaendige Binaries fuer Linux und Windows und
-# haengt sie an einen Release, dessen Text aus dem passenden CHANGELOG.md-
-# Abschnitt (+ fester Footer) kommt. Erstellt wird der Release von der
-# bewaehrten Marketplace-Action softprops/action-gh-release.
+# GitHub release: builds self-contained binaries for Linux and Windows and
+# attaches them to a release whose text comes from the matching CHANGELOG.md
+# section (+ a fixed footer). The release is created by the well-established
+# marketplace action softprops/action-gh-release.
 #
-# Struktur bewusst getrennt: die build-Matrix baut nur und laedt die Binaries
-# als Artefakte hoch; EIN separater release-Job erstellt danach den Release
-# EINMALIG mit beiden Assets. Wuerden beide Matrix-Jobs parallel je einen
-# Release auf denselben Tag schreiben, kann das zu "already_exists"-Fehlern
-# oder doppelten Draft-Releases fuehren (bekanntes Race).
+# Structure deliberately split: the build matrix only builds and uploads the
+# binaries as artifacts; ONE separate release job then creates the release
+# ONCE with both assets. If both matrix jobs each wrote a release to the same
+# tag in parallel, that could cause "already_exists" errors or duplicate draft
+# releases (a known race).
 #
-# Diese Datei ist NUR fuer GitHub Actions. Der Gitea-Release (ohne Binaries)
-# liegt getrennt unter .gitea/workflows/release.yml (curl gegen die Gitea-API,
-# da es dort keine gleichwertige Release-Action gibt). Sobald ein .gitea/-
-# Verzeichnis existiert, ignoriert Gitea diese .github/-Dateien ohnehin ganz.
+# This file is ONLY for GitHub Actions. The Gitea release (without binaries)
+# lives separately under .gitea/workflows/release.yml (curl against the Gitea
+# API, since there is no equivalent release action there). Once a .gitea/
+# directory exists, Gitea ignores these .github/ files entirely anyway.
 on:
   push:
     tags: ["v*"]
@@ -46,18 +46,21 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller
-      - name: Version einbacken
+          pip install -r requirements.txt pyinstaller babel
+      - name: Compile translation catalogs (.po -> .mo)
+        run: pybabel compile -d locale
+      - name: Bake in version
         shell: bash
         run: echo "VERSION = \"$(git describe --tags --always)\"" > _version.py
-      - name: Build (onefile, Template gebündelt)
+      - name: Build (onefile, template + locale bundled)
         run: >
           pyinstaller --onefile --name loop-cr-review
           --add-data "templates/report.html.j2${{ matrix.sep }}templates"
+          --add-data "locale${{ matrix.sep }}locale"
           loop_cr_review.py
-      - name: Smoke-Test (Report aus Beispieldaten erzeugen)
+      - name: Smoke test (generate report from example data)
         run: dist/loop-cr-review example-data -o smoke.html
-      - name: Artefakt benennen
+      - name: Name artifact
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -76,12 +79,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7   # CHANGELOG.md + Footer vom getaggten Stand
-      - name: Artefakte einsammeln
+      - name: Collect artifacts
         uses: actions/download-artifact@v7
         with:
           path: dist-assets
           merge-multiple: true
-      - name: Release-Notes bauen (Changelog-Abschnitt + fester Footer)
+      - name: Build release notes (changelog section + fixed footer)
         run: |
           VERSION="${GITHUB_REF_NAME#v}"        # v0.4.6 -> 0.4.6
           awk -v ver="$VERSION" '
@@ -90,11 +93,11 @@ jobs:
             f                        { print }
           ' CHANGELOG.md > release-body.md
           if [ ! -s release-body.md ]; then
-            echo "Kein CHANGELOG-Abschnitt fuer $VERSION gefunden." >&2
+            echo "No CHANGELOG section found for $VERSION." >&2
             exit 1
           fi
           cat .github/release-footer.md >> release-body.md
-      - name: Release erstellen + Binaries anhaengen
+      - name: Create release + attach binaries
         uses: softprops/action-gh-release@v2
         with:
           body_path: release-body.md
