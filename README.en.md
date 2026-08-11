@@ -96,6 +96,7 @@ pyinstaller --onefile --name loop-cr-review \
 # unpack the Glooko export, then:
 python3 loop_cr_review.py <export_folder>            # default: 4-h window
 python3 loop_cr_review.py <export_folder> -w 3.5     # different window (hours)
+python3 loop_cr_review.py <export_folder> --lang en  # report in English (default: de)
 python3 loop_cr_review.py <export_folder> -o report.html
 python3 loop_cr_review.py <export_folder> -t <template_folder>
 ```
@@ -106,6 +107,7 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |
 | `--slots-file` | custom time-of-day slots from a JSON file (see `example-data/slots.example.json`) | built-in slots |
+| `--lang` | report language (`de` or `en`) | `de` |
 | `-o, --out` | output HTML | `<name>_loop-cr-review_<window>.html` |
 | `-t, --template-dir` | folder containing `report.html.j2` | `./templates` |
 
@@ -138,7 +140,10 @@ An unpacked **Glooko export with CamAPS FX data** (see "Context" above) containi
 - `Insulin data/bolus_data_*.csv` — boluses including `carbohydrate intake (g)` and `insulin delivered (U)`
 - `Insulin data/basal_data_*.csv` — basal segments (`rate`, `duration`)
 
-German number format (comma) and `dd.mm.yyyy HH:MM` are recognised. Unit: **mg/dL**.
+The common CamAPS export formats are detected automatically: date `dd.mm.yyyy`,
+`dd/mm/yyyy` or `yyyy-mm-dd`, decimal separator comma or dot. The glucose unit
+(**mg/dL** or **mmol/L**) is detected from the column header; the whole report
+(metrics, axes, target ranges) is then shown in the export's unit.
 
 ## Project structure
 

@@ -9,6 +9,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Added
+- Automatic locale detection for the export format: dates `dd.mm.yyyy`,
+  `dd/mm/yyyy` and `yyyy-mm-dd`, and both comma and dot decimal separators are
+  now parsed (previously German format only).
+- Automatic glucose-unit detection (mg/dL or mmol/L) from the CGM column header.
+  The whole report — metrics, target ranges, AGP and all charts, per-meal values
+  and derivations — is rendered in the export's unit. GMI is computed on a mg/dL
+  mean regardless of display unit. mg/dL exports are unchanged.
 - Multilingual report output via gettext (`--lang de|en`, default `de`). All
   user-facing strings in the code and template are now translatable; German and
   English catalogs live under `locale/`. English source strings (msgids), German

@@ -96,6 +96,7 @@ pyinstaller --onefile --name loop-cr-review \
 # Glooko-Export entpacken, dann:
 python3 loop_cr_review.py <export_ordner>            # Default: 4-h-Fenster
 python3 loop_cr_review.py <export_ordner> -w 3.5     # anderes Fenster (Stunden)
+python3 loop_cr_review.py <export_ordner> --lang en  # Report auf Englisch (Default: de)
 python3 loop_cr_review.py <export_ordner> -o report.html
 python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 ```
@@ -106,6 +107,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
 | `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`) | eingebaute Slots |
+| `--lang` | Report-Sprache (`de` oder `en`) | `de` |
 | `-o, --out` | Ausgabe-HTML | `<name>_loop-cr-review_<fenster>.html` |
 | `-t, --template-dir` | Ordner mit `report.html.j2` | `./templates` |
 
@@ -138,7 +140,10 @@ Ein entpackter **Glooko-Export mit CamAPS-FX-Daten** (siehe „Kontext" oben) mi
 - `Insulin data/bolus_data_*.csv` — Boli inkl. `Kohlenhydrataufnahme (g)` und `Abgegebenes Insulin (E)`
 - `Insulin data/basal_data_*.csv` — Basal-Segmente (`Rate`, `Dauer`)
 
-Deutsches Zahlformat (Komma) und `dd.mm.yyyy HH:MM` werden erkannt. Einheit: **mg/dL**.
+Erkannt werden die gängigen CamAPS-Exportformate automatisch: Datum `dd.mm.yyyy`,
+`dd/mm/yyyy` oder `yyyy-mm-dd`, Dezimaltrenner Komma oder Punkt. Die Glukose-Einheit
+(**mg/dL** oder **mmol/L**) wird aus dem Spaltenkopf erkannt; der gesamte Report
+(Kennzahlen, Achsen, Zielbereiche) erscheint dann in der Einheit des Exports.
 
 ## Projektstruktur
 

@@ -155,18 +155,65 @@ PEAK_EARLY = 75            # min: peak before this time counts as "early"
 PEAK_RISE_HIGH = 55        # mg/dL rise above start: "high peak"
 NADIR_LOW = 85             # mg/dL: nadir below this = notable
 NADIR_LATE = 120           # min: nadir after this time = late (insulin tail)
-TIME_FMTS = ("%d.%m.%Y %H:%M",)
+
+# --- glucose unit -----------------------------------------------------------
+# All glucose thresholds above are defined in mg/dL. Exports come in either
+# mg/dL or mmol/L (detected from the CGM column header). The whole report is
+# then rendered in the export's unit: g() converts an mg/dL threshold into the
+# active unit, so metrics, chart bands and axes all stay consistent.
+MGDL_PER_MMOL = 18.0182
+GLUCOSE_UNIT = "mg/dL"     # active unit, set by set_glucose_unit() at import
+
+
+def set_glucose_unit(unit):
+    """Set the active glucose unit ('mg/dL' or 'mmol/L') for the whole report."""
+    globals()["GLUCOSE_UNIT"] = unit
+
+
+def is_mmol():
+    """True if the active glucose unit is mmol/L."""
+    return GLUCOSE_UNIT == "mmol/L"
+
+
+def g(mgdl):
+    """Convert an mg/dL glucose value/threshold to the active unit.
+
+    mmol/L is rounded to 1 decimal (the resolution CGM reports use); mg/dL is
+    returned unchanged as an int-like float.
+    """
+    return round(mgdl / MGDL_PER_MMOL, 1) if is_mmol() else mgdl
+
+
+def fmt_glucose(value):
+    """Format a glucose value already in the active unit: 1 decimal for mmol/L,
+    integer for mg/dL."""
+    return f"{value:.1f}" if is_mmol() else f"{value:.0f}"
+
+
+def fmt_delta(value):
+    """Format a glucose *difference* in the active unit (signed): 1 decimal for
+    mmol/L, integer for mg/dL."""
+    return f"{value:+.1f}" if is_mmol() else f"{value:+.0f}"
+
+TIME_FMTS = ("%d.%m.%Y %H:%M",    # de:    29.07.2026 09:02
+             "%d/%m/%Y %H:%M",    # en/UK: 29/07/2026 09:02
+             "%Y-%m-%d %H:%M")    # en_US/ISO: 2026-07-29 09:02
 TOOL_NAME = "Loop-CR-Review"
 REPO_URL = "https://github.com/peisenh/loop-cr-review"
 
 
 # --- small helpers ----------------------------------------------------------
 def num(val):
-    """German number format ('57,0') -> float; empty -> nan."""
+    """Parse a number from the export -> float; empty -> nan.
+
+    Handles both decimal separators used across export locales: comma (de,
+    '5,4') and dot (en, '5.4'). No thousands separators occur in these exports
+    (all values are small), so a comma is unambiguously the decimal mark.
+    """
     val = val.strip().strip('"')
     if val == "":
         return np.nan
-    return float(val.replace(".", "").replace(",", ".")) if "," in val else float(val)
+    return float(val.replace(",", ".")) if "," in val else float(val)
 
 
 def parse_ts(val):
@@ -176,7 +223,7 @@ def parse_ts(val):
             return datetime.strptime(val.strip(), fmt)
         except ValueError:
             continue
-    raise ValueError(f"Unbekanntes Zeitformat: {val!r}")
+    raise ValueError(f"Unknown time format: {val!r}")
 
 
 def fig_to_b64(fig):
@@ -260,16 +307,19 @@ def read_cgm(base):
     times, gluc, sensor, name = [], [], "", "Patient"
     files = numbered_csvs(base, "cgm_data")
     if not files:
-        raise FileNotFoundError(f"Keine cgm_data_*.csv in {base} gefunden")
+        raise FileNotFoundError(f"No cgm_data_*.csv found in {base}")
     for idx, path in enumerate(files):
         with open(path, encoding="utf-8-sig") as fh:
             reader = csv.reader(fh)
             meta = next(reader)
-            next(reader)
+            header = next(reader)
             if idx == 0:
                 match = re.search(r"Name\s*:\s*([^,]+)", ",".join(meta))
                 if match:
                     name = match.group(1).strip()
+                # unit from the glucose column header, e.g. "... (mmol/l)" / "(mg/dl)"
+                set_glucose_unit("mmol/L" if "mmol" in ",".join(header).lower()
+                                 else "mg/dL")
             for row in reader:
                 if len(row) >= 2 and row[1].strip():
                     times.append(parse_ts(row[0]))
@@ -395,22 +445,28 @@ def read_basal_timeline(base):
 
 # --- Analysis ---------------------------------------------------------------
 def consensus_metrics(times, gluc):
-    """Consensus metrics (Battelino 2019) as a dict."""
+    """Consensus metrics (Battelino 2019) as a dict.
+
+    Works in the active glucose unit: gluc and all thresholds are in that unit
+    (g() converts the mg/dL consensus cut-offs). GMI is defined on a mg/dL mean,
+    so the mean is converted back to mg/dL for that formula regardless of unit.
+    """
     mean, sd = float(gluc.mean()), float(gluc.std())
     days = (times[-1] - times[0]).total_seconds() / 86400
     step = np.median(np.diff([t.timestamp() for t in times])) / 60
+    mean_mgdl = mean * MGDL_PER_MMOL if is_mmol() else mean
 
     def pct(lo, hi):
         return 100 * float(np.mean((gluc >= lo) & (gluc <= hi)))
 
     return {
-        "mean": mean, "cv": sd / mean * 100, "gmi": 3.31 + 0.02392 * mean, "days": days,
+        "mean": mean, "cv": sd / mean * 100, "gmi": 3.31 + 0.02392 * mean_mgdl, "days": days,
         "wear": 100 * len(gluc) / (days * 24 * 60 / step) if step else float("nan"),
-        "tir": pct(70, 180), "titr": pct(70, 140),
-        "tbr1": 100 * float(np.mean((gluc >= 54) & (gluc < 70))),
-        "tbr2": 100 * float(np.mean(gluc < 54)),
-        "tar1": 100 * float(np.mean((gluc > 180) & (gluc <= 250))),
-        "tar2": 100 * float(np.mean(gluc > 250)),
+        "tir": pct(g(70), g(180)), "titr": pct(g(70), g(140)),
+        "tbr1": 100 * float(np.mean((gluc >= g(54)) & (gluc < g(70)))),
+        "tbr2": 100 * float(np.mean(gluc < g(54))),
+        "tar1": 100 * float(np.mean((gluc > g(180)) & (gluc <= g(250)))),
+        "tar2": 100 * float(np.mean(gluc > g(250))),
     }
 
 
@@ -465,9 +521,9 @@ def aggregate_slot(slot_rows):
 
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     ratio = exc / bol if bol else 0
-    if ratio > LOOP_RATIO or d4 > D4_HIGH:
+    if ratio > LOOP_RATIO or d4 > g(D4_HIGH):
         flag, cls = _("too weak → tighten"), "weak"
-    elif ratio < -LOOP_RATIO or d4 < D4_STRONG:
+    elif ratio < -LOOP_RATIO or d4 < g(D4_STRONG):
         flag, cls = _("too strong → loosen"), "strong"
     else:
         flag, cls = _("plausibly adequate"), "ok"
@@ -522,9 +578,9 @@ def shape_description(curve):
     start, end, low = np.nanmedian(curve[:2]), np.nanmedian(curve[-2:]), np.nanmin(curve)
     if low < 75:
         return _("rises and then falls to low values")
-    if end - start > 25:
+    if end - start > g(25):
         return _("climbs and does not return to baseline")
-    if end - start < -25:
+    if end - start < -g(25):
         return _("falls clearly below baseline")
     return _("returns close to baseline (balanced)")
 
@@ -562,7 +618,7 @@ def _weak_levers(agg, window):
 def slot_levers(agg, met, window):
     """Candidate levers (tag, CSS class, text) from verdict + curve shape."""
     levers = []
-    if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH:
+    if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= g(PEAK_RISE_HIGH):
         levers.append((_("Pre-bolus"), "sea", _("early high peak → try a longer bolus-meal interval "
                                                   "(caps the spike without more dose)")))
     if agg["cls"] == "weak":
@@ -577,10 +633,10 @@ def slot_levers(agg, met, window):
     elif late_rise:
         levers.append((_("Observe"), "obs", _("slight late re-rise → possibly fat/protein or "
                                                 "basal rate in this window; just keep an eye on it")))
-    if met["nadir"] < NADIR_LOW and met["nadir_t"] >= NADIR_LATE:
-        levers.append((_("Caution"), "obs", _("nadir ~%(n).0f mg/dL around %(t)d min "
+    if met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE:
+        levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
                                                "→ secure the hypo window first")
-                       % {"n": met["nadir"], "t": met["nadir_t"]}))
+                       % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
     has_sea = any(c == "sea" for _, c, _ in levers)
     if agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers):
         if has_sea:
@@ -597,10 +653,10 @@ def slot_levers(agg, met, window):
 def slot_headline(agg, met):
     """Verdict-aware short description of the slot shape (consistent with verdict AND curve)."""
     rise_end = met["end"] - met["start"]
-    early_high = met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= PEAK_RISE_HIGH
+    early_high = met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= g(PEAK_RISE_HIGH)
     if agg["cls"] == "strong":
-        if rise_end < -25:                          # Kurve liegt bei 4h wirklich unter Start
-            return (_("high peak, then drop below baseline") if met["nadir"] < NADIR_LOW
+        if rise_end < -g(25):                        # curve at 4h really below start
+            return (_("high peak, then drop below baseline") if met["nadir"] < g(NADIR_LOW)
                     else _("falls below baseline"))
         # Verdict "strong" came from the loop signal, not from an actual curve drop
         return _("returns close to baseline, loop throttles noticeably")
@@ -633,16 +689,16 @@ def build_cr_note(rows, by_slot):
     parts = []
     for slot, scr, spre in dev:
         direction = _("tighter") if scr < med_cr else _("looser")
-        if not np.isnan(spre) and spre > PRE_BG_HIGH:
+        if not np.isnan(spre) and spre > g(PRE_BG_HIGH):
             hint = _("elevated pre-meal BG → correction likely blended in by the calculator, "
                      "derived CR underestimates the programmed ratio")
         else:
             hint = _("pre-meal BG not clearly elevated → rather a genuinely different programmed "
                      "ratio than a pure correction")
         parts.append(_("%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), "
-                       "pre-meal BG ~%(bg).0f mg/dL – %(hint)s")
+                       "pre-meal BG ~%(bg).0f %(u)s – %(hint)s")
                      % {"slot": SLOT_LABEL[slot], "scr": scr, "dir": direction,
-                        "m": med_cr, "bg": spre, "hint": hint})
+                        "m": med_cr, "bg": spre, "hint": hint, "u": GLUCOSE_UNIT})
     return (_("• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
               "deviations: ") + "; ".join(parts) + _(". Clarification (programmed ratio vs. "
               "correction factor vs. timing) by the care team.<br>"))
@@ -663,17 +719,17 @@ def agp_chart(times, gluc):
                 perc[q].append(np.percentile(vals, q))
     xs = np.array(xs)
     fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.axhspan(70, 180, color="#dff0df")
-    ax.axhline(70, color="#5a5", lw=.7)
-    ax.axhline(180, color="#5a5", lw=.7)
+    ax.axhspan(g(70), g(180), color="#dff0df")
+    ax.axhline(g(70), color="#5a5", lw=.7)
+    ax.axhline(g(180), color="#5a5", lw=.7)
     ax.fill_between(xs, perc[5], perc[95], color="#bcd4ff", alpha=.6, label="5–95 %")
     ax.fill_between(xs, perc[25], perc[75], color="#5b8def", alpha=.55, label="25–75 %")
     ax.plot(xs, perc[50], color="#0b2e6b", lw=2, label="Median")
     ax.set_xlim(0, 24)
     ax.set_xticks(range(0, 25, 3))
-    ax.set_ylim(40, 300)
+    ax.set_ylim(g(40), g(300))
     ax.set_xlabel("Uhrzeit")
-    ax.set_ylabel("mg/dL")
+    ax.set_ylabel(GLUCOSE_UNIT)
     ax.legend(fontsize=8, ncol=3, loc="upper right")
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
@@ -683,7 +739,7 @@ def slot_curves_chart(meals, window, val_at):
     """Median postprandial curves per slot as base64 PNG."""
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.axhspan(70, 180, color="#dff0df")
+    ax.axhspan(g(70), g(180), color="#dff0df")
     for slot in MAIN_SLOTS:
         curve = slot_median_curve(meals, slot, window, val_at)
         if curve is not None:
@@ -691,9 +747,9 @@ def slot_curves_chart(meals, window, val_at):
             ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
                     label=f"{SLOT_LABEL[slot]} (n={n})")
     ax.set_xlim(0, window)
-    ax.set_ylim(60, 240)
+    ax.set_ylim(g(60), g(240))
     ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel("mg/dL")
+    ax.set_ylabel(GLUCOSE_UNIT)
     ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
@@ -727,7 +783,7 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
                     label=f"{SLOT_LABEL[slot]} (n={n}, {basis})")
     ax.set_xlim(0, window)
     ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel(_("Δ mg/dL vs. meal start"))
+    ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": GLUCOSE_UNIT})
     ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
@@ -785,12 +841,12 @@ def daily_charts(times, gluc, events, basal, tdd):
     out = []
     for day in sorted(cgm_by, reverse=True):
         fig, axg = plt.subplots(figsize=(11, 2.5))
-        axg.axhspan(70, 180, color="#dff0df")
+        axg.axhspan(g(70), g(180), color="#dff0df")
         axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]], color="#0b2e6b", lw=1.0)
         axg.set_xlim(0, 24)
-        axg.set_ylim(40, 470)
+        axg.set_ylim(g(40), g(470))
         axg.set_xticks(range(0, 25, 3))
-        axg.set_yticks([70, 180, 300])
+        axg.set_yticks([g(70), g(180), g(300)])
         axg.tick_params(labelsize=7)
         axg.grid(axis="x", alpha=.15)
         axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color="#1a2233")
@@ -829,7 +885,7 @@ def _slots_context(by_slot):
         out.append({
             "label": SLOT_LABEL[slot], "n": agg["n"], "clean": agg["clean"],
             "cho": f"{agg['cho']:.0f}", "cr": fmt_cr(agg["cr"]), "bol": f"{agg['bol']:.1f}",
-            "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": f"{agg['d4']:+.0f}",
+            "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
             "flag": agg["flag"], "cls": agg["cls"],
         })
     return out
@@ -840,13 +896,13 @@ def _meals_context(rows):
     for row in sorted(rows, key=lambda r: r["time"]):
         cls = ""
         if not np.isnan(row["d4"]):
-            weak = (row["exc"] / row["bolus"] if row["bolus"] else 0) > LOOP_RATIO and row["d4"] > D4_WEAK
-            cls = "strong" if row["d4"] < D4_STRONG else "weak" if weak else ""
+            weak = (row["exc"] / row["bolus"] if row["bolus"] else 0) > LOOP_RATIO and row["d4"] > g(D4_WEAK)
+            cls = "strong" if row["d4"] < g(D4_STRONG) else "weak" if weak else ""
         out.append({
             "time": f"{row['time']:%d.%m %H:%M}", "label": SLOT_LABEL[row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
             "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
-            "d4": f"{row['d4']:+.0f}" if not np.isnan(row["d4"]) else "—",
+            "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
             "contam": row["contam"], "cls": cls,
         })
     return out
@@ -879,17 +935,17 @@ def _recommendations_context(meals, by_slot, window, val_at):
         met = curve_metrics(curve, grid)
         recs.append({
             "label": SLOT_LABEL[slot], "cls": agg["cls"], "headline": slot_headline(agg, met),
-            "peak": f"{met['peak']:.0f}", "peak_t": met["peak_t"],
-            "nadir": f"{met['nadir']:.0f}", "nadir_t": met["nadir_t"],
-            "d4": f"{agg['d4']:+.0f}", "loop": f"{agg['exc']:+.2f}",
+            "peak": fmt_glucose(met["peak"]), "peak_t": met["peak_t"],
+            "nadir": fmt_glucose(met["nadir"]), "nadir_t": met["nadir_t"],
+            "d4": fmt_delta(agg["d4"]), "loop": f"{agg['exc']:+.2f}",
             "cr": fmt_cr(agg["cr"]), "cre": fmt_cr(agg["cre"]),
             "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
         })
         if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):
             example, example_exc = ({"label": SLOT_LABEL[slot], "cho": f"{agg['cho']:.0f}",
                                      "bol": f"{agg['bol']:.1f}", "loop": f"{agg['exc']:.1f}",
-                                     "cre": fmt_cr(agg["cre"]), "d4": f"{agg['d4']:+.0f}",
-                                     "underdosed": agg["d4"] > D4_WEAK}, agg["exc"])
+                                     "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
+                                     "underdosed": agg["d4"] > g(D4_WEAK)}, agg["exc"])
     return recs, example
 
 
@@ -909,18 +965,21 @@ def build_context(base, window, wlab, daily=False):
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
     recs, cr_example = _recommendations_context(meals, by_slot, window, val_at)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
-    tir_bands = [("Very High &gt;250", met["tar2"], "#b23b3b"),
-                 ("High 181–250", met["tar1"], "#e0913a"),
-                 ("Target 70–180", met["tir"], "#3a9b46"),
-                 ("Low 54–69", met["tbr1"], "#c0392b"),
-                 ("Very Low &lt;54", met["tbr2"], "#7d1f1f")]
+    tir_bands = [(_("Very High &gt;%(v)s") % {"v": fmt_glucose(g(250))}, met["tar2"], "#b23b3b"),
+                 (_("High %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(181)), "hi": fmt_glucose(g(250))},
+                  met["tar1"], "#e0913a"),
+                 (_("Target %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(70)), "hi": fmt_glucose(g(180))},
+                  met["tir"], "#3a9b46"),
+                 (_("Low %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(54)), "hi": fmt_glucose(g(69))},
+                  met["tbr1"], "#c0392b"),
+                 (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
 
     return {
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
         "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
         "version": tool_version(),
         "days": f"{met['days']:.0f}", "device": f"{device} · Auto Mode",
-        "wear": f"{met['wear']:.0f}", "mean": f"{met['mean']:.0f}", "gmi": f"{met['gmi']:.1f}",
+        "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in tir_bands],
@@ -938,7 +997,9 @@ def build_context(base, window, wlab, daily=False):
         # so that nights with a mean of 0.00 (fully suspended) are also captured
         # correctly -- a factor would be undefined there.
         "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
-        "wlab": wlab,
+        "wlab": wlab, "unit": GLUCOSE_UNIT,
+        "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
+        "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),
     }
 
 

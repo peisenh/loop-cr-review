@@ -1,14 +1,14 @@
-# data/ — eigene Exporte (nicht im Repo)
+# data/ — your own exports (not in the repo)
 
-Ablageort für die **eigenen** entpackten Glooko-/CamAPS-Exporte.
+Storage location for your **own** unpacked Glooko/CamAPS exports.
 
-**Datenschutz:** Der Inhalt dieses Ordners ist per `.gitignore` ausgenommen — echte
-CGM-/Pumpendaten landen also **nicht** im Repository und werden nicht committet. Nur diese
-`README.md` und die `.gitignore` sind versioniert.
+**Privacy:** the contents of this folder are excluded via `.gitignore` — real
+CGM/pump data therefore does **not** end up in the repository and is not committed.
+Only this `README.md` and the `.gitignore` are versioned.
 
-## Benutzung
+## Usage
 
-Export-ZIP hier entpacken, z. B.:
+Unpack an export ZIP here, e.g.:
 
 ```
 data/
@@ -20,11 +20,11 @@ data/
         └── basal_data_1.csv
 ```
 
-Dann aus dem Projektwurzel-Verzeichnis:
+Then, from the project root:
 
 ```bash
 python3 loop_cr_review.py data/2026-jul-4w
 ```
 
-Zum reinen Ausprobieren ohne eigene Daten gibt es den synthetischen Beispiel-Export unter
-[`../example-data/`](../example-data/).
+To just try it out without your own data, there is a synthetic example export
+under [`../example-data/`](../example-data/).
