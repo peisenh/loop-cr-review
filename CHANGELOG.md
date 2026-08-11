@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.6.0] - 2026-08-11
 ### Added
 - Automatic locale detection for the export format: dates `dd.mm.yyyy`,
   `dd/mm/yyyy` and `yyyy-mm-dd`, and both comma and dot decimal separators are
@@ -205,7 +207,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/peisenh/loop-cr-review/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/peisenh/loop-cr-review/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/peisenh/loop-cr-review/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/peisenh/loop-cr-review/compare/v0.5.0...v0.5.1
