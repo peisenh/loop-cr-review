@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.6.2] - 2026-08-12
 ### Fixed
 - A slot that is on average too weak but contains a single hypo rescue no longer
   shows the self-contradictory "too weak → tighten ⚠︎ (likely too strong)". Such a
@@ -232,7 +234,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/peisenh/loop-cr-review/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/peisenh/loop-cr-review/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/peisenh/loop-cr-review/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/peisenh/loop-cr-review/compare/v0.5.2...v0.5.3
