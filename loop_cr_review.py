@@ -554,24 +554,28 @@ def aggregate_slot(slot_rows):
         flag, cls = _("too strong → loosen"), "strong"
     else:
         flag, cls = _("plausibly adequate"), "ok"
-    # A hypo rescue in the window means the meal caused a treatment-requiring low.
-    # When the verdict is not already "too strong", the rescue carbs lift Δ and mask
-    # it, so the verdict is likely understated → say so. When it is already "too
-    # strong", just note that a hypo was actually treated (clinically more urgent
-    # than "too strong" without a treated low), without repeating the verdict.
+    # A hypo rescue means an individual meal went low enough to need treatment.
+    # How that reflects on the slot depends on the verdict and on how many meals
+    # are affected — a single rescue among many meals is scatter, not a systematic
+    # "too strong". "n" here is the number of meals in the slot.
     if rescues:
+        n = len(slot_rows)
+        systematic = rescues >= max(2, n / 4)   # a relevant share (>=25%), not a one-off
         if cls == "strong":
             flag += _(" ⚠︎ (hypo treated)")
-        elif cls == "weak":
-            flag += _(" ⚠︎ (a single hypo despite an on-average too-weak CR — mixed, "
-                      "check meals individually)")
-        else:
+        elif cls == "ok" and systematic:
+            # the balanced median is propped up by the rescue carbs
             flag += _(" ⚠︎ (hypo rescue — likely too strong)")
+        else:
+            # weak, or ok with only isolated rescues: a mixed picture, not "too strong"
+            flag += _(" ⚠︎ (isolated hypo(s) — mixed, check meals individually)")
+    else:
+        systematic = False
     if low_confidence:
         flag += _(" ⚠︎ (few clean meals)")
     return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
             "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls,
-            "rescues": rescues, "low_confidence": low_confidence}
+            "rescues": rescues, "systematic": systematic, "low_confidence": low_confidence}
 
 
 def slot_median_curve(meals, slot, window, val_at):
@@ -655,6 +659,37 @@ def _weak_levers(agg, window):
     return out
 
 
+def _hypo_caution(agg, met, curve_hypo):
+    """Caution lever for a hypo in the window, worded to match the slot verdict so
+    it never contradicts the dose direction. Fires either on a deep median-curve
+    nadir (curve_hypo) or on a documented rescue. When only a rescue is present
+    (the median curve itself doesn't dip low), the text refers to the treated
+    low rather than the median nadir value, which would understate it.
+      - no rescue (curve hypo only) -> preventive "secure the hypo window first"
+      - rescue + too strong / systematic -> a treated hypo, reduce the dose here
+      - rescue + otherwise (weak / isolated-in-ok) -> a treated hypo on one meal,
+        check that meal rather than tightening the whole slot.
+    """
+    base = {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}
+    if not agg.get("rescues"):
+        return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
+                                       "→ secure the hypo window first") % base)
+    reduce_dose = agg["cls"] == "strong" or agg.get("systematic")
+    if curve_hypo:
+        if reduce_dose:
+            return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo "
+                                           "occurred and was treated; reduce the dose here") % base)
+        return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred "
+                                       "and was treated on one meal; check that meal, do not tighten "
+                                       "the whole slot") % base)
+    # rescue only, median curve stays out of the hypo range
+    if reduce_dose:
+        return (_("Caution"), "obs", _("a hypo occurred and was treated in the window; "
+                                       "reduce the dose here"))
+    return (_("Caution"), "obs", _("a hypo occurred and was treated on one meal; check that "
+                                   "meal, do not tighten the whole slot"))
+
+
 def slot_levers(agg, met, window):
     """Candidate levers (tag, CSS class, text) from verdict + curve shape."""
     levers = []
@@ -673,27 +708,31 @@ def slot_levers(agg, met, window):
     elif late_rise:
         levers.append((_("Observe"), "obs", _("slight late re-rise → possibly fat/protein or "
                                                 "basal rate in this window; just keep an eye on it")))
-    if met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE:
-        if agg.get("rescues"):
-            levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo "
-                                                   "occurred and was treated; reduce the dose here")
-                           % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
-        else:
-            levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
-                                                   "→ secure the hypo window first")
-                           % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
-    has_sea = any(c == "sea" for _, c, _ in levers)
+    curve_hypo = met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE
+    if curve_hypo or agg.get("rescues"):
+        levers.append(_hypo_caution(agg, met, curve_hypo))
     has_hypo = met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE
-    if agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers) and not has_hypo:
-        if has_sea:
-            levers.append((_("Reference"), "obs", _("dose fits — leave as is; for timing see the "
-                                                     "pre-bolus note above")))
-        else:
-            levers.append((_("Reference"), "obs", _("dose & timing fit — leave as is; "
-                                                     "serves as a comparison for the other slots")))
+    if (agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers)
+            and not has_hypo and not agg.get("systematic")):
+        levers.append(_reference_lever(agg, levers))
     if not levers:
         levers.append(("—", "obs", _("no notable shape")))
     return levers
+
+
+def _reference_lever(agg, levers):
+    """Reference lever for an otherwise adequate slot, in three tiers by how many
+    meals needed a hypo rescue (same >=25% "systematic" bar as the verdict):
+    none -> "leave as is"; isolated -> point at the one low meal; systematic is
+    already excluded by the caller (the verdict says "too strong")."""
+    if agg.get("rescues"):
+        return (_("Reference"), "obs", _("CR on average fits, but a meal went low "
+                                         "(hypo rescue) — check that one, do not tighten"))
+    if any(c == "sea" for _, c, _ in levers):
+        return (_("Reference"), "obs", _("dose fits — leave as is; for timing see the "
+                                         "pre-bolus note above"))
+    return (_("Reference"), "obs", _("dose & timing fit — leave as is; "
+                                     "serves as a comparison for the other slots"))
 
 
 def slot_headline(agg, met):

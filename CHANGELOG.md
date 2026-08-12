@@ -8,6 +8,30 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Fixed
+- Hypo rescues in an otherwise adequate slot are now handled in three tiers by
+  what share of the slot's meals needed a rescue, so the verdict and the levers
+  always agree. No rescue → "dose fits — leave as is" (a clean reference slot).
+  Isolated rescues (below 25% of the meals) → "isolated hypo(s) — mixed, check
+  meals individually", with a lever that says the CR fits on average but points at
+  the low meal rather than tightening. A systematic share (≥25%, and at least two)
+  → "likely too strong" and no reassuring reference lever. This removes the earlier
+  contradictions where a single rescue among many meals produced "too strong" (even
+  "too weak → tighten ⚠︎ likely too strong"), or "leave as is" appeared next to a
+  hypo-rescue flag.
+- The hypo caution lever no longer contradicts the dose direction of the verdict.
+  Its "reduce the dose here" wording only appears when the slot is actually too
+  strong (or the rescues are systematic); for a slot that is on average too weak
+  with a single treated hypo it now reads "a hypo was treated on one meal; check
+  that meal, do not tighten the whole slot", so "too weak → tighten" and the
+  caution no longer point in opposite directions.
+- The hypo caution line now appears whenever a rescue was recorded, not only when
+  the slot's median curve itself dips into the hypo range. Previously two slots
+  could both carry "hypo treated" in the verdict while only the one with a deep
+  median nadir also showed a caution line. When only the rescue signals the low
+  (the median curve stays above the hypo threshold), the caution refers to the
+  treated low in the window instead of quoting the median nadir value, which would
+  understate it.
 
 ## [0.6.2] - 2026-08-12
 ### Fixed

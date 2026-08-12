@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-12 12:45+0000\n"
+"POT-Creation-Date: 2026-08-12 19:08+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language-Team: en\n"
@@ -44,48 +44,45 @@ msgstr "too strong → loosen"
 msgid "plausibly adequate"
 msgstr "plausibly adequate"
 
-#: loop_cr_review.py:564
+#: loop_cr_review.py:565
 msgid " ⚠︎ (hypo treated)"
 msgstr " ⚠︎ (hypo treated)"
 
-#: loop_cr_review.py:566
-msgid ""
-" ⚠︎ (a single hypo despite an on-average too-weak CR — mixed, check meals "
-"individually)"
-msgstr ""
-" ⚠︎ (a single hypo despite an on-average too-weak CR — mixed, check meals "
-"individually)"
-
-#: loop_cr_review.py:569
+#: loop_cr_review.py:568
 msgid " ⚠︎ (hypo rescue — likely too strong)"
 msgstr " ⚠︎ (hypo rescue — likely too strong)"
 
 #: loop_cr_review.py:571
+msgid " ⚠︎ (isolated hypo(s) — mixed, check meals individually)"
+msgstr " ⚠︎ (isolated hypo(s) — mixed, check meals individually)"
+
+#: loop_cr_review.py:575
 msgid " ⚠︎ (few clean meals)"
 msgstr " ⚠︎ (few clean meals)"
 
-#: loop_cr_review.py:620
+#: loop_cr_review.py:624
 msgid "rises and then falls to low values"
 msgstr "rises and then falls to low values"
 
-#: loop_cr_review.py:622 loop_cr_review.py:710
+#: loop_cr_review.py:626 loop_cr_review.py:749
 msgid "climbs and does not return to baseline"
 msgstr "climbs and does not return to baseline"
 
-#: loop_cr_review.py:624
+#: loop_cr_review.py:628
 msgid "falls clearly below baseline"
 msgstr "falls clearly below baseline"
 
-#: loop_cr_review.py:625 loop_cr_review.py:715
+#: loop_cr_review.py:629 loop_cr_review.py:754
 msgid "returns close to baseline (balanced)"
 msgstr "returns close to baseline (balanced)"
 
-#: loop_cr_review.py:641 loop_cr_review.py:651 loop_cr_review.py:678
-#: loop_cr_review.py:682
+#: loop_cr_review.py:645 loop_cr_review.py:655 loop_cr_review.py:675
+#: loop_cr_review.py:680 loop_cr_review.py:682 loop_cr_review.py:687
+#: loop_cr_review.py:689
 msgid "Caution"
 msgstr "Caution"
 
-#: loop_cr_review.py:642
+#: loop_cr_review.py:646
 msgid ""
 "BG clearly elevated at the end of the window, but the loop rather throttled "
 "(contradictory signal) → possibly an outlier/small sample size rather than a"
@@ -95,16 +92,16 @@ msgstr ""
 "(contradictory signal) → possibly an outlier/small sample size rather than a"
 " CR problem; check individual meals before tightening"
 
-#: loop_cr_review.py:645 loop_cr_review.py:667
+#: loop_cr_review.py:649 loop_cr_review.py:702
 msgid "Dose"
 msgstr "Dose"
 
-#: loop_cr_review.py:646
+#: loop_cr_review.py:650
 #, python-format
 msgid "underdosed → tighten CR, rough direction CR_eff %(cre)s"
 msgstr "underdosed → tighten CR, rough direction CR_eff %(cre)s"
 
-#: loop_cr_review.py:652
+#: loop_cr_review.py:656
 #, python-format
 msgid ""
 "Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely on "
@@ -115,51 +112,12 @@ msgstr ""
 "the strong loop extra basal — the loop caught the too-weak CR. Before "
 "tightening, check individual meals and contamination"
 
-#: loop_cr_review.py:662
-msgid "Pre-bolus"
-msgstr "Pre-bolus"
+#: loop_cr_review.py:675
+#, python-format
+msgid "nadir ~%(n).0f %(u)s around %(t)d min → secure the hypo window first"
+msgstr "nadir ~%(n).0f %(u)s around %(t)d min → secure the hypo window first"
 
-#: loop_cr_review.py:662
-msgid ""
-"early high peak → try a longer bolus-meal interval (caps the spike without "
-"more dose)"
-msgstr ""
-"early high peak → try a longer bolus-meal interval (caps the spike without "
-"more dose)"
-
-#: loop_cr_review.py:667
-msgid ""
-"overdosed/drop → rather reduce the dose of this meal; consider pre-bolus and"
-" dose together"
-msgstr ""
-"overdosed/drop → rather reduce the dose of this meal; consider pre-bolus and"
-" dose together"
-
-#: loop_cr_review.py:671
-msgid "Fat/protein"
-msgstr "Fat/protein"
-
-#: loop_cr_review.py:671
-msgid ""
-"monotonic late rise (no turning point) → check fat/protein; possibly "
-"delayed/dual bolus instead of only tightening"
-msgstr ""
-"monotonic late rise (no turning point) → check fat/protein; possibly "
-"delayed/dual bolus instead of only tightening"
-
-#: loop_cr_review.py:674
-msgid "Observe"
-msgstr "Observe"
-
-#: loop_cr_review.py:674
-msgid ""
-"slight late re-rise → possibly fat/protein or basal rate in this window; "
-"just keep an eye on it"
-msgstr ""
-"slight late re-rise → possibly fat/protein or basal rate in this window; "
-"just keep an eye on it"
-
-#: loop_cr_review.py:678
+#: loop_cr_review.py:680
 #, python-format
 msgid ""
 "nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; "
@@ -170,48 +128,118 @@ msgstr ""
 
 #: loop_cr_review.py:682
 #, python-format
-msgid "nadir ~%(n).0f %(u)s around %(t)d min → secure the hypo window first"
-msgstr "nadir ~%(n).0f %(u)s around %(t)d min → secure the hypo window first"
+msgid ""
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated on "
+"one meal; check that meal, do not tighten the whole slot"
+msgstr ""
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated on "
+"one meal; check that meal, do not tighten the whole slot"
 
-#: loop_cr_review.py:689 loop_cr_review.py:692
-msgid "Reference"
-msgstr "Reference"
+#: loop_cr_review.py:687
+#, python-format
+msgid "a hypo occurred and was treated in the window; reduce the dose here"
+msgstr "a hypo occurred and was treated in the window; reduce the dose here"
 
 #: loop_cr_review.py:689
-msgid "dose fits — leave as is; for timing see the pre-bolus note above"
-msgstr "dose fits — leave as is; for timing see the pre-bolus note above"
-
-#: loop_cr_review.py:692
+#, python-format
 msgid ""
-"dose & timing fit — leave as is; serves as a comparison for the other slots"
+"a hypo occurred and was treated on one meal; check that meal, do not tighten"
+" the whole slot"
 msgstr ""
-"dose & timing fit — leave as is; serves as a comparison for the other slots"
+"a hypo occurred and was treated on one meal; check that meal, do not tighten"
+" the whole slot"
 
-#: loop_cr_review.py:695
+#: loop_cr_review.py:697
+msgid "Pre-bolus"
+msgstr "Pre-bolus"
+
+#: loop_cr_review.py:697
+msgid ""
+"early high peak → try a longer bolus-meal interval (caps the spike without "
+"more dose)"
+msgstr ""
+"early high peak → try a longer bolus-meal interval (caps the spike without "
+"more dose)"
+
+#: loop_cr_review.py:702
+msgid ""
+"overdosed/drop → rather reduce the dose of this meal; consider pre-bolus and"
+" dose together"
+msgstr ""
+"overdosed/drop → rather reduce the dose of this meal; consider pre-bolus and"
+" dose together"
+
+#: loop_cr_review.py:706
+msgid "Fat/protein"
+msgstr "Fat/protein"
+
+#: loop_cr_review.py:706
+msgid ""
+"monotonic late rise (no turning point) → check fat/protein; possibly "
+"delayed/dual bolus instead of only tightening"
+msgstr ""
+"monotonic late rise (no turning point) → check fat/protein; possibly "
+"delayed/dual bolus instead of only tightening"
+
+#: loop_cr_review.py:709
+msgid "Observe"
+msgstr "Observe"
+
+#: loop_cr_review.py:709
+msgid ""
+"slight late re-rise → possibly fat/protein or basal rate in this window; "
+"just keep an eye on it"
+msgstr ""
+"slight late re-rise → possibly fat/protein or basal rate in this window; "
+"just keep an eye on it"
+
+#: loop_cr_review.py:719
 msgid "no notable shape"
 msgstr "no notable shape"
 
-#: loop_cr_review.py:705
+#: loop_cr_review.py:729 loop_cr_review.py:732 loop_cr_review.py:734
+msgid "Reference"
+msgstr "Reference"
+
+#: loop_cr_review.py:729
+msgid ""
+"CR on average fits, but a meal went low (hypo rescue) — check that one, do "
+"not tighten"
+msgstr ""
+"CR on average fits, but a meal went low (hypo rescue) — check that one, do "
+"not tighten"
+
+#: loop_cr_review.py:732
+msgid "dose fits — leave as is; for timing see the pre-bolus note above"
+msgstr "dose fits — leave as is; for timing see the pre-bolus note above"
+
+#: loop_cr_review.py:734
+msgid ""
+"dose & timing fit — leave as is; serves as a comparison for the other slots"
+msgstr ""
+"dose & timing fit — leave as is; serves as a comparison for the other slots"
+
+#: loop_cr_review.py:744
 msgid "high peak, then drop below baseline"
 msgstr "high peak, then drop below baseline"
 
-#: loop_cr_review.py:706
+#: loop_cr_review.py:745
 msgid "falls below baseline"
 msgstr "falls below baseline"
 
-#: loop_cr_review.py:708
+#: loop_cr_review.py:747
 msgid "returns close to baseline, loop throttles noticeably"
 msgstr "returns close to baseline, loop throttles noticeably"
 
-#: loop_cr_review.py:712
+#: loop_cr_review.py:751
 msgid "slight late rise, but net balanced"
 msgstr "slight late rise, but net balanced"
 
-#: loop_cr_review.py:714
+#: loop_cr_review.py:753
 msgid "early peak, then returns cleanly"
 msgstr "early peak, then returns cleanly"
 
-#: loop_cr_review.py:733
+#: loop_cr_review.py:772
 #, python-format
 msgid ""
 "• Derived CR = CHO/bolus; no slot deviates notably from the median "
@@ -220,15 +248,15 @@ msgstr ""
 "• Derived CR = CHO/bolus; no slot deviates notably from the median "
 "(1:%(m).1f).<br>"
 
-#: loop_cr_review.py:737
+#: loop_cr_review.py:776
 msgid "tighter"
 msgstr "tighter"
 
-#: loop_cr_review.py:737
+#: loop_cr_review.py:776
 msgid "looser"
 msgstr "looser"
 
-#: loop_cr_review.py:739
+#: loop_cr_review.py:778
 msgid ""
 "elevated pre-meal BG → correction likely blended in by the calculator, "
 "derived CR underestimates the programmed ratio"
@@ -236,7 +264,7 @@ msgstr ""
 "elevated pre-meal BG → correction likely blended in by the calculator, "
 "derived CR underestimates the programmed ratio"
 
-#: loop_cr_review.py:742
+#: loop_cr_review.py:781
 msgid ""
 "pre-meal BG not clearly elevated → rather a genuinely different programmed "
 "ratio than a pure correction"
@@ -244,7 +272,7 @@ msgstr ""
 "pre-meal BG not clearly elevated → rather a genuinely different programmed "
 "ratio than a pure correction"
 
-#: loop_cr_review.py:744
+#: loop_cr_review.py:783
 #, python-format
 msgid ""
 "%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-meal "
@@ -253,7 +281,7 @@ msgstr ""
 "%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-meal "
 "BG ~%(bg).0f %(u)s – %(hint)s"
 
-#: loop_cr_review.py:748
+#: loop_cr_review.py:787
 msgid ""
 "• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
 "deviations: "
@@ -261,7 +289,7 @@ msgstr ""
 "• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
 "deviations: "
 
-#: loop_cr_review.py:749
+#: loop_cr_review.py:788
 msgid ""
 ". Clarification (programmed ratio vs. correction factor vs. timing) by the "
 "care team.<br>"
@@ -269,82 +297,82 @@ msgstr ""
 ". Clarification (programmed ratio vs. correction factor vs. timing) by the "
 "care team.<br>"
 
-#: loop_cr_review.py:797 loop_cr_review.py:831
+#: loop_cr_review.py:836 loop_cr_review.py:870
 msgid "Minutes after meal"
 msgstr "Minutes after meal"
 
-#: loop_cr_review.py:832
+#: loop_cr_review.py:871
 #, python-format
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s vs. meal start"
 
-#: loop_cr_review.py:839
+#: loop_cr_review.py:878
 msgid "Monday"
 msgstr "Monday"
 
-#: loop_cr_review.py:839
+#: loop_cr_review.py:878
 msgid "Tuesday"
 msgstr "Tuesday"
 
-#: loop_cr_review.py:839
+#: loop_cr_review.py:878
 msgid "Wednesday"
 msgstr "Wednesday"
 
-#: loop_cr_review.py:839
+#: loop_cr_review.py:878
 msgid "Thursday"
 msgstr "Thursday"
 
-#: loop_cr_review.py:840
+#: loop_cr_review.py:879
 msgid "Friday"
 msgstr "Friday"
 
-#: loop_cr_review.py:840
+#: loop_cr_review.py:879
 msgid "Saturday"
 msgstr "Saturday"
 
-#: loop_cr_review.py:840
+#: loop_cr_review.py:879
 msgid "Sunday"
 msgstr "Sunday"
 
-#: loop_cr_review.py:919
+#: loop_cr_review.py:958
 #, python-format
 msgid "%(label)s = everything outside the other windows"
 msgstr "%(label)s = everything outside the other windows"
 
-#: loop_cr_review.py:934
+#: loop_cr_review.py:973
 msgid " ⚠︎ (hypo — secure first)"
 msgstr " ⚠︎ (hypo — secure first)"
 
-#: loop_cr_review.py:979
+#: loop_cr_review.py:1018
 msgid "Too few meals per slot for a robust shape description."
 msgstr "Too few meals per slot for a robust shape description."
 
-#: loop_cr_review.py:1014
+#: loop_cr_review.py:1053
 #, python-format
 msgid "Very High &gt;%(v)s"
 msgstr "Very High &gt;%(v)s"
 
-#: loop_cr_review.py:1015
+#: loop_cr_review.py:1054
 #, python-format
 msgid "High %(lo)s–%(hi)s"
 msgstr "High %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1017
+#: loop_cr_review.py:1056
 #, python-format
 msgid "Target %(lo)s–%(hi)s"
 msgstr "Target %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1019
+#: loop_cr_review.py:1058
 #, python-format
 msgid "Low %(lo)s–%(hi)s"
 msgstr "Low %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1021
+#: loop_cr_review.py:1060
 #, python-format
 msgid "Very Low &lt;%(v)s"
 msgstr "Very Low &lt;%(v)s"
 
-#: loop_cr_review.py:1038
+#: loop_cr_review.py:1077
 msgid "device unknown"
 msgstr "device unknown"
 
