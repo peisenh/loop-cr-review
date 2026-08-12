@@ -178,10 +178,10 @@ img { width: 100%; border-radius: 8px }
     {% for m in meals %}
     <tr class="{{ m.cls }}"><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
         <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
-        <td>{{ m.d4 }}</td><td>{{ '⚠︎' if m.contam else '' }}</td></tr>
+        <td>{{ m.d4 }}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
-  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards).{% endtrans %}</div>
+  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window.{% endtrans %}</div>
 </div>
 
 <div class="card">

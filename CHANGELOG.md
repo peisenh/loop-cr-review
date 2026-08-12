@@ -8,6 +8,21 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Fixed
+- Hypo rescues are no longer invisible to the analysis. Small carb entries below
+  the meal threshold (a few grams, typically no bolus, at low glucose) used to be
+  dropped entirely, so a meal that caused a treated hypo looked clean and could be
+  rated "adequate". Such entries are now read as minors: any minor in a meal's
+  postprandial window marks it contaminated, and one with no bolus at glucose
+  below the hypo threshold is treated as a hypo rescue.
+- A hypo rescue now shows on the slot verdict ("hypo treated" when the slot is
+  already "too strong", otherwise "hypo rescue — likely too strong"), the per-meal
+  table distinguishes a rescue (⚠︎ H) from plain contamination (⚠︎), and the nadir
+  caution reads as an actually treated hypo instead of a mere "secure the window"
+  hint when a rescue is present.
+- Resolved a safety-relevant contradiction where a slot could read "adequate" and
+  "dose fits — leave as is" next to a hypo warning: the reassuring reference lever
+  is now suppressed whenever a hypo is present in the window.
 
 ## [0.6.0] - 2026-08-11
 ### Added

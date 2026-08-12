@@ -155,6 +155,7 @@ PEAK_EARLY = 75            # min: peak before this time counts as "early"
 PEAK_RISE_HIGH = 55        # mg/dL rise above start: "high peak"
 NADIR_LOW = 85             # mg/dL: nadir below this = notable
 NADIR_LATE = 120           # min: nadir after this time = late (insulin tail)
+HYPO_BG = 70               # mg/dL: glucose below this = hypo (rescue-carb context)
 
 # --- glucose unit -----------------------------------------------------------
 # All glucose thresholds above are defined in mg/dL. Exports come in either
@@ -337,7 +338,13 @@ def read_cgm(base):
 
 
 def read_meals(base):
-    """-> (meals[list], pump). Meal = merged boluses >= MEAL_MIN_CHO g with bolus."""
+    """-> (meals, minors, pump).
+
+    meals  = merged carb entries >= MEAL_MIN_CHO g with a bolus (the analysed meals).
+    minors = merged carb entries below that bar (small snacks / hypo rescues); kept
+             so analyze_meals() can flag contamination and hypo rescues that would
+             otherwise be invisible.
+    """
     raw, pump = [], ""
     for path in numbered_csvs(base / "Insulin data", "bolus_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -362,7 +369,8 @@ def read_meals(base):
         else:
             merged.append(dict(meal))
     meals = [m for m in merged if m["cho"] >= MEAL_MIN_CHO and m["bolus"] > 0]
-    return meals, pump
+    minors = [m for m in merged if m["cho"] < MEAL_MIN_CHO or m["bolus"] <= 0]
+    return meals, minors, pump
 
 
 def read_tdd(base):
@@ -479,10 +487,26 @@ def make_glucose_lookup(times, gluc):
     return val_at
 
 
-def analyze_meals(meals, basal, window, val_at):
+def _scan_minors(start, window, minors, val_at):
+    """Scan small carb entries in a meal's window -> (contaminated, hypo_rescue)."""
+    contam = hypo = False
+    for minor in minors:
+        dt = (minor["time"] - start).total_seconds()
+        if 0 < dt <= window * 60:
+            contam = True
+            g_now = val_at(minor["time"], 0)
+            if minor["bolus"] <= 0 and not np.isnan(g_now) and g_now < g(HYPO_BG):
+                hypo = True
+    return contam, hypo
+
+
+def analyze_meals(meals, minors, basal, window, val_at):
     """Per meal: loop extra basal in the window, CR_eff, return Δ, contamination.
 
     basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) from read_basal_timeline.
+    minors: small carb entries (snacks / hypo rescues) below the meal bar. A minor
+    inside a meal's window contaminates it; a minor with no bolus at low glucose is
+    treated as a hypo rescue, which additionally sets a hypo flag on the meal.
     """
     rate, t0, minutes, fasting = basal[:4]
     meal_times = [m["time"] for m in meals]
@@ -494,6 +518,8 @@ def analyze_meals(meals, basal, window, val_at):
             continue
         contam = any(0 < (o - start).total_seconds() <= window * 60
                      for o in meal_times if o != start)
+        minor_contam, hypo_rescue = _scan_minors(start, window, minors, val_at)
+        contam = contam or minor_contam
         excess = float(np.sum(rate[i0:i0 + window] - fasting) / 60.0)
         pre, post = val_at(start, 0), val_at(start, window)
         total = meal["bolus"] + excess
@@ -503,7 +529,7 @@ def analyze_meals(meals, basal, window, val_at):
             "cr": meal["cho"] / meal["bolus"], "exc": excess,
             "cr_eff": meal["cho"] / total if total > 0 else np.nan,
             "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
-            "contam": contam,
+            "contam": contam, "hypo_rescue": hypo_rescue,
         })
     return rows
 
@@ -520,6 +546,7 @@ def aggregate_slot(slot_rows):
         return float(np.nanmedian([r[key] for r in use if not np.isnan(r[key])]))
 
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
+    rescues = sum(1 for r in slot_rows if r.get("hypo_rescue"))
     ratio = exc / bol if bol else 0
     if ratio > LOOP_RATIO or d4 > g(D4_HIGH):
         flag, cls = _("too weak → tighten"), "weak"
@@ -527,11 +554,19 @@ def aggregate_slot(slot_rows):
         flag, cls = _("too strong → loosen"), "strong"
     else:
         flag, cls = _("plausibly adequate"), "ok"
+    # A hypo rescue in the window means the meal caused a treatment-requiring low.
+    # When the verdict is not already "too strong", the rescue carbs lift Δ and mask
+    # it, so the verdict is likely understated → say so. When it is already "too
+    # strong", just note that a hypo was actually treated (clinically more urgent
+    # than "too strong" without a treated low), without repeating the verdict.
+    if rescues:
+        flag += (_(" ⚠︎ (hypo treated)") if cls == "strong"
+                 else _(" ⚠︎ (hypo rescue — likely too strong)"))
     if low_confidence:
         flag += _(" ⚠︎ (few clean meals)")
     return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
             "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls,
-            "low_confidence": low_confidence}
+            "rescues": rescues, "low_confidence": low_confidence}
 
 
 def slot_median_curve(meals, slot, window, val_at):
@@ -634,11 +669,17 @@ def slot_levers(agg, met, window):
         levers.append((_("Observe"), "obs", _("slight late re-rise → possibly fat/protein or "
                                                 "basal rate in this window; just keep an eye on it")))
     if met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE:
-        levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
-                                               "→ secure the hypo window first")
-                       % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
+        if agg.get("rescues"):
+            levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo "
+                                                   "occurred and was treated; reduce the dose here")
+                           % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
+        else:
+            levers.append((_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
+                                                   "→ secure the hypo window first")
+                           % {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}))
     has_sea = any(c == "sea" for _, c, _ in levers)
-    if agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers):
+    has_hypo = met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE
+    if agg["cls"] == "ok" and not any(c == "cr" for _, c, _ in levers) and not has_hypo:
         if has_sea:
             levers.append((_("Reference"), "obs", _("dose fits — leave as is; for timing see the "
                                                      "pre-bolus note above")))
@@ -876,7 +917,20 @@ def slot_definitions():
     return out
 
 
-def _slots_context(by_slot):
+def _slot_flag(agg, slot, meals, window, val_at):
+    """Verdict flag for a slot, adding a hypo note when a low was reached but not
+    already flagged as a rescue (rescue is the stronger, evidence-based signal)."""
+    flag = agg["flag"]
+    if agg["cls"] == "ok" and not agg.get("rescues"):
+        curve = slot_median_curve(meals, slot, window, val_at)
+        if curve is not None:
+            met = curve_metrics(curve, np.arange(0, window + 1, 10))
+            if met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE:
+                flag += _(" ⚠︎ (hypo — secure first)")
+    return flag
+
+
+def _slots_context(by_slot, meals, window, val_at):
     out = []
     for slot, _label, _start, _end in SLOTS:
         agg = aggregate_slot(by_slot.get(slot, []))
@@ -886,7 +940,7 @@ def _slots_context(by_slot):
             "label": SLOT_LABEL[slot], "n": agg["n"], "clean": agg["clean"],
             "cho": f"{agg['cho']:.0f}", "cr": fmt_cr(agg["cr"]), "bol": f"{agg['bol']:.1f}",
             "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
-            "flag": agg["flag"], "cls": agg["cls"],
+            "flag": _slot_flag(agg, slot, meals, window, val_at), "cls": agg["cls"],
         })
     return out
 
@@ -903,7 +957,8 @@ def _meals_context(rows):
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
             "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
             "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
-            "contam": row["contam"], "cls": cls,
+            "contam": row["contam"], "hypo_rescue": row.get("hypo_rescue", False),
+            "cls": cls,
         })
     return out
 
@@ -949,30 +1004,33 @@ def _recommendations_context(meals, by_slot, window, val_at):
     return recs, example
 
 
+def _tir_bands(met):
+    """Time-in-ranges band labels (unit-aware) with values and colours."""
+    return [(_("Very High &gt;%(v)s") % {"v": fmt_glucose(g(250))}, met["tar2"], "#b23b3b"),
+            (_("High %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(181)), "hi": fmt_glucose(g(250))},
+             met["tar1"], "#e0913a"),
+            (_("Target %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(70)), "hi": fmt_glucose(g(180))},
+             met["tir"], "#3a9b46"),
+            (_("Low %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(54)), "hi": fmt_glucose(g(69))},
+             met["tbr1"], "#c0392b"),
+            (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
+
+
 def build_context(base, window, wlab, daily=False):
     """Read all data, analyse, and assemble the template context."""
     times, gluc, name, sensor = read_cgm(base)
-    meals, pump = read_meals(base)
+    meals, minors, pump = read_meals(base)
     basal = read_basal_timeline(base)
     val_at = make_glucose_lookup(times, gluc)
 
     met = consensus_metrics(times, gluc)
-    rows = analyze_meals(meals, basal, window, val_at)
+    rows = analyze_meals(meals, minors, basal, window, val_at)
     by_slot = defaultdict(list)
     for row in rows:
         by_slot[row["slot"]].append(row)
-
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
     recs, cr_example = _recommendations_context(meals, by_slot, window, val_at)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
-    tir_bands = [(_("Very High &gt;%(v)s") % {"v": fmt_glucose(g(250))}, met["tar2"], "#b23b3b"),
-                 (_("High %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(181)), "hi": fmt_glucose(g(250))},
-                  met["tar1"], "#e0913a"),
-                 (_("Target %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(70)), "hi": fmt_glucose(g(180))},
-                  met["tir"], "#3a9b46"),
-                 (_("Low %(lo)s–%(hi)s") % {"lo": fmt_glucose(g(54)), "hi": fmt_glucose(g(69))},
-                  met["tbr1"], "#c0392b"),
-                 (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
 
     return {
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
@@ -982,12 +1040,13 @@ def build_context(base, window, wlab, daily=False):
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
-                       "color": col} for lab, val, col in tir_bands],
+                       "color": col} for lab, val, col in _tir_bands(met)],
         "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at, by_slot),
         "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal,
                                    read_tdd(base)) if daily else [],
-        "curve_cap": curve_cap, "slots": _slots_context(by_slot), "meals": _meals_context(rows),
+        "curve_cap": curve_cap, "slots": _slots_context(by_slot, meals, window, val_at),
+        "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
