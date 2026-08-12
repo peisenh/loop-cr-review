@@ -1,10 +1,10 @@
-"""Wird von 'git archive' (export-subst) bzw. der CI mit der echten Version befuellt.
+"""Filled with the real version by 'git archive' (export-subst) or by CI.
 
-Im normalen Checkout/Clone bleibt der Platzhalter unaufgeloest -- das ist erwartet
-und wird von tool_version() erkannt (siehe loop_cr_review.py).
+In a normal checkout/clone the placeholder stays unresolved -- that is expected
+and is handled by tool_version() (see loop_cr_review.py).
 
-Wichtig: %(describe) loest nur zu annotierten Tags auf (git tag -a ...), wie sie
-diese Projekt-Releases ohnehin verwenden. Ein rein lightweight Tag (git tag x)
-bliebe unaufgeloest -- betrifft nur ad-hoc Tags, nicht den normalen Release-Flow.
+Note: %(describe) only resolves to annotated tags (git tag -a ...), which this
+project's releases use anyway. A purely lightweight tag (git tag x) would stay
+unresolved -- this only affects ad-hoc tags, not the normal release flow.
 """
 VERSION = "$Format:%(describe)$"

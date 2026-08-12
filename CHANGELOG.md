@@ -8,6 +8,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Fixed
+- A slot that is on average too weak but contains a single hypo rescue no longer
+  shows the self-contradictory "too weak → tighten ⚠︎ (likely too strong)". Such a
+  mix (aggregate too weak, one meal went low) now reads as "a single hypo despite
+  an on-average too-weak CR — mixed, check meals individually" instead.
+
+### Changed
+- Translated the last remaining German docstring (`_version.py`) to English.
 
 ## [0.6.1] - 2026-08-12
 ### Fixed

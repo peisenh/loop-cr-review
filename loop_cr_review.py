@@ -560,8 +560,13 @@ def aggregate_slot(slot_rows):
     # strong", just note that a hypo was actually treated (clinically more urgent
     # than "too strong" without a treated low), without repeating the verdict.
     if rescues:
-        flag += (_(" ⚠︎ (hypo treated)") if cls == "strong"
-                 else _(" ⚠︎ (hypo rescue — likely too strong)"))
+        if cls == "strong":
+            flag += _(" ⚠︎ (hypo treated)")
+        elif cls == "weak":
+            flag += _(" ⚠︎ (a single hypo despite an on-average too-weak CR — mixed, "
+                      "check meals individually)")
+        else:
+            flag += _(" ⚠︎ (hypo rescue — likely too strong)")
     if low_confidence:
         flag += _(" ⚠︎ (few clean meals)")
     return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
