@@ -8,6 +8,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Fixed
+- No more "No artists with labels found to put in legend" warning when an export
+  contains no meals (e.g. only overnight data). The slot-curve charts now draw a
+  legend only when there is at least one labelled curve. The report itself was
+  always produced correctly; this only silences the cosmetic matplotlib warning.
 
 ## [0.6.3] - 2026-08-12
 ### Fixed

@@ -835,7 +835,8 @@ def slot_curves_chart(meals, window, val_at):
     ax.set_ylim(g(60), g(240))
     ax.set_xlabel(_("Minutes after meal"))
     ax.set_ylabel(GLUCOSE_UNIT)
-    ax.legend(fontsize=8)
+    if ax.get_legend_handles_labels()[1]:
+        ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
 
@@ -869,7 +870,8 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
     ax.set_xlim(0, window)
     ax.set_xlabel(_("Minutes after meal"))
     ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": GLUCOSE_UNIT})
-    ax.legend(fontsize=8)
+    if ax.get_legend_handles_labels()[1]:
+        ax.legend(fontsize=8)
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
 
