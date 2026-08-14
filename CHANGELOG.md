@@ -14,6 +14,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   legend only when there is at least one labelled curve. The report itself was
   always produced correctly; this only silences the cosmetic matplotlib warning.
 
+### Changed
+- The daily graphs are now ordered oldest-first, matching the per-meal detail
+  table, so the whole report reads chronologically top to bottom and a meal in the
+  table lines up with its day in the graphs. Previously the daily graphs were
+  newest-first while the table was oldest-first.
+
 ## [0.6.3] - 2026-08-12
 ### Fixed
 - Hypo rescues in an otherwise adequate slot are now handled in three tiers by

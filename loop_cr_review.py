@@ -926,7 +926,7 @@ def daily_charts(times, gluc, events, basal, tdd):
     for event in events:
         ev_by[event["time"].date()].append(event)
     out = []
-    for day in sorted(cgm_by, reverse=True):
+    for day in sorted(cgm_by):
         fig, axg = plt.subplots(figsize=(11, 2.5))
         axg.axhspan(g(70), g(180), color="#dff0df")
         axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]], color="#0b2e6b", lw=1.0)
