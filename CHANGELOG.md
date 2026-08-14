@@ -13,6 +13,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   contains no meals (e.g. only overnight data). The slot-curve charts now draw a
   legend only when there is at least one labelled curve. The report itself was
   always produced correctly; this only silences the cosmetic matplotlib warning.
+- Hardened the parsing of untrusted input files so malformed data fails with a
+  clear message instead of a raw traceback. A custom slots file now rejects
+  entries that are not objects and start/end values that are not whole numbers.
+  The CSV readers for meals, bolus events and the basal timeline skip rows that
+  are too short instead of raising IndexError, and an empty basal timeline aborts
+  with a clear message. Non-finite numbers (inf/-inf) are now read as nan like
+  empty cells, so a manipulated value can no longer poison a mean or crash the
+  basal duration. Autoescaping already prevented HTML in slot labels from
+  reaching the report unescaped; no change was needed there.
 
 ### Changed
 - The daily graphs are now ordered oldest-first, matching the per-meal detail

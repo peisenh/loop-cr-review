@@ -127,6 +127,9 @@ def load_slots_file(path):
         sys.exit(f"Slots-Datei '{path}': erwarte eine nicht-leere Liste von Slot-Objekten.")
     slots, seen_keys, catchall = [], set(), 0
     for i, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            sys.exit(f"Slots-Datei '{path}', Eintrag {i}: erwarte ein Objekt "
+                     "(key/label/start/end).")
         missing = [f for f in ("key", "label", "start", "end") if f not in entry]
         if missing:
             sys.exit(f"Slots-Datei '{path}', Eintrag {i}: fehlende Felder {missing}.")
@@ -134,6 +137,10 @@ def load_slots_file(path):
         if key in seen_keys:
             sys.exit(f"Slots-Datei '{path}': doppelter key '{key}'.")
         seen_keys.add(key)
+        if (not isinstance(start, int) or not isinstance(end, int)
+                or isinstance(start, bool) or isinstance(end, bool)):
+            sys.exit(f"Slots-Datei '{path}', '{key}': start/end muss eine "
+                     "ganze Zahl sein.")
         if start == -1 and end == -1:
             catchall += 1
         elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
@@ -214,7 +221,8 @@ def num(val):
     val = val.strip().strip('"')
     if val == "":
         return np.nan
-    return float(val.replace(",", ".")) if "," in val else float(val)
+    parsed = float(val.replace(",", ".")) if "," in val else float(val)
+    return parsed if np.isfinite(parsed) else np.nan
 
 
 def parse_ts(val):
@@ -354,6 +362,8 @@ def read_meals(base):
             for row in reader:
                 if not pump and len(row) >= 9 and row[8].strip():
                     pump = row[8].strip()
+                if len(row) < 6:
+                    continue
                 cho = num(row[3])
                 if not np.isnan(cho) and cho > 0:
                     ins = num(row[5])
@@ -398,6 +408,8 @@ def read_bolus_events(base):
             next(reader)
             next(reader)
             for row in reader:
+                if len(row) < 6:
+                    continue
                 cho, ins = num(row[3]), num(row[5])
                 cho = 0.0 if np.isnan(cho) else cho
                 ins = 0.0 if np.isnan(ins) else ins
@@ -415,10 +427,15 @@ def read_basal_timeline(base):
             next(reader)
             next(reader)
             for row in reader:
+                if len(row) < 5:
+                    continue
                 rate_val = num(row[4])
                 if not np.isnan(rate_val):
                     dur = num(row[2])
                     segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
+    if not segs:
+        sys.exit(f"Keine Basalraten in {base / 'Insulin data'} gefunden "
+                 "(basal_data_*.csv leer oder fehlt).")
     segs.sort()
     t0 = segs[0][0]
     minutes = int((segs[-1][0] + timedelta(minutes=segs[-1][1]) - t0).total_seconds() // 60) + 1
