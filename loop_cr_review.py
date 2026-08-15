@@ -934,7 +934,7 @@ def _day_title(day, tdd):
 
 
 def daily_charts(times, gluc, events, basal, tdd):
-    """One page-wide panel per day (CGM + all bolus/carb entries + basal + TDD), newest first."""
+    """One page-wide panel per day (CGM + all bolus/carb entries + basal + TDD), oldest first."""
     rate, t0, minutes = basal[:3]
     gmax = float(np.nanmax(rate)) or 1.0           # global basal scale, same for all days
     cgm_by, ev_by = defaultdict(list), defaultdict(list)

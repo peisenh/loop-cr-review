@@ -214,7 +214,7 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 {% if daily_days %}
-<div class="card"><h2>{% trans %}Daily overview — CGM · bolus · basal (newest first){% endtrans %}</h2>
+<div class="card"><h2>{% trans %}Daily overview — CGM · bolus · basal{% endtrans %}</h2>
   <div class="note">{% trans lo=tir_lo, hi=tir_hi, unit=unit %}Green band = target range {{ lo }}–{{ hi }} {{ unit }} · <b style="color:#0b2e6b">units</b>
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
     blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>
