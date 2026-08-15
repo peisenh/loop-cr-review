@@ -8,6 +8,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Added
+- Project logo embedded inline at the top of the HTML report (still a single self-contained file).
+
 ### Fixed
 - No more "No artists with labels found to put in legend" warning when an export
   contains no meals (e.g. only overnight data). The slot-curve charts now draw a
