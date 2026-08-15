@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- SPDX-FileCopyrightText: 2026 Peter Eisenhauer -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>loop-cr-review</title>
+<style>
+  :root { --ink:#3F454A; --muted:#5a6b82; --line:#dde3ee; --bg:#eef1f6; --blue:#1A6FC6; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 660px; margin: 0 auto; padding: 28px 20px 56px; }
+  .brand { height: 44px; width:auto; display:block; margin: 8px 0 4px; }
+  h1 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 0 0 20px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; }
+  label { display:block; font-weight:600; margin: 16px 0 6px; }
+  label.first { margin-top: 0; }
+  input[type=file], select, input[type=number], input[type=text] {
+    width:100%; padding:9px 10px; border:1px solid var(--line);
+    border-radius:9px; font-size:14px; background:#fff; color:var(--ink); }
+  .row { display:flex; gap:16px; } .row > div { flex:1; }
+  .hint { font-weight:400; color:var(--muted); font-size:12px; margin-top:4px; }
+  .check { display:flex; align-items:center; gap:8px; margin-top:16px; font-weight:600; }
+  .check input { width:auto; }
+  button { margin-top:22px; width:100%; padding:12px; border:0; border-radius:10px;
+           background:var(--blue); color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+  button:hover { background:#155aa3; }
+  .btn-sec { margin:8px 0 0; width:auto; padding:7px 12px; font-size:13px;
+             background:#eaf1fb; color:var(--blue); }
+  .btn-sec:hover { background:#dbe8fb; }
+  .disclaimer { margin:18px 0 0; padding:12px 14px; border-radius:10px;
+                background:#fff6f3; border:1px solid #f0b7a6; border-left:4px solid #c0392b;
+                font-size:13px; color:#7a2318; }
+  .disclaimer b { color:#a12626; }
+  .foot { margin-top:22px; font-size:12px; color:var(--muted); text-align:center; }
+  .foot a { color:var(--blue); text-decoration:none; }
+  fieldset { border:1px solid var(--line); border-radius:10px; margin:16px 0 0; padding:12px 14px 16px; }
+  legend { font-weight:600; font-size:13px; padding:0 6px; color:var(--muted); }
+  table.slots { width:100%; border-collapse:collapse; margin-top:8px; }
+  table.slots th { text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:0 6px 4px; }
+  table.slots td { padding:3px 6px; }
+  table.slots input { padding:7px 8px; }
+  .slot-h { width:56px; }
+  .rm { background:#fbeaea; color:#a12626; border:0; border-radius:8px; padding:7px 10px;
+        font-weight:700; cursor:pointer; width:auto; margin:0; }
+  .rm:hover { background:#f6d6d6; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="/static/logo-readme-dark.svg">
+    <img class="brand" src="/static/logo-horizontal.svg" alt="loop-cr-review">
+  </picture>
+  <h1>Loop-aware Carb-Ratio Review &middot; CR-Beurteilung aus CamAPS-FX-Daten</h1>
+
+  <form class="card" action="/report" method="post" enctype="multipart/form-data">
+    <label class="first" for="export">CamAPS/Glooko-Export (ZIP)</label>
+    <input id="export" type="file" name="export" accept=".zip" required>
+    <div class="hint">Wird nur im Arbeitsspeicher verarbeitet und danach sofort gel&ouml;scht.</div>
+
+    <div class="row">
+      <div>
+        <label for="lang">Sprache</label>
+        <select id="lang" name="lang">
+          <option value="de" selected>Deutsch</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div>
+        <label for="window_hours">Mahlzeitfenster (h)</label>
+        <input id="window_hours" type="number" name="window_hours" value="4" min="0.5" max="12" step="0.5">
+        <div class="hint">Postprandiales Fenster (Standard 4).</div>
+      </div>
+    </div>
+
+    <label class="check"><input type="checkbox" name="daily"> Tages&uuml;bersicht anh&auml;ngen</label>
+    <label class="check"><input type="checkbox" name="download"> Report als Datei herunterladen (statt anzeigen)</label>
+
+    <fieldset>
+      <legend>Slots (Tageszeit-Fenster)</legend>
+      <label class="first" for="slots_mode">Quelle</label>
+      <select id="slots_mode" name="slots_mode" onchange="slotMode(this.value)">
+        <option value="default" selected>Standard (Fr&uuml;hst&uuml;ck/Mittag/Abend)</option>
+        <option value="fields">Eigene Felder</option>
+        <option value="json">JSON-Datei</option>
+      </select>
+
+      <div id="slots-fields" class="hidden">
+        <table class="slots">
+          <thead><tr><th>Label</th><th>Start</th><th>Ende</th><th></th></tr></thead>
+          <tbody id="slot-rows"></tbody>
+        </table>
+        <button type="button" class="btn-sec" onclick="addRow()">+ Zeile</button>
+        <div class="hint">Stunden 0&ndash;24, Start &lt; Ende, keine &Uuml;berlappung.
+          Der Auffang-Slot &bdquo;Sonstige&ldquo; wird automatisch erg&auml;nzt.</div>
+      </div>
+
+      <div id="slots-json" class="hidden">
+        <label for="slots">Slots-Datei (JSON)</label>
+        <input id="slots" type="file" name="slots" accept=".json">
+      </div>
+    </fieldset>
+
+    <button type="submit">Report erstellen</button>
+
+    <div class="disclaimer">
+      <b>&#9888; Kein Medizinprodukt, keine Dosierempfehlung.</b>
+      Statistische Auswertung vorhandener CGM-/Pumpendaten als Grundlage f&uuml;r
+      Gespr&auml;che mit dem Behandlungsteam &mdash; keine Diagnose, keine Therapie&shy;entscheidung.
+    </div>
+  </form>
+
+  <div class="foot">
+    Open Source (AGPL-3.0-or-later) &middot;
+    <a href="{{ repo }}">{{ repo.replace('https://','') }}</a>
+  </div>
+</div>
+
+<script>
+  var DEFAULTS = [["Fr\u00fchst\u00fcck",5,10],["Mittag",11,15],["Abend",17,22]];
+  function row(label, s, e) {
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><input type="text" name="slot_label" value="'+label+'"></td>' +
+      '<td><input class="slot-h" type="number" name="slot_start" min="0" max="23" value="'+s+'"></td>' +
+      '<td><input class="slot-h" type="number" name="slot_end" min="1" max="24" value="'+e+'"></td>' +
+      '<td><button type="button" class="rm" onclick="this.closest(\'tr\').remove()">&times;</button></td>';
+    return tr;
+  }
+  function addRow(){ document.getElementById("slot-rows").appendChild(row("",8,10)); }
+  function fillDefaults(){
+    var b = document.getElementById("slot-rows"); b.innerHTML="";
+    DEFAULTS.forEach(function(d){ b.appendChild(row(d[0],d[1],d[2])); });
+  }
+  function slotMode(m){
+    document.getElementById("slots-fields").classList.toggle("hidden", m!=="fields");
+    document.getElementById("slots-json").classList.toggle("hidden", m!=="json");
+    if (m==="fields" && !document.getElementById("slot-rows").children.length) fillDefaults();
+  }
+</script>
+</body>
+</html>

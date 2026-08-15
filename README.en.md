@@ -97,6 +97,11 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Usage
 
+Two ways to run it — pick one: the **command line** (1) or the **homelab web
+front-end** (2).
+
+### 1 · Command line
+
 ```bash
 # unpack the Glooko export, then:
 python3 loop_cr_review.py <export_folder>            # default: 4-h window
@@ -117,6 +122,31 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `-t, --template-dir` | folder containing `report.html.j2` | `./templates` |
 
 **PDF:** open the report in a browser → Print → "Save as PDF" (cards are protected against page breaks).
+
+### 2 · Web front-end (homelab)
+
+A small Flask app offers the same analysis in the browser: upload the export
+ZIP, pick the options, get the report back. It is meant for **private LAN use in
+a homelab, not public hosting** — health data is processed in a temporary
+directory and deleted immediately (nothing is stored, nothing is logged).
+
+```bash
+# with Docker (recommended)
+cp docker-compose.example.yml docker-compose.yml   # adjust if needed
+docker compose up --build                          # http://<homelab-ip>:8000
+
+# or without Docker
+pip install -r requirements.txt -r requirements-web.txt
+python3 webapp.py                                  # http://127.0.0.1:8000
+```
+
+The form exposes the same options as the CLI — language, meal window, daily
+overview — plus a download switch and the time-of-day slots, which can be left
+at the built-in default, entered in an inline field editor, or uploaded as JSON.
+`docker-compose.example.yml` includes an optional, commented-out Traefik block
+for HTTPS + Basic-Auth if you want a reverse proxy in front; the real
+`docker-compose.yml` is gitignored so local settings stay private. The same
+**not a medical device** disclaimer applies as for the CLI.
 
 ## Example data to try it out
 
@@ -154,13 +184,19 @@ The common CamAPS export formats are detected automatically: date `dd.mm.yyyy`,
 
 ```
 loop-cr-review/
-├── loop_cr_review.py          # logic (reading, analysis, charts, context)
+├── loop_cr_review.py          # logic (reading, analysis, charts, context) + CLI
+├── webapp.py                  # optional homelab web front-end (Flask)
 ├── templates/
-│   └── report.html.j2         # presentation (Jinja2) — adjust layout/wording here
+│   ├── report.html.j2         # presentation (Jinja2) — adjust layout/wording here
+│   └── upload.html.j2         # web front-end upload form
+├── static/                    # logo assets served by the web front-end
 ├── example-data/              # synthetic example export to try it out
 ├── data/                      # your own exports (contents excluded via .gitignore)
-├── docs/                      # screenshots for the README
-├── requirements.txt
+├── docs/                      # screenshots + logo for the README
+├── Dockerfile                 # web front-end container
+├── docker-compose.example.yml # copy to docker-compose.yml (gitignored)
+├── requirements.txt           # CLI dependencies
+├── requirements-web.txt       # extra dependencies for the web front-end
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

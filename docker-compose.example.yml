@@ -1,0 +1,31 @@
+# Homelab deployment — copy to docker-compose.yml and adjust for your setup:
+#   cp docker-compose.example.yml docker-compose.yml
+# The real docker-compose.yml is gitignored so local settings stay private.
+# LAN-only; do not expose this port to the internet.
+services:
+  loop-cr-review:
+    build: .
+    image: loop-cr-review
+    container_name: loop-cr-review
+    restart: unless-stopped
+    ports:
+      - "8000:8000"          # reach at http://<homelab-ip>:8000
+
+    # --- Optional: Traefik reverse proxy (HTTPS + Basic-Auth) --------------
+    # Remove the "ports" mapping above when routing through Traefik, then
+    # uncomment the labels + network below. Note the doubled $$ in the hash.
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.loopcr.rule=Host(`loop-cr.home.lan`)"
+    #   - "traefik.http.routers.loopcr.entrypoints=websecure"
+    #   - "traefik.http.routers.loopcr.tls=true"
+    #   - "traefik.http.services.loopcr.loadbalancer.server.port=8000"
+    #   # Basic-Auth — create a hash with:  htpasswd -nbB user 'password'
+    #   - "traefik.http.routers.loopcr.middlewares=loopcr-auth"
+    #   - "traefik.http.middlewares.loopcr-auth.basicauth.users=user:$$2y$$05$$examplehashreplaceme"
+    # networks:
+    #   - proxy
+
+# networks:
+#   proxy:
+#     external: true

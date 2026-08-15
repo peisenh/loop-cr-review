@@ -97,6 +97,11 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Nutzung
 
+Zwei Wege — einer genügt: die **Kommandozeile** (1) oder das **Web-Frontend
+fürs Homelab** (2).
+
+### 1 · Kommandozeile
+
 ```bash
 # Glooko-Export entpacken, dann:
 python3 loop_cr_review.py <export_ordner>            # Default: 4-h-Fenster
@@ -117,6 +122,33 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | `-t, --template-dir` | Ordner mit `report.html.j2` | `./templates` |
 
 **PDF:** Report im Browser öffnen → Drucken → „Als PDF speichern" (Karten sind gegen Seitenumbrüche geschützt).
+
+### 2 · Web-Frontend (Homelab)
+
+Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Export-ZIP
+hochladen, Optionen wählen, Report zurückbekommen. Gedacht für den **privaten
+Betrieb im Heimnetz, nicht für öffentliches Hosting** — Gesundheitsdaten werden
+nur in einem temporären Verzeichnis verarbeitet und sofort danach gelöscht
+(nichts wird gespeichert, nichts protokolliert).
+
+```bash
+# mit Docker (empfohlen)
+cp docker-compose.example.yml docker-compose.yml   # bei Bedarf anpassen
+docker compose up --build                          # http://<homelab-ip>:8000
+
+# oder ohne Docker
+pip install -r requirements.txt -r requirements-web.txt
+python3 webapp.py                                  # http://127.0.0.1:8000
+```
+
+Das Formular bietet dieselben Optionen wie die Kommandozeile — Sprache,
+Mahlzeitfenster, Tagesübersicht — dazu einen Download-Schalter und die
+Tageszeit-Slots, wahlweise als Standard, über einen eingebauten Feld-Editor oder
+als JSON-Upload. `docker-compose.example.yml` enthält einen optionalen,
+auskommentierten Traefik-Block für HTTPS + Basic-Auth, falls du einen Reverse
+Proxy davorsetzen willst; die echte `docker-compose.yml` ist gitignored, damit
+lokale Einstellungen privat bleiben. Es gilt derselbe Hinweis **kein
+Medizinprodukt** wie für die Kommandozeile.
 
 ## Beispieldaten zum Ausprobieren
 
@@ -154,13 +186,19 @@ Erkannt werden die gängigen CamAPS-Exportformate automatisch: Datum `dd.mm.yyyy
 
 ```
 loop-cr-review/
-├── loop_cr_review.py          # Logik (Einlesen, Analyse, Charts, Context)
+├── loop_cr_review.py          # Logik (Einlesen, Analyse, Charts, Context) + CLI
+├── webapp.py                  # optionales Web-Frontend fürs Homelab (Flask)
 ├── templates/
-│   └── report.html.j2         # Darstellung (Jinja2) — Layout/Wording hier anpassen
+│   ├── report.html.j2         # Darstellung (Jinja2) — Layout/Wording hier anpassen
+│   └── upload.html.j2         # Upload-Formular des Web-Frontends
+├── static/                    # Logo-Assets fürs Web-Frontend
 ├── example-data/              # synthetischer Beispiel-Export zum Ausprobieren
 ├── data/                      # eigene Exporte (Inhalt per .gitignore ausgenommen)
-├── docs/                      # Screenshots fürs README
-├── requirements.txt
+├── docs/                      # Screenshots + Logo fürs README
+├── Dockerfile                 # Container fürs Web-Frontend
+├── docker-compose.example.yml # nach docker-compose.yml kopieren (gitignored)
+├── requirements.txt           # CLI-Abhängigkeiten
+├── requirements-web.txt       # zusätzliche Abhängigkeiten fürs Web-Frontend
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

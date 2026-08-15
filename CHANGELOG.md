@@ -10,6 +10,21 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 ### Added
 - Project logo embedded inline at the top of the HTML report (still a single self-contained file).
+- Reusable `generate_report()` entry point in `loop_cr_review.py` that returns the
+  HTML (and context) without writing files or printing, so front-ends other than
+  the CLI can drive the same analysis. The CLI is now a thin wrapper around it.
+- Optional homelab web front-end (`webapp.py`, Flask): upload a CamAPS/Glooko
+  export ZIP, pick language/window/daily and the time-of-day slots, get the HTML
+  report back. Slots can be left at the built-in default, entered as fields
+  (label/start/end, catch-all added automatically) or uploaded as JSON; an
+  optional switch downloads the report instead of showing it. Health data is
+  processed in a temporary directory and deleted immediately (ephemeral, nothing
+  stored). Intended for private LAN use, not public hosting. Ships with a
+  `Dockerfile`, `docker-compose.example.yml` (with an optional, commented-out
+  Traefik reverse-proxy block) and `requirements-web.txt`; run behind gunicorn.
+  Not installed or imported by the CLI.
+- Shared `build_slots()` validation used by both the slots JSON file and the web
+  field editor, so a single set of rules governs custom slots everywhere.
 
 ### Fixed
 - No more "No artists with labels found to put in legend" warning when an export

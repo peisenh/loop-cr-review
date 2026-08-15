@@ -111,46 +111,54 @@ MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 
 
+def build_slots(raw, source="Slots"):
+    """Validate a parsed slots list -> [(key, label, start, end), ...].
+
+    Shared by :func:`load_slots_file` and other front-ends (e.g. the web
+    form, which builds the list from input fields). ``source`` is only used
+    in error messages. Order = priority (first match wins); exactly one
+    catch-all entry with start=-1/end=-1 is required. Aborts with a clear
+    message instead of silently using wrong slots.
+    """
+    if not isinstance(raw, list) or not raw:
+        sys.exit(f"{source}: erwarte eine nicht-leere Liste von Slot-Objekten.")
+    slots, seen_keys, catchall = [], set(), 0
+    for i, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            sys.exit(f"{source}, Eintrag {i}: erwarte ein Objekt (key/label/start/end).")
+        missing = [f for f in ("key", "label", "start", "end") if f not in entry]
+        if missing:
+            sys.exit(f"{source}, Eintrag {i}: fehlende Felder {missing}.")
+        key, label, start, end = entry["key"], entry["label"], entry["start"], entry["end"]
+        if key in seen_keys:
+            sys.exit(f"{source}: doppelter key '{key}'.")
+        seen_keys.add(key)
+        if (not isinstance(start, int) or not isinstance(end, int)
+                or isinstance(start, bool) or isinstance(end, bool)):
+            sys.exit(f"{source}, '{key}': start/end muss eine ganze Zahl sein.")
+        if start == -1 and end == -1:
+            catchall += 1
+        elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
+            sys.exit(f"{source}, '{key}': start/end muss 0<=start<end<=24 "
+                     "sein (oder beide -1 fuer den Auffangbecken-Slot).")
+        slots.append((key, label, start, end))
+    if catchall != 1:
+        sys.exit(f"{source}: genau ein Auffangbecken-Eintrag (start=-1, end=-1) "
+                 f"noetig, gefunden: {catchall}.")
+    return slots
+
+
 def load_slots_file(path):
     """Load custom slot time windows from a JSON file (list of objects).
 
-    Expected: [{"key": "...", "label": "...", "start": H, "end": H}, ...],
-    order = priority (first match wins). Exactly one catch-all
-    entry with start=-1/end=-1 is required. Aborts with a clear error message
-    instead of silently using wrong slots.
+    Expected: [{"key": "...", "label": "...", "start": H, "end": H}, ...].
+    Validation is delegated to :func:`build_slots`.
     """
     try:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         sys.exit(f"Slots-Datei '{path}' nicht lesbar/kein gueltiges JSON: {exc}")
-    if not isinstance(raw, list) or not raw:
-        sys.exit(f"Slots-Datei '{path}': erwarte eine nicht-leere Liste von Slot-Objekten.")
-    slots, seen_keys, catchall = [], set(), 0
-    for i, entry in enumerate(raw):
-        if not isinstance(entry, dict):
-            sys.exit(f"Slots-Datei '{path}', Eintrag {i}: erwarte ein Objekt "
-                     "(key/label/start/end).")
-        missing = [f for f in ("key", "label", "start", "end") if f not in entry]
-        if missing:
-            sys.exit(f"Slots-Datei '{path}', Eintrag {i}: fehlende Felder {missing}.")
-        key, label, start, end = entry["key"], entry["label"], entry["start"], entry["end"]
-        if key in seen_keys:
-            sys.exit(f"Slots-Datei '{path}': doppelter key '{key}'.")
-        seen_keys.add(key)
-        if (not isinstance(start, int) or not isinstance(end, int)
-                or isinstance(start, bool) or isinstance(end, bool)):
-            sys.exit(f"Slots-Datei '{path}', '{key}': start/end muss eine "
-                     "ganze Zahl sein.")
-        if start == -1 and end == -1:
-            catchall += 1
-        elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
-            sys.exit(f"Slots-Datei '{path}', '{key}': start/end muss 0<=start<end<=24 "
-                     "sein (oder beide -1 fuer den Auffangbecken-Slot).")
-        slots.append((key, label, start, end))
-    if catchall != 1:
-        sys.exit(f"Slots-Datei '{path}': genau ein Auffangbecken-Eintrag "
-                 f"(start=-1, end=-1) noetig, gefunden: {catchall}.")
-    return slots
+    return build_slots(raw, f"Slots-Datei '{path}'")
 FASTING_HOURS = (0, 1, 2, 3, 4, 5)
 LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
 D4_WEAK, D4_STRONG = 15, -30
@@ -1156,30 +1164,47 @@ def parse_args():
     return parser.parse_args()
 
 
+def generate_report(export_dir, *, lang="de", window_hours=4.0,
+                    daily=False, slots=None, template_dir=None):
+    """Analyse an unpacked export and return (html, context).
+
+    Reusable core shared by the CLI and other front-ends (e.g. a web
+    service): no output file is written and nothing is printed, the caller
+    decides what to do with the returned HTML. Parameters mirror the CLI;
+    ``slots`` is an already-validated slots list (see :func:`load_slots_file`)
+    or ``None`` for the built-in slots, and ``template_dir`` defaults to the
+    bundled ``templates`` folder.
+    """
+    setup_i18n(lang)
+    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
+    if slots is not None:
+        SLOTS = slots
+    # Re-derive after setup_i18n so the labels go through the real translator
+    # (at import time the identity fallback froze them to the English msgids).
+    MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
+    window = int(round(window_hours * 60))
+    wlab = (f"{int(window_hours)}h" if float(window_hours).is_integer()
+            else f"{window_hours:g}h")
+    tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
+    context = build_context(Path(export_dir), window, wlab, daily)
+    return render(context, tpl_dir), context
+
+
 def main():
-    """Build and write the report."""
+    """Build and write the report (CLI wrapper around generate_report)."""
     for stream in (sys.stdout, sys.stderr):        # Windows console (cp1252) else crashes on '→'
         try:
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
     args = parse_args()
-    setup_i18n(args.lang)
-    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
-    if args.slots_file:
-        SLOTS = load_slots_file(args.slots_file)
-    # Re-derive after setup_i18n so the labels go through the real translator
-    # (at import time the identity fallback froze them to the English msgids).
-    MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
-    window = int(round(args.window_hours * 60))
+    slots = load_slots_file(args.slots_file) if args.slots_file else None
+    html, context = generate_report(
+        args.export_dir, lang=args.lang, window_hours=args.window_hours,
+        daily=args.daily, slots=slots, template_dir=args.template_dir)
+
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
             else f"{args.window_hours:g}h")
-    template_dir = (Path(args.template_dir) if args.template_dir
-                    else resource_dir() / "templates")
-
-    context = build_context(Path(args.export_dir), window, wlab, args.daily)
-    html = render(context, template_dir)
-
     slug = re.sub(r"[^a-z0-9]+", "_", context["name"].lower()).strip("_") or "patient"
     out = Path(args.out) if args.out else Path(f"{slug}_loop-cr-review_{wlab}.html")
     out.write_text(html, encoding="utf-8")
