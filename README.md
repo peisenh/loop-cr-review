@@ -97,8 +97,8 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Nutzung
 
-Zwei Wege — einer genügt: die **Kommandozeile** (1) oder das **Web-Frontend
-fürs Homelab** (2).
+Drei Wege — einer genügt: die **Kommandozeile** (1), das **Web-Frontend
+fürs Homelab** (2) oder die **Desktop-App** (3).
 
 ### 1 · Kommandozeile
 

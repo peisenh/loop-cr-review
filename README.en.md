@@ -97,8 +97,8 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Usage
 
-Two ways to run it — pick one: the **command line** (1) or the **homelab web
-front-end** (2).
+Three ways to run it — pick one: the **command line** (1), the **homelab web
+front-end** (2), or the **desktop app** (3).
 
 ### 1 · Command line
 
