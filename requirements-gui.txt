@@ -3,11 +3,10 @@
 #   pip install -r requirements-gui.txt   &&   python3 gui.py
 # (Deliberately does NOT depend on gunicorn — it can't install on Windows.)
 #
-# Runtime prerequisites (not pip-installable):
-#   Linux   — system WebKitGTK, e.g. Debian/Ubuntu:
-#             sudo apt install gir1.2-webkit2-4.1 libwebkit2gtk-4.1-0 python3-gi
-#   Windows — Microsoft Edge WebView2 runtime (present on current Windows;
-#             else install the free "Evergreen" bootstrapper from Microsoft)
+# Runtime: Qt WebEngine is bundled in the pre-built binaries.
+# For a source run you need a working Qt/PyQt6 environment
+# (provided by pywebview[qt]). No extra system packages required
+# on modern Windows or most current Linux distributions.
 -r requirements.txt
 Flask>=3.0,<4.0
 pywebview[qt]>=5.0
