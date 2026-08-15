@@ -1,11 +1,9 @@
-<p align="center">
+<h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/logo-readme-dark.svg">
     <img alt="loop-cr-review" src="docs/logo-readme-light.svg" width="440">
   </picture>
-</p>
-
-# loop-cr-review
+</h1>
 
 **🇩🇪 Deutsch** · [🇬🇧 English](README.en.md)
 
