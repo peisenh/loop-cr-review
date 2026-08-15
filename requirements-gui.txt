@@ -1,0 +1,14 @@
+# Desktop GUI build — native window (pywebview) + local WSGI server (waitress).
+# Pulls in the core deps and Flask too, so a single install covers a source run:
+#   pip install -r requirements-gui.txt   &&   python3 gui.py
+# (Deliberately does NOT depend on gunicorn — it can't install on Windows.)
+#
+# Runtime prerequisites (not pip-installable):
+#   Linux   — system WebKitGTK, e.g. Debian/Ubuntu:
+#             sudo apt install gir1.2-webkit2-4.1 libwebkit2gtk-4.1-0 python3-gi
+#   Windows — Microsoft Edge WebView2 runtime (present on current Windows;
+#             else install the free "Evergreen" bootstrapper from Microsoft)
+-r requirements.txt
+Flask>=3.0,<4.0
+pywebview[qt]>=5.0
+waitress>=3.0

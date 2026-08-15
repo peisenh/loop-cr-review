@@ -150,6 +150,23 @@ Proxy davorsetzen willst; die echte `docker-compose.yml` ist gitignored, damit
 lokale Einstellungen privat bleiben. Es gilt derselbe Hinweis **kein
 Medizinprodukt** wie für die Kommandozeile.
 
+### 3 · Desktop-App (Doppelklick)
+
+Fertige Binaries starten dasselbe Frontend in einem nativen Fenster — ohne
+Python, Docker oder Browser. Passende Datei von der Release-Seite laden und starten:
+
+- **Windows:** `loop-cr-review-gui-windows.exe`
+- **Linux:** `loop-cr-review-gui-linux`
+
+Oder aus dem Quellcode:
+
+```bash
+pip install -r requirements-gui.txt
+python3 gui.py
+```
+
+Alles läuft lokal; die Daten verlassen den Rechner nicht.
+
 ## Beispieldaten zum Ausprobieren
 
 Im Ordner [`example-data/`](example-data/) liegt ein vollständiger, **rein synthetischer**
@@ -188,6 +205,7 @@ Erkannt werden die gängigen CamAPS-Exportformate automatisch: Datum `dd.mm.yyyy
 loop-cr-review/
 ├── loop_cr_review.py          # Logik (Einlesen, Analyse, Charts, Context) + CLI
 ├── webapp.py                  # optionales Web-Frontend fürs Homelab (Flask)
+├── gui.py                     # Desktop-App (pywebview + lokaler Server)
 ├── templates/
 │   ├── report.html.j2         # Darstellung (Jinja2) — Layout/Wording hier anpassen
 │   └── upload.html.j2         # Upload-Formular des Web-Frontends
@@ -199,6 +217,7 @@ loop-cr-review/
 ├── docker-compose.example.yml # nach docker-compose.yml kopieren (gitignored)
 ├── requirements.txt           # CLI-Abhängigkeiten
 ├── requirements-web.txt       # zusätzliche Abhängigkeiten fürs Web-Frontend
+├── requirements-gui.txt       # zusätzliche Abhängigkeiten für die Desktop-App
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

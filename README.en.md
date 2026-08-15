@@ -148,6 +148,23 @@ for HTTPS + Basic-Auth if you want a reverse proxy in front; the real
 `docker-compose.yml` is gitignored so local settings stay private. The same
 **not a medical device** disclaimer applies as for the CLI.
 
+### 3 · Desktop app (double-click)
+
+Pre-built binaries run the same front-end in a native window — no Python, no
+Docker, no browser. Download the file for your OS from the release page and run it:
+
+- **Windows:** `loop-cr-review-gui-windows.exe`
+- **Linux:** `loop-cr-review-gui-linux`
+
+Or run it from source:
+
+```bash
+pip install -r requirements-gui.txt
+python3 gui.py
+```
+
+Everything happens locally; the data never leaves your machine.
+
 ## Example data to try it out
 
 The [`example-data/`](example-data/) folder contains a complete, **purely synthetic**
@@ -186,6 +203,7 @@ The common CamAPS export formats are detected automatically: date `dd.mm.yyyy`,
 loop-cr-review/
 ├── loop_cr_review.py          # logic (reading, analysis, charts, context) + CLI
 ├── webapp.py                  # optional homelab web front-end (Flask)
+├── gui.py                     # desktop app (pywebview + local server)
 ├── templates/
 │   ├── report.html.j2         # presentation (Jinja2) — adjust layout/wording here
 │   └── upload.html.j2         # web front-end upload form
@@ -197,6 +215,7 @@ loop-cr-review/
 ├── docker-compose.example.yml # copy to docker-compose.yml (gitignored)
 ├── requirements.txt           # CLI dependencies
 ├── requirements-web.txt       # extra dependencies for the web front-end
+├── requirements-gui.txt       # extra dependencies for the desktop app
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

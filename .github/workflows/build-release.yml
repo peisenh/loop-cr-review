@@ -15,6 +15,8 @@ name: Build executables
 # lives separately under .gitea/workflows/release.yml (curl against the Gitea
 # API, since there is no equivalent release action there). Once a .gitea/
 # directory exists, Gitea ignores these .github/ files entirely anyway.
+#
+# GUI backend: Qt (pywebview[qt] + PyQt6) instead of GTK/WebKitGTK
 on:
   push:
     tags: ["v*"]
@@ -32,9 +34,11 @@ jobs:
           - os: ubuntu-latest
             sep: ":"
             asset: loop-cr-review-linux
+            gui_asset: loop-cr-review-gui-linux
           - os: windows-latest
             sep: ";"
             asset: loop-cr-review-windows.exe
+            gui_asset: loop-cr-review-gui-windows.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -72,6 +76,47 @@ jobs:
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
+
+      # --- Desktop GUI binary (pywebview + local server) -------------------
+      - name: Install GUI deps
+        run: pip install -r requirements-gui.txt
+      - name: Install Qt runtime libs (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libxcb-cursor0 \
+            libxcb-xinerama0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-shape0
+      - name: Build GUI (onefile, windowed; whole templates + static + locale)
+        run: >
+          pyinstaller --onefile --windowed --name loop-cr-review-gui
+          --add-data "templates${{ matrix.sep }}templates"
+          --add-data "static${{ matrix.sep }}static"
+          --add-data "locale${{ matrix.sep }}locale"
+          --collect-all webview
+          --collect-all PyQt6
+          --collect-all qtpy
+          gui.py
+      - name: Name GUI artifact
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv dist/loop-cr-review-gui.exe "${{ matrix.gui_asset }}"
+          else
+            mv dist/loop-cr-review-gui "${{ matrix.gui_asset }}"
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.gui_asset }}
+          path: ${{ matrix.gui_asset }}
 
   release:
     needs: build

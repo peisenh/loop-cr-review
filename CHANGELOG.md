@@ -8,6 +8,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Added
+- Desktop app (`gui.py`): runs the web front-end in a native window via
+  pywebview + Qt (PyQt6 WebEngine), backed by a local waitress server —
+  a double-click binary with no browser, no Docker, localhost only.
+  Pre-built binaries for Windows and Linux are built in CI and attached
+  to releases; `requirements-gui.txt` covers a run from source.
+  Reuses the same templates, reports and analysis as the CLI/web.
+  Note: binaries are larger (\~250–280 MB) because the Qt WebEngine is bundled.
 
 ## [0.7.0] - 2026-08-15
 ### Added
