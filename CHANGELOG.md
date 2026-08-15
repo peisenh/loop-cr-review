@@ -9,10 +9,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Added
-- Project logo embedded inline at the top of the HTML report (still a single self-contained file).
-- Reusable `generate_report()` entry point in `loop_cr_review.py` that returns the
-  HTML (and context) without writing files or printing, so front-ends other than
-  the CLI can drive the same analysis. The CLI is now a thin wrapper around it.
 - Optional homelab web front-end (`webapp.py`, Flask): upload a CamAPS/Glooko
   export ZIP, pick language/window/daily and the time-of-day slots, get the HTML
   report back. Slots can be left at the built-in default, entered as fields
@@ -23,8 +19,24 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   `Dockerfile`, `docker-compose.example.yml` (with an optional, commented-out
   Traefik reverse-proxy block) and `requirements-web.txt`; run behind gunicorn.
   Not installed or imported by the CLI.
+- The web front-end is reverse-proxy aware: it honours X-Forwarded-Prefix/Proto/
+  Host, so it can run under a sub-path (e.g. /loop-cr-review behind Traefik
+  StripPrefix) with correct links and HTTPS redirects. Form and asset URLs use
+  url_for so they inherit the prefix.
+- Reusable `generate_report()` entry point in `loop_cr_review.py` that returns the
+  HTML (and context) without writing files or printing, so front-ends other than
+  the CLI can drive the same analysis. The CLI is now a thin wrapper around it.
 - Shared `build_slots()` validation used by both the slots JSON file and the web
   field editor, so a single set of rules governs custom slots everywhere.
+- Project logo embedded inline at the top of the HTML report (still a single
+  self-contained file); the version is now shown in both the report header and
+  the web front-end, baked from `git describe` during the Docker build.
+
+### Changed
+- The daily graphs are now ordered oldest-first, matching the per-meal detail
+  table, so the whole report reads chronologically top to bottom and a meal in the
+  table lines up with its day in the graphs. Previously the daily graphs were
+  newest-first while the table was oldest-first.
 
 ### Fixed
 - No more "No artists with labels found to put in legend" warning when an export
@@ -41,11 +53,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   basal duration. Autoescaping already prevented HTML in slot labels from
   reaching the report unescaped; no change was needed there.
 
-### Changed
-- The daily graphs are now ordered oldest-first, matching the per-meal detail
-  table, so the whole report reads chronologically top to bottom and a meal in the
-  table lines up with its day in the graphs. Previously the daily graphs were
-  newest-first while the table was oldest-first.
+### Security
+- Web front-end: hardened ZIP upload handling. Extraction now caps the number of
+  entries and the per-file and total uncompressed size to stop decompression
+  bombs, in addition to the existing zip-slip/absolute-path rejection. Any failure
+  while building a report from a malformed export is turned into a clean HTTP 400
+  instead of a 500 with a traceback.
 
 ## [0.6.3] - 2026-08-12
 ### Fixed

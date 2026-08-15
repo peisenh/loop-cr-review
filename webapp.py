@@ -13,23 +13,48 @@ import zipfile
 from pathlib import Path
 
 from flask import Flask, request, render_template, abort, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import loop_cr_review as core
 
 REPO = "https://github.com/peisenh/loop-cr-review"
-MAX_UPLOAD_BYTES = 64 * 1024 * 1024   # 64 MB cap for the export ZIP
+MAX_UPLOAD_BYTES = 64 * 1024 * 1024        # 64 MB cap for the (compressed) ZIP
+MAX_ENTRIES = 5000                         # refuse archives with absurd file counts
+MAX_FILE_BYTES = 100 * 1024 * 1024         # 100 MB per extracted file
+MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb guard)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
+# Honour X-Forwarded-* from a trusted reverse proxy (Traefik in the homelab):
+# X-Forwarded-Prefix lets the app run under a sub-path (e.g. /loop-cr-review)
+# so url_for() generates correct links; Proto/Host keep HTTPS redirects right.
+# Direct LAN access without these headers is unaffected.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
 def _safe_extract(zf, dest):
-    """Extract a ZIP into dest, refusing members that escape it (zip-slip)."""
+    """Extract a ZIP into dest, guarding against path- and size-based abuse.
+
+    Rejects (HTTP 400): members escaping dest (zip-slip / absolute paths /
+    symlinks), too many entries, and archives whose declared uncompressed size
+    exceeds the per-file or total caps (decompression bomb). Sizes come from the
+    central directory, which is enough to stop the practical bombs before any
+    bytes are written to disk.
+    """
     dest = dest.resolve()
-    for member in zf.namelist():
-        target = (dest / member).resolve()
+    infos = zf.infolist()
+    if len(infos) > MAX_ENTRIES:
+        abort(400, "archive has too many entries")
+    total = 0
+    for info in infos:
+        target = (dest / info.filename).resolve()
         if target != dest and not str(target).startswith(str(dest) + os.sep):
             abort(400, "unsafe path in archive")
+        if info.file_size > MAX_FILE_BYTES:
+            abort(400, "a file in the archive is too large")
+        total += info.file_size
+        if total > MAX_TOTAL_BYTES:
+            abort(400, "archive expands to too much data")
     zf.extractall(dest)
 
 
@@ -112,7 +137,7 @@ def _read_slots(tmpd, lang):
 @app.route("/", methods=["GET"])
 def index():
     """Show the upload form."""
-    return render_template("upload.html.j2", repo=REPO)
+    return render_template("upload.html.j2", repo=REPO, version=core.tool_version())
 
 
 @app.route("/report", methods=["POST"])
@@ -155,14 +180,23 @@ def _load_slots_or_400(path):
 
 
 def _generate_or_400(base, lang, window_hours, daily, slots):
-    """Run generate_report, mapping the core's error exits to HTTP 400."""
+    """Run generate_report; map any failure to a clean HTTP 400.
+
+    The analysis core signals input problems in several ways (sys.exit,
+    FileNotFoundError, csv.Error, UnicodeDecodeError, ...). At the request
+    boundary we turn all of them into a 400 with a short, generic message so a
+    malformed export never crashes a worker or leaks a traceback/temp path.
+    """
     try:
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily, slots=slots)
         return html
-    except (SystemExit, FileNotFoundError, ValueError) as exc:
+    except SystemExit as exc:                 # core validates via sys.exit()
         abort(400, f"could not build report: {exc}")
-    return ""                            # pragma: no cover
+    except Exception:                         # pylint: disable=broad-exception-caught
+        abort(400, "could not build report from this export "
+                   "(unrecognised or corrupt data)")
+    return ""                                 # pragma: no cover
 
 
 if __name__ == "__main__":

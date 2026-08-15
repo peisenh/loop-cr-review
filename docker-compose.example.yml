@@ -11,18 +11,36 @@ services:
     ports:
       - "8000:8000"          # reach at http://<homelab-ip>:8000
 
-    # --- Optional: Traefik reverse proxy (HTTPS + Basic-Auth) --------------
-    # Remove the "ports" mapping above when routing through Traefik, then
-    # uncomment the labels + network below. Note the doubled $$ in the hash.
+    # --- Optional: Traefik reverse proxy -----------------------------------
+    # Two ways to expose it — pick ONE and uncomment its labels.
+    # Replace the placeholder host below with your own. Remove the "ports"
+    # mapping above when routing through Traefik.
+    #
+    # (a) Own host (simplest — no sub-path, no extra middleware):
     # labels:
     #   - "traefik.enable=true"
-    #   - "traefik.http.routers.loopcr.rule=Host(`loop-cr.home.lan`)"
+    #   - "traefik.http.routers.loopcr.rule=Host(`loopcr.example.lan`)"
     #   - "traefik.http.routers.loopcr.entrypoints=websecure"
     #   - "traefik.http.routers.loopcr.tls=true"
     #   - "traefik.http.services.loopcr.loadbalancer.server.port=8000"
-    #   # Basic-Auth — create a hash with:  htpasswd -nbB user 'password'
-    #   - "traefik.http.routers.loopcr.middlewares=loopcr-auth"
+    #
+    # (b) Sub-path on an existing host (StripPrefix; the app is prefix-aware
+    #     via X-Forwarded-Prefix, which StripPrefix sends). Use ONE router
+    #     name throughout and PathPrefix (not Path).
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.loopcr.rule=Host(`host.example.lan`) && PathPrefix(`/loop-cr-review`)"
+    #   - "traefik.http.routers.loopcr.entrypoints=websecure"
+    #   - "traefik.http.routers.loopcr.tls=true"
+    #   - "traefik.http.routers.loopcr.priority=20"
+    #   - "traefik.http.routers.loopcr.service=loopcr"
+    #   - "traefik.http.services.loopcr.loadbalancer.server.port=8000"
+    #   - "traefik.http.middlewares.loopcr-strip.stripprefix.prefixes=/loop-cr-review"
+    #   - "traefik.http.routers.loopcr.middlewares=loopcr-strip@docker"
+    #
+    # Optional Basic-Auth (append the middleware; note the doubled $$):
     #   - "traefik.http.middlewares.loopcr-auth.basicauth.users=user:$$2y$$05$$examplehashreplaceme"
+    #   - "traefik.http.routers.loopcr.middlewares=loopcr-strip@docker,loopcr-auth@docker"
     # networks:
     #   - proxy
 

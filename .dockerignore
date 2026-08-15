@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+.venv/
+venv/
+docker-compose.yml
+data/*
+!data/README.md

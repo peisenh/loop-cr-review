@@ -52,12 +52,12 @@
 <body>
 <div class="wrap">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/static/logo-readme-dark.svg">
-    <img class="brand" src="/static/logo-horizontal.svg" alt="loop-cr-review">
+    <source media="(prefers-color-scheme: dark)" srcset="{{ url_for('static', filename='logo-readme-dark.svg') }}">
+    <img class="brand" src="{{ url_for('static', filename='logo-horizontal.svg') }}" alt="loop-cr-review">
   </picture>
   <h1>Loop-aware Carb-Ratio Review &middot; CR-Beurteilung aus CamAPS-FX-Daten</h1>
 
-  <form class="card" action="/report" method="post" enctype="multipart/form-data">
+  <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
     <label class="first" for="export">CamAPS/Glooko-Export (ZIP)</label>
     <input id="export" type="file" name="export" accept=".zip" required>
     <div class="hint">Wird nur im Arbeitsspeicher verarbeitet und danach sofort gel&ouml;scht.</div>
@@ -115,7 +115,7 @@
   </form>
 
   <div class="foot">
-    Open Source (AGPL-3.0-or-later) &middot;
+    Open Source (AGPL-3.0-or-later){% if version %} &middot; {{ version }}{% endif %} &middot;
     <a href="{{ repo }}">{{ repo.replace('https://','') }}</a>
   </div>
 </div>
