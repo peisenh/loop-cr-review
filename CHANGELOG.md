@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.8.1] - 2026-08-16
 ### Changed
 - Report presentation: clearer CR column headers —
   ``CR (CHO/bolus)`` vs ``CR_eff (+loop)`` — and an explicit note that both are
@@ -355,7 +357,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/peisenh/loop-cr-review/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/peisenh/loop-cr-review/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/peisenh/loop-cr-review/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/peisenh/loop-cr-review/compare/v0.6.2...v0.6.3
