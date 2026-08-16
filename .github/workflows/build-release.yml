@@ -143,7 +143,7 @@ jobs:
           fi
           cat .github/release-footer.md >> release-body.md
       - name: Create release + attach binaries
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: release-body.md
           prerelease: ${{ contains(github.ref_name, '-') }}
