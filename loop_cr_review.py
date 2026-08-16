@@ -21,6 +21,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+from contextlib import contextmanager
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -59,6 +60,15 @@ def N_(message):
     return message
 
 
+class LoopCRError(Exception):
+    """User-facing analysis / input error (bad export, invalid slots, ...).
+
+    Front-ends catch this and map it to CLI exit codes or HTTP 400.
+    Replaces former ``sys.exit(...)`` calls inside the analysis core so the
+    library API does not terminate the host process.
+    """
+
+
 # Active gettext translation for the Jinja2 i18n extension; set by setup_i18n().
 _ACTIVE_TRANSLATION = _gettext_module.NullTranslations()
 
@@ -85,8 +95,16 @@ def setup_i18n(lang):
 
 
 # --- Method parameters (data-independent) ----------------------------------
-SLOTS = [("breakfast", N_("Breakfast"), 5, 10), ("lunch", N_("Lunch"), 11, 15),
-         ("dinner", N_("Dinner"), 17, 22), ("other", N_("Other"), -1, -1)]
+# Built-in default slots (immutable template). Runtime analysis uses the module
+# globals SLOTS / MAIN_SLOTS / SLOT_LABEL / SLOT_COLOR, which are installed for
+# the duration of generate_report() via _slot_scope() and then restored so
+# concurrent callers (e.g. threaded waitress in gui.py) do not leak custom slots.
+DEFAULT_SLOTS = (
+    ("breakfast", N_("Breakfast"), 5, 10),
+    ("lunch", N_("Lunch"), 11, 15),
+    ("dinner", N_("Dinner"), 17, 22),
+    ("other", N_("Other"), -1, -1),
+)
 _SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
 
 
@@ -103,10 +121,29 @@ def _derive_slot_globals(slots):
     return main_slots, label, color
 
 
+SLOTS = list(DEFAULT_SLOTS)
 # All slots with a real time window (start >= 0); "other" (-1,-1) is deliberately
-# the catch-all slot and stays out. Add new slots to SLOTS --
+# the catch-all slot and stays out. Add new slots to DEFAULT_SLOTS --
 # MAIN_SLOTS and all derived analyses follow automatically.
 MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
+
+
+@contextmanager
+def _slot_scope(slots):
+    """Install slot tables for one report, then restore the previous values.
+
+    ``slots`` is an already-validated list from :func:`build_slots` /
+    :func:`load_slots_file`, or ``None`` for the built-in defaults. Labels are
+    re-derived after ``setup_i18n`` so gettext is applied.
+    """
+    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR  # pylint: disable=global-statement
+    previous = (SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR)
+    try:
+        SLOTS = list(slots) if slots is not None else list(DEFAULT_SLOTS)
+        MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
+        yield
+    finally:
+        SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = previous
 MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 
@@ -118,32 +155,32 @@ def build_slots(raw, source="Slots"):
     form, which builds the list from input fields). ``source`` is only used
     in error messages. Order = priority (first match wins); exactly one
     catch-all entry with start=-1/end=-1 is required. Aborts with a clear
-    message instead of silently using wrong slots.
+    message as LoopCRError instead of silently using wrong slots.
     """
     if not isinstance(raw, list) or not raw:
-        sys.exit(f"{source}: erwarte eine nicht-leere Liste von Slot-Objekten.")
+        raise LoopCRError(f"{source}: erwarte eine nicht-leere Liste von Slot-Objekten.")
     slots, seen_keys, catchall = [], set(), 0
     for i, entry in enumerate(raw):
         if not isinstance(entry, dict):
-            sys.exit(f"{source}, Eintrag {i}: erwarte ein Objekt (key/label/start/end).")
+            raise LoopCRError(f"{source}, Eintrag {i}: erwarte ein Objekt (key/label/start/end).")
         missing = [f for f in ("key", "label", "start", "end") if f not in entry]
         if missing:
-            sys.exit(f"{source}, Eintrag {i}: fehlende Felder {missing}.")
+            raise LoopCRError(f"{source}, Eintrag {i}: fehlende Felder {missing}.")
         key, label, start, end = entry["key"], entry["label"], entry["start"], entry["end"]
         if key in seen_keys:
-            sys.exit(f"{source}: doppelter key '{key}'.")
+            raise LoopCRError(f"{source}: doppelter key '{key}'.")
         seen_keys.add(key)
         if (not isinstance(start, int) or not isinstance(end, int)
                 or isinstance(start, bool) or isinstance(end, bool)):
-            sys.exit(f"{source}, '{key}': start/end muss eine ganze Zahl sein.")
+            raise LoopCRError(f"{source}, '{key}': start/end muss eine ganze Zahl sein.")
         if start == -1 and end == -1:
             catchall += 1
         elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
-            sys.exit(f"{source}, '{key}': start/end muss 0<=start<end<=24 "
+            raise LoopCRError(f"{source}, '{key}': start/end muss 0<=start<end<=24 "
                      "sein (oder beide -1 fuer den Auffangbecken-Slot).")
         slots.append((key, label, start, end))
     if catchall != 1:
-        sys.exit(f"{source}: genau ein Auffangbecken-Eintrag (start=-1, end=-1) "
+        raise LoopCRError(f"{source}: genau ein Auffangbecken-Eintrag (start=-1, end=-1) "
                  f"noetig, gefunden: {catchall}.")
     return slots
 
@@ -157,7 +194,7 @@ def load_slots_file(path):
     try:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        sys.exit(f"Slots-Datei '{path}' nicht lesbar/kein gueltiges JSON: {exc}")
+        raise LoopCRError(f"Slots-Datei '{path}' nicht lesbar/kein gueltiges JSON: {exc}")
     return build_slots(raw, f"Slots-Datei '{path}'")
 FASTING_HOURS = (0, 1, 2, 3, 4, 5)
 LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
@@ -442,7 +479,7 @@ def read_basal_timeline(base):
                     dur = num(row[2])
                     segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
     if not segs:
-        sys.exit(f"Keine Basalraten in {base / 'Insulin data'} gefunden "
+        raise LoopCRError(f"Keine Basalraten in {base / 'Insulin data'} gefunden "
                  "(basal_data_*.csv leer oder fehlt).")
     segs.sort()
     t0 = segs[0][0]
@@ -1174,20 +1211,19 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     ``slots`` is an already-validated slots list (see :func:`load_slots_file`)
     or ``None`` for the built-in slots, and ``template_dir`` defaults to the
     bundled ``templates`` folder.
+
+    Raises :class:`LoopCRError` for invalid exports or slot configuration.
+    Slot tables are installed only for the duration of this call (see
+    :func:`_slot_scope`) so concurrent front-ends do not leak custom slots.
     """
     setup_i18n(lang)
-    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR   # pylint: disable=global-statement
-    if slots is not None:
-        SLOTS = slots
-    # Re-derive after setup_i18n so the labels go through the real translator
-    # (at import time the identity fallback froze them to the English msgids).
-    MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
     window = int(round(window_hours * 60))
     wlab = (f"{int(window_hours)}h" if float(window_hours).is_integer()
             else f"{window_hours:g}h")
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
-    context = build_context(Path(export_dir), window, wlab, daily)
-    return render(context, tpl_dir), context
+    with _slot_scope(slots):
+        context = build_context(Path(export_dir), window, wlab, daily)
+        return render(context, tpl_dir), context
 
 
 def main():
@@ -1198,10 +1234,14 @@ def main():
         except (AttributeError, ValueError):
             pass
     args = parse_args()
-    slots = load_slots_file(args.slots_file) if args.slots_file else None
-    html, context = generate_report(
-        args.export_dir, lang=args.lang, window_hours=args.window_hours,
-        daily=args.daily, slots=slots, template_dir=args.template_dir)
+    try:
+        slots = load_slots_file(args.slots_file) if args.slots_file else None
+        html, context = generate_report(
+            args.export_dir, lang=args.lang, window_hours=args.window_hours,
+            daily=args.daily, slots=slots, template_dir=args.template_dir)
+    except LoopCRError as exc:
+        print(str(exc) or "error", file=sys.stderr)
+        sys.exit(1)
 
     wlab = (f"{int(args.window_hours)}h" if float(args.window_hours).is_integer()
             else f"{args.window_hours:g}h")
@@ -1209,9 +1249,8 @@ def main():
     out = Path(args.out) if args.out else Path(f"{slug}_loop-cr-review_{wlab}.html")
     out.write_text(html, encoding="utf-8")
     print(f"geschrieben: {out} | {len(html)} bytes")
-    main_labels = {SLOT_LABEL[k] for k in MAIN_SLOTS}
-    print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]
-                     if s["label"] in main_labels))
+    # Labels from the report context (slot scope already restored)
+    print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]))
 
 
 if __name__ == "__main__":

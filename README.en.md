@@ -175,6 +175,11 @@ patient data. This lets you test the tool without your own export:
 python3 loop_cr_review.py example-data
 ```
 
+For the **web front-end** (upload form), use
+[`example-data/Alex_Beispiel_Glooko_export.zip`](example-data/Alex_Beispiel_Glooko_export.zip) —
+a Glooko-style ZIP with only the CSV files. After `python3 webapp.py` or
+`docker compose up --build`, upload that file at http://127.0.0.1:8000.
+
 The generated report matches the screenshot above.
 
 Your own exports are best placed under [`data/`](data/) — the contents of this folder are
@@ -209,6 +214,7 @@ loop-cr-review/
 │   └── upload.html.j2         # web front-end upload form
 ├── static/                    # logo assets served by the web front-end
 ├── example-data/              # synthetic example export to try it out
+├── tests/                     # regression tests (example-data)
 ├── data/                      # your own exports (contents excluded via .gitignore)
 ├── docs/                      # screenshots + logo for the README
 ├── Dockerfile                 # web front-end container

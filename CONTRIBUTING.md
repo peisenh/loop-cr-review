@@ -121,3 +121,10 @@ By making a contribution to this project, I certify that:
 ```
 
 Full text: <https://developercertificate.org/>
+
+## Tests
+
+```bash
+python3 -m unittest tests.test_example_data -v
+```
+These pin the synthetic demo slot pattern and basic parsers.

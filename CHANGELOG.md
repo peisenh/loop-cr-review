@@ -16,6 +16,22 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   to releases; `requirements-gui.txt` covers a run from source.
   Reuses the same templates, reports and analysis as the CLI/web.
   Note: binaries are larger (\~250–280 MB) because the Qt WebEngine is bundled.
+- `example-data/Alex_Beispiel_Glooko_export.zip`: Glooko-style ZIP of the
+  synthetic demo export (CSV files only) so the web front-end upload path
+  can be tested without packaging the folder by hand.
+- Automated regression tests (`tests/test_example_data.py`) against the
+  synthetic example export: parsers, slot JSON, demo slot verdicts
+  (breakfast strong / lunch weak / dinner ok), English report, and ZIP
+  extract ≡ folder analysis. Run with `python3 -m unittest tests.test_example_data -v`.
+
+### Changed
+- Analysis core raises :class:`LoopCRError` instead of calling ``sys.exit``
+  for invalid slots, unreadable slot files and missing basal data; the CLI
+  maps that to exit code 1 and the web front-end to HTTP 400.
+- ``generate_report`` installs custom slots only inside a scoped context
+  (``_slot_scope``) and restores the built-in ``DEFAULT_SLOTS`` afterwards,
+  so concurrent GUI/web requests do not leak slot configuration via module
+  globals.
 
 ## [0.7.0] - 2026-08-15
 ### Added

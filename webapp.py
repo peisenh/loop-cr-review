@@ -16,6 +16,7 @@ from flask import Flask, request, render_template, abort, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import loop_cr_review as core
+from loop_cr_review import LoopCRError
 
 REPO = "https://github.com/peisenh/loop-cr-review"
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024        # 64 MB cap for the (compressed) ZIP
@@ -171,10 +172,10 @@ def report():
 
 
 def _load_slots_or_400(path):
-    """Load a slots file, turning the core's sys.exit errors into HTTP 400."""
+    """Load a slots file, turning the core's LoopCRError into HTTP 400."""
     try:
         return core.load_slots_file(str(path))
-    except SystemExit as exc:            # core validates via sys.exit()
+    except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"invalid slots file: {exc}")
     return None                          # pragma: no cover
 
@@ -182,7 +183,7 @@ def _load_slots_or_400(path):
 def _generate_or_400(base, lang, window_hours, daily, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
-    The analysis core signals input problems in several ways (sys.exit,
+    The analysis core signals input problems in several ways (LoopCRError,
     FileNotFoundError, csv.Error, UnicodeDecodeError, ...). At the request
     boundary we turn all of them into a 400 with a short, generic message so a
     malformed export never crashes a worker or leaks a traceback/temp path.
@@ -191,7 +192,7 @@ def _generate_or_400(base, lang, window_hours, daily, slots):
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily, slots=slots)
         return html
-    except SystemExit as exc:                 # core validates via sys.exit()
+    except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"could not build report: {exc}")
     except Exception:                         # pylint: disable=broad-exception-caught
         abort(400, "could not build report from this export "

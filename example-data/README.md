@@ -13,6 +13,20 @@ Aus dem Projektwurzel-Verzeichnis ausführen:
 python3 loop_cr_review.py example-data
 ```
 
+## Web-Frontend / Docker
+
+Dieselbe Auswertung per Upload testen: die Datei
+`Alex_Beispiel_Glooko_export.zip` in diesem Ordner ist ein Glooko-ähnliches
+Archiv (nur die CSV-Dateien, ohne README/Slots) und kann im Web-Formular
+unter http://127.0.0.1:8000 hochgeladen werden:
+
+```bash
+# Web starten (ohne Docker)
+pip install -r requirements.txt -r requirements-web.txt
+python3 webapp.py
+# dann im Browser ZIP wählen: example-data/Alex_Beispiel_Glooko_export.zip
+```
+
 ## Eigene Tageszeit-Slots
 
 `slots.example.json` zeigt das Format für eigene Slot-Zeitfenster (z. B. andere Uhrzeiten,
