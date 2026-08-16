@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-15 08:53+0200\n"
+"POT-Creation-Date: 2026-08-16 07:27+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: de\n"
@@ -14,75 +14,75 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: loop_cr_review.py:88
+#: loop_cr_review.py:103
 msgid "Breakfast"
 msgstr "Frühstück"
 
-#: loop_cr_review.py:88
+#: loop_cr_review.py:104
 msgid "Lunch"
 msgstr "Mittag"
 
-#: loop_cr_review.py:89
+#: loop_cr_review.py:105
 msgid "Dinner"
 msgstr "Abend"
 
-#: loop_cr_review.py:89
+#: loop_cr_review.py:106
 msgid "Other"
 msgstr "Sonstige"
 
-#: loop_cr_review.py:569
+#: loop_cr_review.py:635
 msgid "too weak → tighten"
 msgstr "zu schwach → straffen"
 
-#: loop_cr_review.py:571
+#: loop_cr_review.py:637
 msgid "too strong → loosen"
 msgstr "zu stark → lockern"
 
-#: loop_cr_review.py:573
+#: loop_cr_review.py:639
 msgid "plausibly adequate"
 msgstr "plausibel passend"
 
-#: loop_cr_review.py:582
+#: loop_cr_review.py:648
 msgid " ⚠︎ (hypo treated)"
 msgstr " ⚠︎ (Hypo behandelt)"
 
-#: loop_cr_review.py:585
+#: loop_cr_review.py:651
 msgid " ⚠︎ (hypo rescue — likely too strong)"
 msgstr " ⚠︎ (Hypo-Behandlung — wahrscheinlich zu stark)"
 
-#: loop_cr_review.py:588
+#: loop_cr_review.py:654
 msgid " ⚠︎ (isolated hypo(s) — mixed, check meals individually)"
 msgstr " ⚠︎ (vereinzelte Hypo(s) — uneinheitlich, Mahlzeiten einzeln prüfen)"
 
-#: loop_cr_review.py:592
+#: loop_cr_review.py:658
 msgid " ⚠︎ (few clean meals)"
 msgstr " ⚠︎ (wenig saubere Mahlzeiten)"
 
-#: loop_cr_review.py:641
+#: loop_cr_review.py:707
 msgid "rises and then falls to low values"
 msgstr "steigt an und fällt anschließend in tiefe Werte"
 
-#: loop_cr_review.py:643 loop_cr_review.py:766
+#: loop_cr_review.py:709 loop_cr_review.py:832
 msgid "climbs and does not return to baseline"
 msgstr "klettert und kehrt nicht zum Ausgangswert zurück"
 
-#: loop_cr_review.py:645
+#: loop_cr_review.py:711
 msgid "falls clearly below baseline"
 msgstr "fällt deutlich unter den Ausgangswert"
 
-#: loop_cr_review.py:646 loop_cr_review.py:771
+#: loop_cr_review.py:712 loop_cr_review.py:837
 msgid "returns close to baseline (balanced)"
 msgstr "kehrt nahe zum Ausgangswert zurück (ausgewogen)"
 
-#: loop_cr_review.py:662 loop_cr_review.py:672 loop_cr_review.py:692
-#: loop_cr_review.py:697 loop_cr_review.py:699 loop_cr_review.py:704
-#: loop_cr_review.py:706
+#: loop_cr_review.py:728 loop_cr_review.py:738 loop_cr_review.py:758
+#: loop_cr_review.py:763 loop_cr_review.py:765 loop_cr_review.py:770
+#: loop_cr_review.py:772
 msgid "Caution"
 msgstr "Achtung"
 
-#: loop_cr_review.py:663
+#: loop_cr_review.py:729
 msgid ""
 "BG clearly elevated at the end of the window, but the loop rather "
 "throttled (contradictory signal) → possibly an outlier/small sample size "
@@ -92,16 +92,16 @@ msgstr ""
 "(widersprüchliches Signal) → möglicherweise Ausreißer/geringe Fallzahl "
 "statt CR-Problem; vor Straffen Einzelmahlzeiten prüfen"
 
-#: loop_cr_review.py:666 loop_cr_review.py:719
+#: loop_cr_review.py:732 loop_cr_review.py:785
 msgid "Dose"
 msgstr "Dosis"
 
-#: loop_cr_review.py:667
+#: loop_cr_review.py:733
 #, python-format
 msgid "underdosed → tighten CR, rough direction CR_eff %(cre)s"
 msgstr "unterdeckt → CR straffen, grobe Richtung CR_eff %(cre)s"
 
-#: loop_cr_review.py:673
+#: loop_cr_review.py:739
 #, python-format
 msgid ""
 "Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely "
@@ -112,12 +112,12 @@ msgstr ""
 "allein auf das kräftige Loop-Mehrbasal — der Loop hat die zu schwache CR "
 "aufgefangen. Vor dem Straffen Einzelmahlzeiten und Kontamination prüfen"
 
-#: loop_cr_review.py:692
+#: loop_cr_review.py:758
 #, python-format
 msgid "nadir ~%(n).0f %(u)s around %(t)d min → secure the hypo window first"
 msgstr "Tief ~%(n).0f %(u)s gegen %(t)d min → Hypo-Fenster zuerst absichern"
 
-#: loop_cr_review.py:697
+#: loop_cr_review.py:763
 #, python-format
 msgid ""
 "nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; "
@@ -126,7 +126,7 @@ msgstr ""
 "Tief ~%(n).0f %(u)s gegen %(t)d min — eine Hypo trat auf und wurde "
 "behandelt; Dosis hier reduzieren"
 
-#: loop_cr_review.py:699
+#: loop_cr_review.py:765
 #, python-format
 msgid ""
 "nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated "
@@ -136,11 +136,11 @@ msgstr ""
 "einer Mahlzeit behandelt; diese Mahlzeit prüfen, nicht den ganzen Slot "
 "straffen"
 
-#: loop_cr_review.py:704
+#: loop_cr_review.py:770
 msgid "a hypo occurred and was treated in the window; reduce the dose here"
 msgstr "im Fenster trat eine Hypo auf und wurde behandelt; Dosis hier reduzieren"
 
-#: loop_cr_review.py:706
+#: loop_cr_review.py:772
 msgid ""
 "a hypo occurred and was treated on one meal; check that meal, do not "
 "tighten the whole slot"
@@ -148,11 +148,11 @@ msgstr ""
 "bei einer Mahlzeit trat eine Hypo auf und wurde behandelt; diese Mahlzeit"
 " prüfen, nicht den ganzen Slot straffen"
 
-#: loop_cr_review.py:714
+#: loop_cr_review.py:780
 msgid "Pre-bolus"
 msgstr "SEA"
 
-#: loop_cr_review.py:714
+#: loop_cr_review.py:780
 msgid ""
 "early high peak → try a longer bolus-meal interval (caps the spike "
 "without more dose)"
@@ -160,7 +160,7 @@ msgstr ""
 "früher hoher Peak → längeren Spritz-Ess-Abstand prüfen (kappt die Spitze "
 "ohne mehr Dosis)"
 
-#: loop_cr_review.py:719
+#: loop_cr_review.py:785
 msgid ""
 "overdosed/drop → rather reduce the dose of this meal; consider pre-bolus "
 "and dose together"
@@ -168,11 +168,11 @@ msgstr ""
 "überdeckt/Abfall → Dosis dieser Mahlzeit eher reduzieren; SEA und Dosis "
 "zusammen betrachten"
 
-#: loop_cr_review.py:723
+#: loop_cr_review.py:789
 msgid "Fat/protein"
 msgstr "Fett/Protein"
 
-#: loop_cr_review.py:723
+#: loop_cr_review.py:789
 msgid ""
 "monotonic late rise (no turning point) → check fat/protein; possibly "
 "delayed/dual bolus instead of only tightening"
@@ -180,11 +180,11 @@ msgstr ""
 "monotoner Spätanstieg (kein Umkehrpunkt) → Fett/Protein prüfen; ggf. "
 "verzögerter/Dual-Bolus statt nur straffen"
 
-#: loop_cr_review.py:726
+#: loop_cr_review.py:792
 msgid "Observe"
 msgstr "Beobachten"
 
-#: loop_cr_review.py:726
+#: loop_cr_review.py:792
 msgid ""
 "slight late re-rise → possibly fat/protein or basal rate in this window; "
 "just keep an eye on it"
@@ -192,15 +192,15 @@ msgstr ""
 "leichter später Wiederanstieg → ggf. Fett/Protein oder Basalrate in "
 "diesem Zeitfenster, nur im Auge behalten"
 
-#: loop_cr_review.py:736
+#: loop_cr_review.py:802
 msgid "no notable shape"
 msgstr "keine auffällige Form"
 
-#: loop_cr_review.py:746 loop_cr_review.py:749 loop_cr_review.py:751
+#: loop_cr_review.py:812 loop_cr_review.py:815 loop_cr_review.py:817
 msgid "Reference"
 msgstr "Referenz"
 
-#: loop_cr_review.py:746
+#: loop_cr_review.py:812
 msgid ""
 "CR on average fits, but a meal went low (hypo rescue) — check that one, "
 "do not tighten"
@@ -208,11 +208,11 @@ msgstr ""
 "CR im Mittel passend, aber eine Mahlzeit ging tief (Hypo-Behandlung) — "
 "diese prüfen, nicht straffen"
 
-#: loop_cr_review.py:749
+#: loop_cr_review.py:815
 msgid "dose fits — leave as is; for timing see the pre-bolus note above"
 msgstr "Dosis passt — so belassen; Timing siehe SEA-Hinweis oben"
 
-#: loop_cr_review.py:751
+#: loop_cr_review.py:817
 msgid ""
 "dose & timing fit — leave as is; serves as a comparison for the other "
 "slots"
@@ -220,27 +220,27 @@ msgstr ""
 "Dosis & Timing passen — so belassen; dient als Vergleich für die anderen "
 "Slots"
 
-#: loop_cr_review.py:761
+#: loop_cr_review.py:827
 msgid "high peak, then drop below baseline"
 msgstr "hoher Peak, danach Abfall unter die Ausgangslage"
 
-#: loop_cr_review.py:762
+#: loop_cr_review.py:828
 msgid "falls below baseline"
 msgstr "fällt unter den Ausgangswert"
 
-#: loop_cr_review.py:764
+#: loop_cr_review.py:830
 msgid "returns close to baseline, loop throttles noticeably"
 msgstr "kehrt nahe zum Ausgangswert zurück, Loop drosselt spürbar"
 
-#: loop_cr_review.py:768
+#: loop_cr_review.py:834
 msgid "slight late rise, but net balanced"
 msgstr "leichter Spätanstieg, netto aber ausgewogen"
 
-#: loop_cr_review.py:770
+#: loop_cr_review.py:836
 msgid "early peak, then returns cleanly"
 msgstr "früher Peak, kehrt anschließend sauber zurück"
 
-#: loop_cr_review.py:789
+#: loop_cr_review.py:855
 #, python-format
 msgid ""
 "• Derived CR = CHO/bolus; no slot deviates notably from the median "
@@ -249,15 +249,15 @@ msgstr ""
 "• Abgeleitete CR = CHO/Bolus; kein Slot weicht auffällig vom Median "
 "(1:%(m).1f) ab.<br>"
 
-#: loop_cr_review.py:793
+#: loop_cr_review.py:859
 msgid "tighter"
 msgstr "straffer"
 
-#: loop_cr_review.py:793
+#: loop_cr_review.py:859
 msgid "looser"
 msgstr "lockerer"
 
-#: loop_cr_review.py:795
+#: loop_cr_review.py:861
 msgid ""
 "elevated pre-meal BG → correction likely blended in by the calculator, "
 "derived CR underestimates the programmed ratio"
@@ -265,7 +265,7 @@ msgstr ""
 "erhöhter prä-BZ → vom Rechner beigemischte Korrektur wahrscheinlich, "
 "abgeleitete CR unterschätzt die programmierte Ratio"
 
-#: loop_cr_review.py:798
+#: loop_cr_review.py:864
 msgid ""
 "pre-meal BG not clearly elevated → rather a genuinely different "
 "programmed ratio than a pure correction"
@@ -273,7 +273,7 @@ msgstr ""
 "prä-BZ nicht deutlich erhöht → eher genuin andere programmierte Ratio als"
 " reine Korrektur"
 
-#: loop_cr_review.py:800
+#: loop_cr_review.py:866
 #, python-format
 msgid ""
 "%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-"
@@ -282,7 +282,7 @@ msgstr ""
 "%(slot)s: abgeleitete CR 1:%(scr).1f (%(dir)s als Median 1:%(m).1f), "
 "prä-BZ ~%(bg).0f %(u)s – %(hint)s"
 
-#: loop_cr_review.py:804
+#: loop_cr_review.py:870
 msgid ""
 "• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
 "deviations: "
@@ -290,7 +290,7 @@ msgstr ""
 "• Abgeleitete CR = CHO/Bolus (enthält ggf. beigemischte Korrekturen). "
 "Auffällige Abweichungen: "
 
-#: loop_cr_review.py:805
+#: loop_cr_review.py:871
 msgid ""
 ". Clarification (programmed ratio vs. correction factor vs. timing) by "
 "the care team.<br>"
@@ -298,108 +298,108 @@ msgstr ""
 ". Klärung (programmierte Ratio vs. Korrekturfaktor vs. Timing) durch das "
 "Team.<br>"
 
-#: loop_cr_review.py:853 loop_cr_review.py:888
+#: loop_cr_review.py:919 loop_cr_review.py:953
 msgid "Minutes after meal"
 msgstr "Minuten ab Mahlzeit"
 
-#: loop_cr_review.py:889
+#: loop_cr_review.py:954
 #, python-format
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s ggü. Mahlzeitbeginn"
 
-#: loop_cr_review.py:897
+#: loop_cr_review.py:962
 msgid "Monday"
 msgstr "Montag"
 
-#: loop_cr_review.py:897
+#: loop_cr_review.py:962
 msgid "Tuesday"
 msgstr "Dienstag"
 
-#: loop_cr_review.py:897
+#: loop_cr_review.py:962
 msgid "Wednesday"
 msgstr "Mittwoch"
 
-#: loop_cr_review.py:897
+#: loop_cr_review.py:962
 msgid "Thursday"
 msgstr "Donnerstag"
 
-#: loop_cr_review.py:898
+#: loop_cr_review.py:963
 msgid "Friday"
 msgstr "Freitag"
 
-#: loop_cr_review.py:898
+#: loop_cr_review.py:963
 msgid "Saturday"
 msgstr "Samstag"
 
-#: loop_cr_review.py:898
+#: loop_cr_review.py:963
 msgid "Sunday"
 msgstr "Sonntag"
 
-#: loop_cr_review.py:977
+#: loop_cr_review.py:1042
 #, python-format
 msgid "%(label)s = everything outside the other windows"
 msgstr "%(label)s = alles außerhalb der übrigen Fenster"
 
-#: loop_cr_review.py:992
+#: loop_cr_review.py:1057
 msgid " ⚠︎ (hypo — secure first)"
 msgstr " ⚠︎ (Hypo — zuerst absichern)"
 
-#: loop_cr_review.py:1037
+#: loop_cr_review.py:1102
 msgid "Too few meals per slot for a robust shape description."
 msgstr "Zu wenige Mahlzeiten je Slot für eine belastbare Formbeschreibung."
 
-#: loop_cr_review.py:1072
+#: loop_cr_review.py:1137
 #, python-format
 msgid "Very High &gt;%(v)s"
 msgstr "Sehr hoch &gt;%(v)s"
 
-#: loop_cr_review.py:1073
+#: loop_cr_review.py:1138
 #, python-format
 msgid "High %(lo)s–%(hi)s"
 msgstr "Hoch %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1075
+#: loop_cr_review.py:1140
 #, python-format
 msgid "Target %(lo)s–%(hi)s"
 msgstr "Zielbereich %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1077
+#: loop_cr_review.py:1142
 #, python-format
 msgid "Low %(lo)s–%(hi)s"
 msgstr "Niedrig %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1079
+#: loop_cr_review.py:1144
 #, python-format
 msgid "Very Low &lt;%(v)s"
 msgstr "Sehr niedrig &lt;%(v)s"
 
-#: loop_cr_review.py:1096
+#: loop_cr_review.py:1161
 msgid "device unknown"
 msgstr "Gerät unbekannt"
 
-#: templates/report.html.j2:72
+#: templates/report.html.j2:75
 msgid "Ambulatory Glucose Profile &amp; CR Assessment"
 msgstr "Ambulatory Glucose Profile &amp; CR-Beurteilung"
 
-#: templates/report.html.j2:73
+#: templates/report.html.j2:76
 #, python-format
 msgid "%(days)s days"
 msgstr "%(days)s Tage"
 
-#: templates/report.html.j2:73
+#: templates/report.html.j2:76
 msgid "sensor wear"
 msgstr "Sensor-Wear"
 
-#: templates/report.html.j2:74
+#: templates/report.html.j2:77
 msgid "Created with"
 msgstr "Erstellt mit"
 
-#: templates/report.html.j2:74
+#: templates/report.html.j2:77
 #, python-format
 msgid "%(wlab)s window"
 msgstr "%(wlab)s-Fenster"
 
-#: templates/report.html.j2:78
+#: templates/report.html.j2:81
 msgid ""
 "<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a "
 "statistical analysis of\n"
@@ -421,16 +421,64 @@ msgstr ""
 "Gesprächsgrundlage; <b>keine Gewähr</b>\n"
 "  für Richtigkeit oder Vollständigkeit."
 
-#: templates/report.html.j2:86
+#: templates/report.html.j2:90
+msgid "How to read this report (CamAPS FX Auto Mode)"
+msgstr "So liest man diesen Report (CamAPS FX Auto Mode)"
+
+#: templates/report.html.j2:91
+msgid ""
+"• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly"
+" corrects via\n"
+"  <b>modulated basal</b> (not auto-bolus). Other AID systems need a "
+"different signal."
+msgstr ""
+"• <b>Geltungsbereich:</b> Ausgelegt auf CamAPS FX Auto Mode, bei dem der "
+"Algorithmus vor allem über <b>moduliertes Basal</b> korrigiert (nicht per"
+" Auto-Bolus). Andere AID-Systeme brauchen ein anderes Signal."
+
+#: templates/report.html.j2:93
+msgid ""
+"• <b>Loop extra basal</b> in the post-meal window:\n"
+"  <code>∫ (basal rate − fasting basal) dt</code>.\n"
+"  Positive → the loop is adding insulin (often a too-weak meal bolus/CR)."
+msgstr ""
+"• <b>Loop-Mehrbasal</b> im Postprandialfenster: <code>∫ (Basalrate − "
+"Fasten-Basal) dt</code>. Positiv → der Loop gibt zusätzlich Insulin (oft "
+"zu schwacher Mahlzeitenbolus/CR)."
+
+#: templates/report.html.j2:96
+msgid ""
+"• <b>Two ratios:</b>\n"
+"  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include "
+"correction insulin).\n"
+"  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective "
+"ratio <i>including</i> loop compensation.\n"
+"  Neither is a programmed pump setting; both are derived from the export."
+msgstr ""
+"• <b>Zwei Verhältnisse:</b> <code>CR (CHO/Bolus)</code> = KH ÷ nur "
+"Mahlzeitenbolus (kann Korrekturinsulin enthalten). <code>CR_eff</code> = "
+"KH ÷ (Bolus + Loop-Mehrbasal) — effektives Verhältnis inkl. Loop-"
+"Kompensation. Beides ist keine programmierte Pumpen-Einstellung; beides "
+"wird aus dem Export abgeleitet."
+
+#: templates/report.html.j2:100
+msgid ""
+"• <b>Use:</b> Discussion material for the diabetes care team only — not a"
+" dosing instruction."
+msgstr ""
+"• <b>Nutzung:</b> Nur Gesprächsgrundlage für das Diabetes-Team — keine "
+"Dosieranweisung."
+
+#: templates/report.html.j2:104
 #, python-format
 msgid "mean glucose %(unit)s"
 msgstr "Ø Glukose %(unit)s"
 
-#: templates/report.html.j2:88
+#: templates/report.html.j2:106
 msgid "CV (target ≤36%)"
 msgstr "CV (Ziel ≤36%)"
 
-#: templates/report.html.j2:100
+#: templates/report.html.j2:118
 #, python-format
 msgid ""
 "Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
@@ -439,52 +487,57 @@ msgstr ""
 "Ziele: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
 "≤36%%. TITR(%(lo)s–%(hi)s %(unit)s)"
 
-#: templates/report.html.j2:103
+#: templates/report.html.j2:121
 msgid "AGP (percentiles 5/25/50/75/95)"
 msgstr "AGP (Perzentile 5/25/50/75/95)"
 
-#: templates/report.html.j2:106
+#: templates/report.html.j2:124
 msgid "Real postprandial courses per meal (median)"
 msgstr "Reale Postprandial-Verläufe je Mahlzeit (Median)"
 
-#: templates/report.html.j2:111
+#: templates/report.html.j2:129
 msgid "CR assessment per slot (loop-aware)"
 msgstr "CR-Beurteilung pro Slot (Loop-aware)"
 
-#: templates/report.html.j2:113 templates/report.html.j2:190
+#: templates/report.html.j2:131 templates/report.html.j2:209
 msgid "Slot"
 msgstr "Slot"
 
-#: templates/report.html.j2:113
+#: templates/report.html.j2:131
 msgid "n (clean)"
 msgstr "n (clean)"
 
-#: templates/report.html.j2:113
+#: templates/report.html.j2:131
 msgid "Ø CHO"
 msgstr "Ø CHO"
 
-#: templates/report.html.j2:113 templates/report.html.j2:158
-msgid "CR derived"
-msgstr "CR abgel."
+#: templates/report.html.j2:131 templates/report.html.j2:177
+#: templates/report.html.j2:209
+msgid "CR (CHO/bolus)"
+msgstr "CR (CHO/Bolus)"
 
-#: templates/report.html.j2:113
+#: templates/report.html.j2:131
 msgid "Bolus"
 msgstr "Bolus"
 
-#: templates/report.html.j2:114 templates/report.html.j2:158
-#: templates/report.html.j2:191
+#: templates/report.html.j2:132 templates/report.html.j2:177
+#: templates/report.html.j2:210
 msgid "Loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:114
+#: templates/report.html.j2:132 templates/report.html.j2:210
+msgid "CR_eff (+loop)"
+msgstr "CR_eff (+Loop)"
+
+#: templates/report.html.j2:132
 msgid "Verdict"
 msgstr "Befund"
 
-#: templates/report.html.j2:122
+#: templates/report.html.j2:140
 msgid "Time windows:"
 msgstr "Zeitfenster:"
 
-#: templates/report.html.j2:124
+#: templates/report.html.j2:142
 #, python-format
 msgid ""
 "<b>Method:</b> Loop %(w)s = basal delivered by Auto Mode in addition to "
@@ -495,32 +548,34 @@ msgstr ""
 "über der\n"
 "    Fasten-Basalrate"
 
-#: templates/report.html.j2:125
+#: templates/report.html.j2:143
 #, python-format
 msgid "mean; nights %(lo)s–%(hi)s U/h"
 msgstr "Mittel; Nächte %(lo)s–%(hi)s U/h"
 
-#: templates/report.html.j2:125
+#: templates/report.html.j2:143
 msgid "strongly varying, use reference with caution"
 msgstr "stark schwankend, Referenz mit Vorsicht"
 
-#: templates/report.html.j2:125
+#: templates/report.html.j2:143
 #, python-format
 msgid ""
 "in the %(w)s window. Positive → the loop is compensating for a too-weak "
 "CR\n"
-"    (CR too weak). CR_eff = CHO / (bolus + loop extra basal). Δ%(w)s = "
+"    (CR too weak). <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the"
+" pump’s programmed ICR).\n"
+"    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ%(w)s = "
 "glucose at\n"
 "    %(w)s minus pre-meal. \"clean\" = meals without another meal in the "
 "%(w)s window."
 msgstr ""
-"im %(w)s-Fenster. Positiv → Loop gleicht zu schwache CR\n"
-"    aus (CR zu schwach). CR_eff = CHO / (Bolus + Loop-Mehrbasal). Δ%(w)s "
-"= Glukose bei\n"
-"    %(w)s minus prämahlzeitlich. „clean\" = Mahlzeiten ohne weitere "
-"Mahlzeit im %(w)s-Fenster."
+"im %(w)s-Fenster. Positiv → der Loop kompensiert eine zu schwache CR (CR "
+"zu schwach). <b>CR (CHO/Bolus)</b> = CHO / nur Mahlzeitenbolus (nicht die"
+" programmierte ICR der Pumpe). <b>CR_eff (+Loop)</b> = CHO / (Bolus + "
+"Loop-Mehrbasal). Δ%(w)s = Glukose bei %(w)s minus präprandial. „clean“ = "
+"Mahlzeiten ohne weitere Mahlzeit im %(w)s-Fenster."
 
-#: templates/report.html.j2:128
+#: templates/report.html.j2:147
 msgid ""
 "<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies"
 " (in part)\n"
@@ -530,11 +585,11 @@ msgstr ""
 "stützt sich (mit)\n"
 "    auf kontaminierte Fenster und ist entsprechend unsicherer."
 
-#: templates/report.html.j2:133
+#: templates/report.html.j2:152
 msgid "Course relative to meal start (baseline-normalised)"
 msgstr "Verlauf relativ zum Mahlzeitbeginn (baseline-normalisiert)"
 
-#: templates/report.html.j2:136
+#: templates/report.html.j2:155
 #, python-format
 msgid ""
 "Here each meal is referenced to its <b>own baseline at minute 0</b>\n"
@@ -587,23 +642,23 @@ msgstr ""
 "Fallzahl (n) leicht von\n"
 "    der Tabelle abweichen."
 
-#: templates/report.html.j2:152
+#: templates/report.html.j2:171
 msgid "Derivations from the curve shape &amp; possible approaches"
 msgstr "Ableitungen aus der Kurvenform &amp; mögliche Ansätze"
 
-#: templates/report.html.j2:156
+#: templates/report.html.j2:175
 msgid "Peak"
 msgstr "Peak"
 
-#: templates/report.html.j2:156
+#: templates/report.html.j2:175
 msgid "after"
 msgstr "nach"
 
-#: templates/report.html.j2:157
+#: templates/report.html.j2:176
 msgid "nadir"
 msgstr "Tief"
 
-#: templates/report.html.j2:164
+#: templates/report.html.j2:183
 msgid ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
@@ -611,11 +666,11 @@ msgstr ""
 "Hypothesen/Kandidaten fürs Team-Gespräch, keine\n"
 "    Dosieranweisung. Unter Auto Mode prägt der Loop die Kurvenform mit."
 
-#: templates/report.html.j2:169
+#: templates/report.html.j2:188
 msgid "What CR_eff means — and what it does not"
 msgstr "Was bedeutet CR_eff — und was nicht"
 
-#: templates/report.html.j2:171
+#: templates/report.html.j2:190
 msgid ""
 "<b>CR_eff is an approach, not a target value.</b> It converts the basal "
 "the loop pushed in\n"
@@ -627,7 +682,7 @@ msgstr ""
 "    „effektiv gebrauchte\" Ratio um: <code>CR_eff = CHO / (Bolus + Loop-"
 "Mehrbasal)</code>."
 
-#: templates/report.html.j2:173
+#: templates/report.html.j2:192
 #, python-format
 msgid ""
 "Example %(label)s: %(cho)s g on\n"
@@ -638,7 +693,7 @@ msgstr ""
 "    (%(bol)s U Bolus + %(loop)s U Loop) ≈ <b>%(cre)s</b>\n"
 "    statt der angesetzten Ratio."
 
-#: templates/report.html.j2:175
+#: templates/report.html.j2:194
 #, python-format
 msgid ""
 "And even then the BG at\n"
@@ -655,7 +710,7 @@ msgstr ""
 "Untergrenze</b>: die tatsächlich nötige CR\n"
 "    liegt noch straffer (grob: zusätzlich ~Δ/ISF Einheiten)."
 
-#: templates/report.html.j2:179
+#: templates/report.html.j2:198
 msgid ""
 "<b>Meant as:</b> direction and order of magnitude (\"rather tighter, "
 "roughly this much\") —\n"
@@ -681,23 +736,23 @@ msgstr ""
 "iterativ mit dem Team festlegen\n"
 "    und je ~1–2 Wochen nachmessen."
 
-#: templates/report.html.j2:188
+#: templates/report.html.j2:207
 msgid "Per-meal detail"
 msgstr "Per-Mahlzeit-Detail"
 
-#: templates/report.html.j2:190
+#: templates/report.html.j2:209
 msgid "Time"
 msgstr "Zeit"
 
-#: templates/report.html.j2:195
+#: templates/report.html.j2:214
 msgid "hypo rescue in the window"
 msgstr "Hypo-Behandlung im Fenster"
 
-#: templates/report.html.j2:195
+#: templates/report.html.j2:214
 msgid "contaminated window"
 msgstr "kontaminiertes Fenster"
 
-#: templates/report.html.j2:198
+#: templates/report.html.j2:217
 #, python-format
 msgid ""
 "⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a "
@@ -706,23 +761,23 @@ msgstr ""
 "⚠︎ = kontaminiertes Fenster (weitere Mahlzeit &lt;%(w)s danach). ⚠︎ H = "
 "Hypo-Behandlung (wenig KH, kein Bolus, niedriger BZ) im Fenster."
 
-#: templates/report.html.j2:202
+#: templates/report.html.j2:221
 msgid "Interpretation &amp; limitations"
 msgstr "Einordnung &amp; Grenzen"
 
-#: templates/report.html.j2:204
+#: templates/report.html.j2:223
 msgid "too strong"
 msgstr "zu stark"
 
-#: templates/report.html.j2:204
+#: templates/report.html.j2:223
 msgid "too weak"
 msgstr "zu schwach"
 
-#: templates/report.html.j2:204
+#: templates/report.html.j2:223
 msgid "adequate"
 msgstr "passend"
 
-#: templates/report.html.j2:205
+#: templates/report.html.j2:224
 msgid ""
 "This is <b>decision evidence for the diabetes care team</b>, not a dosing"
 " instruction."
@@ -730,7 +785,7 @@ msgstr ""
 "Dies ist <b>Entscheidungs-Evidenz für das Diabetes-Team</b>, keine "
 "Dosieranweisung."
 
-#: templates/report.html.j2:207
+#: templates/report.html.j2:226
 msgid ""
 "• Under CamAPS Auto Mode the loop compensates continuously; that is "
 "exactly why the loop extra\n"
@@ -744,7 +799,7 @@ msgstr ""
 "kann länger bestehende\n"
 "      Fehleinstellungen teilweise glätten."
 
-#: templates/report.html.j2:210
+#: templates/report.html.j2:229
 msgid ""
 "• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
 "are dampened by medians,\n"
@@ -754,11 +809,11 @@ msgstr ""
 "Mahlzeiten) sind über Mediane\n"
 "      gedämpft, nicht eliminiert; Slots mit wenigen „clean\"-Mahlzeiten"
 
-#: templates/report.html.j2:211
+#: templates/report.html.j2:230
 msgid "are less certain."
 msgstr "sind unsicherer."
 
-#: templates/report.html.j2:212
+#: templates/report.html.j2:231
 msgid ""
 "• The fasting basal as a reference (mean of the nights) assumes meal"
 "-/correction-free nights 00:00–06:00."
@@ -766,11 +821,11 @@ msgstr ""
 "• Fasten-Basal als Referenz (Mittel der Nächte) setzt "
 "mahlzeit-/korrekturfreie Nächte 00:00–06:00 Uhr voraus."
 
-#: templates/report.html.j2:217
+#: templates/report.html.j2:236
 msgid "Daily overview — CGM · bolus · basal"
 msgstr "Tagesübersicht — CGM · Bolus · Basal"
 
-#: templates/report.html.j2:218
+#: templates/report.html.j2:237
 #, python-format
 msgid ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
@@ -795,4 +850,26 @@ msgstr ""
 #~ "Ziele: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%%"
 #~ " · TBR&lt;%(vlo)s &lt;1%% · CV ≤36%%."
 #~ " TITR(%(lo)s–%(hi)s %(unit)s)"
+
+#~ msgid "CR derived"
+#~ msgstr "CR abgel."
+
+#~ msgid ""
+#~ "in the %(w)s window. Positive → "
+#~ "the loop is compensating for a "
+#~ "too-weak CR\n"
+#~ "    (CR too weak). CR_eff = CHO"
+#~ " / (bolus + loop extra basal). "
+#~ "Δ%(w)s = glucose at\n"
+#~ "    %(w)s minus pre-meal. \"clean\" "
+#~ "= meals without another meal in "
+#~ "the %(w)s window."
+#~ msgstr ""
+#~ "im %(w)s-Fenster. Positiv → Loop gleicht zu schwache CR\n"
+#~ "    aus (CR zu schwach). CR_eff ="
+#~ " CHO / (Bolus + Loop-Mehrbasal). "
+#~ "Δ%(w)s = Glukose bei\n"
+#~ "    %(w)s minus prämahlzeitlich. „clean\" "
+#~ "= Mahlzeiten ohne weitere Mahlzeit im"
+#~ " %(w)s-Fenster."
 

@@ -8,6 +8,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Changed
+- Report presentation: clearer CR column headers —
+  ``CR (CHO/bolus)`` vs ``CR_eff (+loop)`` — and an explicit note that both are
+  derived from the export, not the pump’s programmed ICR.
+- Short method box near the top of the HTML report (CamAPS scope, loop
+  extra-basal formula, two ratios, discussion-only use).
+
 
 ## [0.8.0] - 2026-08-16
 ### Added

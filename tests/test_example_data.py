@@ -78,6 +78,21 @@ class TestGenerateReportExample(unittest.TestCase):
         self.assertGreater(len(self.html), 10_000)
         self.assertIn("Alex Beispiel", self.html)
 
+    def test_report_method_box_and_cr_columns(self):
+        self.assertTrue(
+            "How to read this report" in self.html
+            or "So liest man diesen Report" in self.html
+        )
+        self.assertTrue(
+            "CR (CHO/bolus)" in self.html or "CR (CHO/Bolus)" in self.html
+        )
+        self.assertTrue(
+            "CR_eff (+loop)" in self.html or "CR_eff (+Loop)" in self.html
+        )
+        self.assertTrue(
+            "modulated basal" in self.html or "moduliertes Basal" in self.html
+        )
+
     def test_meta(self):
         self.assertEqual(self.ctx["name"], "Alex Beispiel")
         self.assertEqual(self.ctx["days"], "14")

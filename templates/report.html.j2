@@ -43,6 +43,9 @@ tr.lowconf td:last-child { color: #7a6a2a }
 .t-sea { background: #e7efff; color: #1c4ea8 } .t-cr { background: #fdeaea; color: #a12626 }
 .t-fp { background: #fff3e8; color: #a5541b } .t-obs { background: #eef8ef; color: #2b7a34 }
 .eff { background: #f4f7ff; border: 1px solid #cdddff; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.6 }
+.methodbox { background: #f7f9fc; border: 1px solid #c5d0e0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.55; color: #1a2233 }
+.methodbox b { color: #1c4ea8 }
+.methodbox code { font-family: monospace; background: #eef1f6; padding: 1px 4px; border-radius: 4px; font-size: 11px }
 .eff b { color: #1c4ea8 } .eff code { font-family: monospace; background: #eef1f6; padding: 1px 4px; border-radius: 4px }
 .dailyrow { margin: 3px 0 }
 .dailyrow img { width: 100%; border-radius: 6px; display: block }
@@ -82,6 +85,21 @@ img { width: 100%; border-radius: 8px }
   correctness or completeness.{% endtrans %}
 </div>
 
+
+<div class="methodbox">
+  <b>{% trans %}How to read this report (CamAPS FX Auto Mode){% endtrans %}</b><br>
+  {% trans %}• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects via
+  <b>modulated basal</b> (not auto-bolus). Other AID systems need a different signal.{% endtrans %}<br>
+  {% trans %}• <b>Loop extra basal</b> in the post-meal window:
+  <code>∫ (basal rate − fasting basal) dt</code>.
+  Positive → the loop is adding insulin (often a too-weak meal bolus/CR).{% endtrans %}<br>
+  {% trans %}• <b>Two ratios:</b>
+  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include correction insulin).
+  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective ratio <i>including</i> loop compensation.
+  Neither is a programmed pump setting; both are derived from the export.{% endtrans %}<br>
+  {% trans %}• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing instruction.{% endtrans %}
+</div>
+
 <div class="grid">
   <div class="kpi"><div class="v">{{ mean }}</div><div class="l">{% trans unit=unit %}mean glucose {{ unit }}{% endtrans %}</div></div>
   <div class="kpi"><div class="v">{{ gmi }}%</div><div class="l">GMI</div></div>
@@ -110,8 +128,8 @@ img { width: 100%; border-radius: 8px }
 <div class="card">
   <h2>{% trans %}CR assessment per slot (loop-aware){% endtrans %}</h2>
   <table>
-    <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR derived{% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
-        <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
+    <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
+        <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
     {% for s in slots %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
@@ -123,7 +141,8 @@ img { width: 100%; border-radius: 8px }
   <div class="note" style="margin-top: 8px">
     {% trans w=wlab %}<b>Method:</b> Loop {{ w }} = basal delivered by Auto Mode in addition to the
     fasting basal rate{% endtrans %} ({{ fb }} U/h{% if fb_lo != fb_hi %}, {% trans lo=fb_lo, hi=fb_hi %}mean; nights {{ lo }}–{{ hi }} U/h{% endtrans %}{% if fb_spread %} — {% trans %}strongly varying, use reference with caution{% endtrans %}{% endif %}{% endif %}) {% trans w=wlab %}in the {{ w }} window. Positive → the loop is compensating for a too-weak CR
-    (CR too weak). CR_eff = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
+    (CR too weak). <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s programmed ICR).
+    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window.{% endtrans %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
     on contaminated windows and is correspondingly less certain.{% endtrans %}</div>
@@ -155,7 +174,7 @@ img { width: 100%; border-radius: 8px }
     <h3>{{ r.label }} — {{ r.headline }}</h3>
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
-      {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR derived{% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
+      {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}
@@ -187,8 +206,8 @@ img { width: 100%; border-radius: 8px }
 <div class="card">
   <h2>{% trans %}Per-meal detail{% endtrans %}</h2>
   <table>
-    <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>CR</th>
-        <th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>CR_eff</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
+    <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th>
+        <th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
     {% for m in meals %}
     <tr class="{{ m.cls }}"><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
         <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
