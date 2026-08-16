@@ -14,6 +14,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   derived from the export, not the pump’s programmed ICR.
 - Short method box near the top of the HTML report (CamAPS scope, loop
   extra-basal formula, two ratios, discussion-only use).
+- Absolute postprandial curve: short note that it uses all meals per slot, while the CR table and baseline-normalised curves use the clean-meal rule (so n/shape may differ by design).
+- Interpretation legend tags aligned with table verdict wording (too strong → loosen / too weak → tighten / plausibly adequate).
 
 
 ## [0.8.0] - 2026-08-16

@@ -123,7 +123,8 @@ img { width: 100%; border-radius: 8px }
 
 <div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
   <img src="data:image/png;base64,{{ slot_img }}">
-  <div class="note" style="margin-top: 6px">{{ curve_cap }}</div></div>
+  <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
+  <div class="note" style="margin-top: 6px">{% trans %}This absolute median uses <b>all meals</b> in each slot (including contaminated windows). The CR table and the baseline-normalised curves below prefer contamination-free meals (same rule: at least 3 clean, otherwise all) — so the count (n) and the shape can differ from those sections on purpose.{% endtrans %}</div></div>
 
 <div class="card">
   <h2>{% trans %}CR assessment per slot (loop-aware){% endtrans %}</h2>
@@ -220,7 +221,7 @@ img { width: 100%; border-radius: 8px }
 <div class="card">
   <h2>{% trans %}Interpretation &amp; limitations{% endtrans %}</h2>
   <div class="note">
-    <span class="tag ts">{% trans %}too strong{% endtrans %}</span><span class="tag tw">{% trans %}too weak{% endtrans %}</span><span class="tag to">{% trans %}adequate{% endtrans %}</span><br><br>
+    <span class="tag ts">{% trans %}too strong → loosen{% endtrans %}</span><span class="tag tw">{% trans %}too weak → tighten{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br>
     {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
     {{ cr_note | safe }}
     {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra

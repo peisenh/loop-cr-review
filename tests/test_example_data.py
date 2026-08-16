@@ -93,6 +93,10 @@ class TestGenerateReportExample(unittest.TestCase):
             "modulated basal" in self.html or "moduliertes Basal" in self.html
         )
 
+        self.assertTrue(
+            "all meals" in self.html or "alle Mahlzeiten" in self.html
+        )
+
     def test_meta(self):
         self.assertEqual(self.ctx["name"], "Alex Beispiel")
         self.assertEqual(self.ctx["days"], "14")
