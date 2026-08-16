@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.8.0] - 2026-08-16
 ### Added
 - Desktop app (`gui.py`): runs the web front-end in a native window via
   pywebview + Qt (PyQt6 WebEngine), backed by a local waitress server —
@@ -342,7 +344,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/peisenh/loop-cr-review/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/peisenh/loop-cr-review/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/peisenh/loop-cr-review/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/peisenh/loop-cr-review/compare/v0.6.1...v0.6.2
