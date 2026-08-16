@@ -139,3 +139,20 @@ class TestLoopCRErrorAndSlotScope(unittest.TestCase):
         core.generate_report(EXAMPLE, lang="de", slots=custom)
         self.assertEqual([s[0] for s in core.SLOTS], [s[0] for s in before])
         self.assertIn("breakfast", core.MAIN_SLOTS)
+
+
+class TestSelectSlotRows(unittest.TestCase):
+    def test_prefers_clean_when_enough(self):
+        rows = [{"contam": False, "x": i} for i in range(3)] + [{"contam": True, "x": 99}]
+        used, n_clean, only = core.select_slot_rows(rows)
+        self.assertTrue(only)
+        self.assertEqual(n_clean, 3)
+        self.assertEqual(len(used), 3)
+        self.assertTrue(all(not r["contam"] for r in used))
+
+    def test_fallback_when_few_clean(self):
+        rows = [{"contam": False, "x": 1}, {"contam": True, "x": 2}]
+        used, n_clean, only = core.select_slot_rows(rows)
+        self.assertFalse(only)
+        self.assertEqual(n_clean, 1)
+        self.assertEqual(len(used), 2)

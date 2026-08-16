@@ -32,6 +32,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   (``_slot_scope``) and restores the built-in ``DEFAULT_SLOTS`` afterwards,
   so concurrent GUI/web requests do not leak slot configuration via module
   globals.
+- ``select_slot_rows()`` is the single rule for which meals feed a slot's
+  median table/verdict and the baseline-normalised curves (prefer
+  contamination-free rows, fall back to all if fewer than
+  ``MIN_CLEAN_MEALS``). Behaviour unchanged; absolute median curves still
+  use every meal in the slot by design.
 
 ## [0.7.0] - 2026-08-15
 ### Added

@@ -146,6 +146,7 @@ def _slot_scope(slots):
         SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = previous
 MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
+MIN_CLEAN_MEALS = 3        # prefer contamination-free meals; else fall back to all
 
 
 def build_slots(raw, source="Slots"):
@@ -596,13 +597,33 @@ def analyze_meals(meals, minors, basal, window, val_at):
     return rows
 
 
+def select_slot_rows(slot_rows):
+    """Single definition of which meals feed a slot's table/verdict/norm-curve.
+
+    Preference: contamination-free rows (``contam`` is False). If fewer than
+    :data:`MIN_CLEAN_MEALS` clean rows exist, fall back to **all** rows for that
+    slot so a sparse export still yields a median. Returns
+    ``(used_rows, n_clean, used_clean_only)``.
+
+    Note: the *absolute* median postprandial curve (:func:`slot_median_curve`)
+    still uses every meal in the slot (no contamination filter). Only the
+    Δ-oriented table aggregation and the baseline-normalised curves share this
+    selector — changing the absolute curve would alter shape captions and
+    lever metrics.
+    """
+    clean = [r for r in slot_rows if not r["contam"]]
+    n_clean = len(clean)
+    if n_clean >= MIN_CLEAN_MEALS:
+        return clean, n_clean, True
+    return list(slot_rows), n_clean, False
+
+
 def aggregate_slot(slot_rows):
     """Median aggregation of a slot + verdict. -> dict or None."""
-    clean = [r for r in slot_rows if not r["contam"]]
-    use = clean if len(clean) >= 3 else slot_rows
+    use, n_clean, used_clean_only = select_slot_rows(slot_rows)
     if not use:
         return None
-    low_confidence = len(clean) < 3     # verdict relies (also) on contaminated meals
+    low_confidence = not used_clean_only     # verdict relies (also) on contaminated meals
 
     def med(key):
         return float(np.nanmedian([r[key] for r in use if not np.isnan(r[key])]))
@@ -635,7 +656,7 @@ def aggregate_slot(slot_rows):
         systematic = False
     if low_confidence:
         flag += _(" ⚠︎ (few clean meals)")
-    return {"n": len(slot_rows), "clean": len(clean), "cho": med("cho"), "cr": med("cr"),
+    return {"n": len(slot_rows), "clean": n_clean, "cho": med("cho"), "cr": med("cr"),
             "bol": bol, "exc": exc, "cre": med("cr_eff"), "d4": d4, "flag": flag, "cls": cls,
             "rescues": rescues, "systematic": systematic, "low_confidence": low_confidence}
 
@@ -918,15 +939,14 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
     ax.axhline(0, color="#888", lw=1)
     for slot in MAIN_SLOTS:
         srows = by_slot.get(slot, [])
-        clean = [r for r in srows if not r["contam"]]
-        used = clean if len(clean) >= 3 else srows
+        used, n_clean, used_clean_only = select_slot_rows(srows)
         clean_times = {r["time"] for r in used}
         curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
         if curve is not None:
             # make transparent whether n are clean meals or (fallback with fewer
-            # than 3 clean) all -- otherwise the legend looks contradictory
-            # to the "clean" column of the table.
-            basis = "sauber" if len(clean) >= 3 else "alle"
+            # than MIN_CLEAN_MEALS clean) all -- otherwise the legend looks
+            # contradictory to the "clean" column of the table.
+            basis = "sauber" if used_clean_only else "alle"
             ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
                     label=f"{SLOT_LABEL[slot]} (n={n}, {basis})")
     ax.set_xlim(0, window)
