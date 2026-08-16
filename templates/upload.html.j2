@@ -56,6 +56,7 @@
     <img class="brand" src="{{ url_for('static', filename='logo-horizontal.svg') }}" alt="loop-cr-review">
   </picture>
   <h1>Loop-aware Carb-Ratio Review &middot; CR-Beurteilung aus CamAPS-FX-Daten</h1>
+  <p class="hint" style="margin:0 0 14px">Ausgelegt und getestet <b>nur f&uuml;r CamAPS FX Auto Mode</b> (Glooko-Export). Andere Closed-Loop-Systeme: siehe README.</p>
 
   <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
     <label class="first" for="export">CamAPS/Glooko-Export (ZIP)</label>
@@ -111,6 +112,11 @@
       <b>&#9888; Kein Medizinprodukt, keine Dosierempfehlung.</b>
       Statistische Auswertung vorhandener CGM-/Pumpendaten als Grundlage f&uuml;r
       Gespr&auml;che mit dem Behandlungsteam &mdash; keine Diagnose, keine Therapie&shy;entscheidung.
+      <br><br>
+      <b>Nur CamAPS FX (Auto Mode).</b>
+      Die Methode setzt auf moduliertes Basal als Loop-Signal. Andere AID-Systeme
+      (z.&nbsp;B. Control-IQ, Omnipod&nbsp;5, AndroidAPS) sind nicht unterst&uuml;tzt;
+      Ergebnisse w&auml;ren dort nicht g&uuml;ltig.
     </div>
   </form>
 

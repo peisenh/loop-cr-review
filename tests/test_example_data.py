@@ -96,6 +96,11 @@ class TestGenerateReportExample(unittest.TestCase):
         self.assertTrue(
             "all meals" in self.html or "alle Mahlzeiten" in self.html
         )
+        # low-confidence legend present (wording de/en)
+        self.assertTrue(
+            "Hatched row" in self.html or "Schraffierte Zeile" in self.html
+            or "low confidence" in self.html or "unsichere Datenlage" in self.html
+        )
 
     def test_meta(self):
         self.assertEqual(self.ctx["name"], "Alex Beispiel")

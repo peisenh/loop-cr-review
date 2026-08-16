@@ -1122,6 +1122,7 @@ def _recommendations_context(meals, by_slot, window, val_at):
             "nadir": fmt_glucose(met["nadir"]), "nadir_t": met["nadir_t"],
             "d4": fmt_delta(agg["d4"]), "loop": f"{agg['exc']:+.2f}",
             "cr": fmt_cr(agg["cr"]), "cre": fmt_cr(agg["cre"]),
+            "low_confidence": agg.get("low_confidence", False),
             "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
         })
         if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):

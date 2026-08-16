@@ -31,8 +31,13 @@ table { width: 100%; border-collapse: collapse; font-size: 12px }
 th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #eef1f6 }
 th { color: #5a6b82; font-weight: 600 }
 tr.weak { background: #fff3e8 } tr.strong { background: #fdeaea } tr.ok { background: #eef8ef }
-tr.lowconf { background: repeating-linear-gradient(135deg, #f2f2f2, #f2f2f2 8px, #e8e8e8 8px, #e8e8e8 16px) }
-tr.lowconf td:last-child { color: #7a6a2a }
+tr.lowconf { background: repeating-linear-gradient(135deg, #f2f2f2, #f2f2f2 8px, #e8e8e8 8px, #e8e8e8 16px);
+  outline: 1px dashed #a0893a; outline-offset: -1px }
+tr.lowconf td:last-child { color: #7a6a2a; font-weight: 600 }
+.slot.lowconf { background: repeating-linear-gradient(135deg, #fafbfd, #fafbfd 8px, #f0eee6 8px, #f0eee6 16px);
+  border-right: 3px dashed #a0893a }
+.lc-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px;
+  margin-left: 6px; background: #f5e6a8; color: #6a5a18; vertical-align: middle }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: #fafbfd }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
@@ -132,7 +137,7 @@ img { width: 100%; border-radius: 8px }
     <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
         <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
     {% for s in slots %}
-    <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence }}"><td>{{ s.label }}</td><td>{{ s.n }} ({{ s.clean }})</td>
+    <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence }}"><td>{{ s.label }}{% if s.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
         <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}</td></tr>
     {% endfor %}
@@ -146,7 +151,8 @@ img { width: 100%; border-radius: 8px }
     <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window.{% endtrans %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
-    on contaminated windows and is correspondingly less certain.{% endtrans %}</div>
+    on contaminated windows and is correspondingly less certain.{% endtrans %}
+    {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}</div>
 </div>
 
 <div class="card">
@@ -171,8 +177,8 @@ img { width: 100%; border-radius: 8px }
 <div class="card">
   <h2>{% trans %}Derivations from the curve shape &amp; possible approaches{% endtrans %}</h2>
   {% for r in recs %}
-  <div class="slot {{ r.cls }}">
-    <h3>{{ r.label }} — {{ r.headline }}</h3>
+  <div class="slot {{ r.cls }}{{ ' lowconf' if r.low_confidence }}">
+    <h3>{{ r.label }} — {{ r.headline }}{% if r.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}</h3>
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
       {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>

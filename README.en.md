@@ -9,6 +9,8 @@
 
 **Loop-aware Carb-Ratio Review** — carb-ratio assessment from real CamAPS FX data.
 
+**CamAPS FX (Auto Mode) only.** Other AID systems are not supported — see “Supported systems”.
+
 Analyses a CamAPS/Glooko export and produces a self-contained HTML report with an Ambulatory Glucose Profile (AGP), consensus metrics, and a **loop-aware assessment of carbohydrate ratios (CR)** per time-of-day slot.
 
 ![Example report from loop-cr-review](docs/screenshot.png)

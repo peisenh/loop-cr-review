@@ -16,6 +16,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   extra-basal formula, two ratios, discussion-only use).
 - Absolute postprandial curve: short note that it uses all meals per slot, while the CR table and baseline-normalised curves use the clean-meal rule (so n/shape may differ by design).
 - Interpretation legend tags aligned with table verdict wording (too strong → loosen / too weak → tighten / plausibly adequate).
+- Low-confidence slots: clearer hatching, dashed outline, and a “low confidence” tag in the CR table and derivation cards; legend notes the hatched row.
+- Web upload UI: explicit CamAPS FX (Auto Mode) only notice; README lead-in points to the supported-systems section.
 
 
 ## [0.8.0] - 2026-08-16
