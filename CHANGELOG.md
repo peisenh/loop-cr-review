@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.8.3] - 2026-08-17
 ### Changed
 - Windows desktop: slim WebView2 build (`loop-cr-review-gui-windows.exe`) plus full Qt
   build (`…-gui-windows-qt.exe`); Linux GUI stays Qt.
@@ -375,7 +377,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/peisenh/loop-cr-review/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/peisenh/loop-cr-review/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/peisenh/loop-cr-review/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/peisenh/loop-cr-review/compare/v0.7.0...v0.8.0
