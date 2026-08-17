@@ -8,6 +8,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+
+## [0.8.4] - 2026-08-17
 ### Added
 - Desktop launcher tests (`tests/test_gui.py`, 12 cases): pywebview backend
   selection per platform/build including the `LOOP_CR_GUI` override, the
@@ -418,7 +420,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...HEAD
+[0.8.4]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/peisenh/loop-cr-review/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/peisenh/loop-cr-review/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/peisenh/loop-cr-review/compare/v0.8.0...v0.8.1
