@@ -13,7 +13,12 @@ import unittest
 import urllib.request
 from unittest import mock
 
-import gui
+try:
+    import gui
+except ImportError as exc:                    # pragma: no cover - env without GUI deps
+    # gui.py needs the optional launcher dependencies (waitress, pywebview).
+    # Skip instead of failing the whole suite in a CLI-only environment.
+    raise unittest.SkipTest(f"desktop launcher dependencies missing: {exc}") from exc
 
 
 class TestGuiBackendSelection(unittest.TestCase):

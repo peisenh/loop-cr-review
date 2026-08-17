@@ -16,6 +16,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 - Dependabot config for pip, GitHub Actions and Docker (weekly, grouped
   minor/patch bumps). The DCO workflows now skip bot commits, which cannot
   carry a Signed-off-by line.
+  The CI test job installs the launcher dependencies (waitress, pywebview) and
+  the GUI tests skip themselves when those are absent.
 - Web front-end regression tests (`tests/test_webapp.py`, 25 cases): upload
   hardening (zip-slip, absolute paths, decompression bombs, entry floods,
   corrupt archives), the three slot sources (built-in / field editor / uploaded

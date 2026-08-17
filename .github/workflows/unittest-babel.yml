@@ -25,7 +25,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install "Flask>=3.0,<4.0"   # web tests import webapp (gunicorn not needed)
+          # Test deps: web tests import webapp, GUI tests import gui.
+          # gunicorn/Qt are deliberately left out (not needed to import).
+          pip install "Flask>=3.0,<4.0" "waitress>=3.0" "pywebview>=5.0"
           pip install babel
 
       - name: Babel — compile de/en catalogs
