@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- SPDX-FileCopyrightText: 2026 Peter Eisenhauer -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,8 +42,8 @@
              background:var(--btn-sec-bg); color:var(--blue); }
   .btn-sec:hover { background:var(--btn-sec-hover); }
   .disclaimer { margin:18px 0 0; padding:12px 14px; border-radius:10px;
-                background:var(--disc-bg); border:1px solid var(--disc-border); border-left:4px solid #c0392b;
-                font-size:13px; color:var(--disc-ink); }
+                background:var(--disc-bg); border:1px solid var(--disc-border);
+                border-left:4px solid #c0392b; font-size:13px; color:var(--disc-ink); }
   .disclaimer b { color:var(--disc-b); }
   .foot { margin-top:22px; font-size:12px; color:var(--muted); text-align:center; }
   .foot a { color:var(--blue); text-decoration:none; }
@@ -66,72 +66,72 @@
     <source media="(prefers-color-scheme: dark)" srcset="{{ url_for('static', filename='logo-readme-dark.svg') }}">
     <img class="brand" src="{{ url_for('static', filename='logo-horizontal.svg') }}" alt="loop-cr-review">
   </picture>
-  <h1>Loop-aware Carb-Ratio Review &middot; CR-Beurteilung aus CamAPS-FX-Daten</h1>
-  <p class="hint" style="margin:0 0 14px">Ausgelegt und getestet <b>nur f&uuml;r CamAPS FX Auto Mode</b> (Glooko-Export). Andere Closed-Loop-Systeme: siehe README.</p>
+  <h1>{% trans %}Loop-aware Carb-Ratio Review · CR assessment from CamAPS FX data{% endtrans %}</h1>
+  <p class="hint" style="margin:0 0 14px">{% trans %}Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). Other closed-loop systems: see README.{% endtrans %}</p>
 
   <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
-    <label class="first" for="export">CamAPS/Glooko-Export (ZIP)</label>
+    <label class="first" for="export">{% trans %}CamAPS/Glooko export (ZIP){% endtrans %}</label>
     <input id="export" type="file" name="export" accept=".zip" required>
-    <div class="hint">Wird nur im Arbeitsspeicher verarbeitet und danach sofort gel&ouml;scht.</div>
+    <div class="hint">{% trans %}Processed in memory only and deleted immediately afterwards.{% endtrans %}</div>
 
     <div class="row">
       <div>
-        <label for="lang">Sprache</label>
-        <select id="lang" name="lang">
-          <option value="de" selected>Deutsch</option>
-          <option value="en">English</option>
+        <label for="lang">{% trans %}Language{% endtrans %}</label>
+        <select id="lang" name="lang" onchange="location.search='?lang='+this.value">
+          <option value="de" {% if lang == 'de' %}selected{% endif %}>Deutsch</option>
+          <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
         </select>
+        <div class="hint">{% trans %}UI and report language (default German).{% endtrans %}</div>
       </div>
       <div>
-        <label for="window_hours">Mahlzeitfenster (h)</label>
+        <label for="window_hours">{% trans %}Meal window (h){% endtrans %}</label>
         <input id="window_hours" type="number" name="window_hours" value="4" min="0.5" max="12" step="0.5">
-        <div class="hint">Postprandiales Fenster (Standard 4).</div>
+        <div class="hint">{% trans %}Postprandial window (default 4).{% endtrans %}</div>
       </div>
     </div>
 
-    <label class="check"><input type="checkbox" name="daily"> Tages&uuml;bersicht anh&auml;ngen</label>
-    <label class="check"><input type="checkbox" name="download"> Report als Datei herunterladen (statt anzeigen)</label>
+    <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="download"> {% trans %}Download report as file (instead of displaying){% endtrans %}</label>
 
     <fieldset>
-      <legend>Slots (Tageszeit-Fenster)</legend>
-      <label class="first" for="slots_mode">Quelle</label>
+      <legend>{% trans %}Slots (time-of-day windows){% endtrans %}</legend>
+      <label class="first" for="slots_mode">{% trans %}Source{% endtrans %}</label>
       <select id="slots_mode" name="slots_mode" onchange="slotMode(this.value)">
-        <option value="default" selected>Standard (Fr&uuml;hst&uuml;ck/Mittag/Abend)</option>
-        <option value="fields">Eigene Felder</option>
-        <option value="json">JSON-Datei</option>
+        <option value="default" selected>{% trans %}Default (breakfast/lunch/dinner){% endtrans %}</option>
+        <option value="fields">{% trans %}Custom fields{% endtrans %}</option>
+        <option value="json">{% trans %}JSON file{% endtrans %}</option>
       </select>
 
       <div id="slots-fields" class="hidden">
         <table class="slots">
-          <thead><tr><th>Label</th><th>Start</th><th>Ende</th><th></th></tr></thead>
+          <thead><tr><th>{% trans %}Label{% endtrans %}</th><th>{% trans %}Start{% endtrans %}</th><th>{% trans %}End{% endtrans %}</th><th></th></tr></thead>
           <tbody id="slot-rows"></tbody>
         </table>
-        <button type="button" class="btn-sec" onclick="addRow()">+ Zeile</button>
-        <div class="hint">Stunden 0&ndash;24, Start &lt; Ende, keine &Uuml;berlappung.
-          Der Auffang-Slot &bdquo;Sonstige&ldquo; wird automatisch erg&auml;nzt.</div>
+        <button type="button" class="btn-sec" onclick="addRow()">+ {% trans %}Row{% endtrans %}</button>
+        <div class="hint">{% trans %}Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is added automatically.{% endtrans %}</div>
       </div>
 
       <div id="slots-json" class="hidden">
-        <label for="slots">Slots-Datei (JSON)</label>
+        <label for="slots">{% trans %}Slots file (JSON){% endtrans %}</label>
         <input id="slots" type="file" name="slots" accept=".json">
       </div>
     </fieldset>
 
-    <button type="submit">Report erstellen</button>
+    <button type="submit">{% trans %}Create report{% endtrans %}</button>
 
     <div class="disclaimer">
-      <b>&#9888; Kein Medizinprodukt, keine Dosierempfehlung.</b>
-      Statistische Auswertung vorhandener CGM-/Pumpendaten als Grundlage f&uuml;r
-      Gespr&auml;che mit dem Behandlungsteam &mdash; keine Diagnose, keine Therapie&shy;entscheidung.
+      {% trans %}<b>⚠︎ Not a medical device, no dosing recommendation.</b>
+      Statistical analysis of existing CGM/pump data as a basis for discussions
+      with the care team — no diagnosis, no treatment decision.{% endtrans %}
       <br><br>
-      <b>Nur CamAPS FX (Auto Mode).</b>
-      Die Methode setzt auf moduliertes Basal als Loop-Signal. Andere AID-Systeme
-      (z.&nbsp;B. Control-IQ, Omnipod&nbsp;5, AndroidAPS) sind nicht unterst&uuml;tzt;
-      Ergebnisse w&auml;ren dort nicht g&uuml;ltig.
+      {% trans %}<b>CamAPS FX (Auto Mode) only.</b>
+      The method relies on modulated basal as the loop signal. Other AID systems
+      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;
+      results would not be valid there.{% endtrans %}
       <br><br>
-      <b>Homelab / privat.</b>
-      Upload nur im Arbeitsspeicher bzw. tempor&auml;r, danach L&ouml;schung —
-      kein &ouml;ffentliches Hosting, keine Speicherung der Exporte.
+      {% trans %}<b>Homelab / private.</b>
+      Upload is processed in memory or temporarily only, then deleted —
+      no public hosting, no storage of exports.{% endtrans %}
     </div>
   </form>
 
@@ -142,7 +142,7 @@
 </div>
 
 <script>
-  var DEFAULTS = [["Fr\u00fchst\u00fcck",5,10],["Mittag",11,15],["Abend",17,22]];
+  var DEFAULTS = {{ slot_defaults | tojson }};
   function row(label, s, e) {
     var tr = document.createElement("tr");
     tr.innerHTML =

@@ -9,6 +9,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Changed
+- Upload form: Babel i18n (de/en), switchable via language field; default remains German.
 - CI: align checkout/setup-python with build-release (v7; Node 20 deprecation warning).
 
 

@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path
 
 from flask import Flask, request, render_template, abort, Response
+from jinja2 import select_autoescape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import loop_cr_review as core
@@ -25,6 +26,8 @@ MAX_FILE_BYTES = 100 * 1024 * 1024         # 100 MB per extracted file
 MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb guard)
 
 app = Flask(__name__)
+app.jinja_env.add_extension("jinja2.ext.i18n")
+app.jinja_env.autoescape = select_autoescape(["html", "htm", "xml", "j2"])
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 # Honour X-Forwarded-* from a trusted reverse proxy (Traefik in the homelab):
 # X-Forwarded-Prefix lets the app run under a sub-path (e.g. /loop-cr-review)
@@ -78,9 +81,7 @@ def _find_export_base(root):
 
 def _read_options():
     """Validate and return (lang, window_hours, daily) from the form."""
-    lang = request.form.get("lang", "de")
-    if lang not in ("de", "en"):
-        abort(400, "invalid language")
+    lang = _ui_lang()
     try:
         window_hours = float(request.form.get("window_hours", "4"))
     except ValueError:
@@ -135,10 +136,36 @@ def _read_slots(tmpd, lang):
     return None
 
 
+
+def _ui_lang():
+    """Language for the upload form and the report (default ``de``)."""
+    lang = (request.args.get("lang") or request.form.get("lang") or "de").strip().lower()
+    return lang if lang in ("de", "en") else "de"
+
+
+def _install_ui_i18n(lang):
+    """Load gettext catalogs for Jinja ``{% trans %}`` on the upload page."""
+    core.setup_i18n(lang)
+    # pylint: disable=no-member
+    app.jinja_env.install_gettext_translations(core._TRANSLATION.get(), newstyle=True)
+
+
 @app.route("/", methods=["GET"])
 def index():
-    """Show the upload form."""
-    return render_template("upload.html.j2", repo=REPO, version=core.tool_version())
+    """Show the upload form (UI language via ?lang=, default German)."""
+    lang = _ui_lang()
+    _install_ui_i18n(lang)
+    if lang == "de":
+        slot_defaults = [["Frühstück", 5, 10], ["Mittag", 11, 15], ["Abend", 17, 22]]
+    else:
+        slot_defaults = [["Breakfast", 5, 10], ["Lunch", 11, 15], ["Dinner", 17, 22]]
+    return render_template(
+        "upload.html.j2",
+        repo=REPO,
+        version=core.tool_version(),
+        lang=lang,
+        slot_defaults=slot_defaults,
+    )
 
 
 @app.route("/report", methods=["POST"])
