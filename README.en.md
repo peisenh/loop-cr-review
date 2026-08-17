@@ -153,16 +153,23 @@ for HTTPS + Basic-Auth if you want a reverse proxy in front; the real
 ### 3 · Desktop app (double-click)
 
 Pre-built binaries run the same front-end in a native window — no Python, no
-Docker, no browser. Download the file for your OS from the release page and run it:
+Docker, no browser tab. Download from the release page:
 
-- **Windows:** `loop-cr-review-gui-windows.exe`
-- **Linux:** `loop-cr-review-gui-linux`
+- **Windows 10 / 11 (recommended):** `loop-cr-review-gui-windows.exe`
+  Slim; uses **Edge WebView2** (normally already present on Win10/11).
+- **Older Windows / no WebView2:** `loop-cr-review-gui-windows-qt.exe`
+  Full **Qt WebEngine** bundled — larger, but independent of WebView2
+  (e.g. if the slim build fails or WebView2 is missing).
+- **Linux:** `loop-cr-review-gui-linux` (Qt WebEngine, larger)
 
-Or run it from source:
+Or from source:
 
 ```bash
-pip install -r requirements-gui.txt
-python3 gui.py
+# Linux / Windows with Qt
+pip install -r requirements-gui.txt && python3 gui.py
+
+# Windows slim (WebView2, no Qt)
+pip install -r requirements-gui-webview2.txt && python3 gui.py
 ```
 
 Everything happens locally; the data never leaves your machine.
@@ -234,7 +241,8 @@ loop-cr-review/
 ├── docker-compose.example.yml # copy to docker-compose.yml (gitignored)
 ├── requirements.txt           # CLI dependencies
 ├── requirements-web.txt       # extra dependencies for the web front-end
-├── requirements-gui.txt       # extra dependencies for the desktop app
+├── requirements-gui.txt       # desktop app Qt (Linux + Windows full)
+├── requirements-gui-webview2.txt  # desktop app Windows slim (WebView2)
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

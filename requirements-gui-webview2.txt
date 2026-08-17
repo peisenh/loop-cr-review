@@ -1,0 +1,8 @@
+# Slim Windows desktop GUI — pywebview + Edge WebView2 (no Qt).
+# For source runs on modern Windows (WebView2 runtime usually preinstalled):
+#   pip install -r requirements-gui-webview2.txt   &&   python3 gui.py
+# Linux / fully bundled offline Windows: use requirements-gui.txt (Qt) instead.
+-r requirements.txt
+Flask>=3.0,<4.0
+pywebview>=5.0
+waitress>=3.0

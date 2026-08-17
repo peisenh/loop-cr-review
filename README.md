@@ -155,16 +155,23 @@ Medizinprodukt** wie für die Kommandozeile.
 ### 3 · Desktop-App (Doppelklick)
 
 Fertige Binaries starten dasselbe Frontend in einem nativen Fenster — ohne
-Python, Docker oder Browser. Passende Datei von der Release-Seite laden und starten:
+Python, Docker oder Browser-Tab. Passende Datei von der Release-Seite laden:
 
-- **Windows:** `loop-cr-review-gui-windows.exe`
-- **Linux:** `loop-cr-review-gui-linux`
+- **Windows 10 / 11 (empfohlen):** `loop-cr-review-gui-windows.exe`
+  Schlank, nutzt **Edge WebView2** (unter Win10/11 in der Regel schon installiert).
+- **Ältere Windows-Versionen / ohne WebView2:** `loop-cr-review-gui-windows-qt.exe`
+  Volles **Qt WebEngine** mitgeliefert — größer, dafür unabhängig von WebView2
+  (z. B. wenn der schlanke Build scheitert oder WebView2 fehlt).
+- **Linux:** `loop-cr-review-gui-linux` (Qt WebEngine, größer)
 
 Oder aus dem Quellcode:
 
 ```bash
-pip install -r requirements-gui.txt
-python3 gui.py
+# Linux / Windows mit Qt
+pip install -r requirements-gui.txt && python3 gui.py
+
+# Windows schlank (WebView2, ohne Qt)
+pip install -r requirements-gui-webview2.txt && python3 gui.py
 ```
 
 Alles läuft lokal; die Daten verlassen den Rechner nicht.
@@ -237,7 +244,8 @@ loop-cr-review/
 ├── docker-compose.example.yml # nach docker-compose.yml kopieren (gitignored)
 ├── requirements.txt           # CLI-Abhängigkeiten
 ├── requirements-web.txt       # zusätzliche Abhängigkeiten fürs Web-Frontend
-├── requirements-gui.txt       # zusätzliche Abhängigkeiten für die Desktop-App
+├── requirements-gui.txt       # Desktop-App Qt (Linux + Windows full)
+├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE

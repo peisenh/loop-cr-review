@@ -5,10 +5,17 @@ Runs the Flask web front-end on a local port with a production WSGI server
 reports as the web/CLI, but as a double-click desktop app: no browser tab, no
 Docker, localhost only, single user. Health data never leaves the machine.
 
-Runtime backends pywebview uses: WebView2 (Edge) on Windows, WebKitGTK on
-Linux. See requirements-gui.txt for the system prerequisites.
+GUI backends (auto-selected unless LOOP_CR_GUI overrides):
+
+- Windows with PyQt6 present (bundled Qt build) → Qt WebEngine
+- Windows without PyQt6 (slim build) → Edge WebView2
+- Linux → Qt WebEngine (WebKitGTK was unreliable)
+
+Override: LOOP_CR_GUI=qt|edgechromium
 """
+import os
 import socket
+import sys
 import threading
 import time
 
@@ -35,13 +42,33 @@ def serve(port):
 def wait_until_up(port, timeout=15.0):
     """Block until the local server accepts connections, or time out."""
     deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
+    while time.monotonic() <= deadline:
         try:
             with socket.create_connection(("127.0.0.1", port), 0.2):
                 return True
         except OSError:
             time.sleep(0.05)
     return False
+
+
+def _gui_backend():
+    """Pick pywebview GUI backend for this build/platform.
+
+    Bundled Windows Qt builds ship PyQt6 → use Qt. Slim Windows builds do not
+    → Edge WebView2. Linux always uses Qt. LOOP_CR_GUI=qt|edgechromium forces.
+    """
+    forced = os.environ.get("LOOP_CR_GUI", "").strip().lower()
+    if forced in ("edge", "webview2", "edgechromium"):
+        return "edgechromium"
+    if forced == "qt":
+        return "qt"
+    if sys.platform == "win32":
+        try:
+            import PyQt6  # noqa: F401  # present only in the full Qt Windows build
+            return "qt"
+        except ImportError:
+            return "edgechromium"
+    return "qt"
 
 
 def main():
@@ -51,7 +78,7 @@ def main():
     wait_until_up(port)
     webview.create_window(WINDOW_TITLE, f"http://127.0.0.1:{port}/",
                           width=780, height=920)
-    webview.start(gui='qt')
+    webview.start(gui=_gui_backend())
 
 
 if __name__ == "__main__":

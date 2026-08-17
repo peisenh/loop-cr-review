@@ -8,6 +8,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Changed
+- Windows desktop: slim WebView2 build (`loop-cr-review-gui-windows.exe`) plus full Qt
+  build (`…-gui-windows-qt.exe`); Linux GUI stays Qt.
+
 
 ## [0.8.2] - 2026-08-17
 ### Changed

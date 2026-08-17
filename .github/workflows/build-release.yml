@@ -7,16 +7,15 @@ name: Build executables
 #
 # Structure deliberately split: the build matrix only builds and uploads the
 # binaries as artifacts; ONE separate release job then creates the release
-# ONCE with both assets. If both matrix jobs each wrote a release to the same
-# tag in parallel, that could cause "already_exists" errors or duplicate draft
-# releases (a known race).
+# ONCE with all assets. If matrix jobs each wrote a release to the same tag
+# in parallel, that could cause "already_exists" errors or duplicate drafts.
 #
 # This file is ONLY for GitHub Actions. The Gitea release (without binaries)
-# lives separately under .gitea/workflows/release.yml (curl against the Gitea
-# API, since there is no equivalent release action there). Once a .gitea/
-# directory exists, Gitea ignores these .github/ files entirely anyway.
+# lives separately under .gitea/workflows/release.yml.
 #
-# GUI backend: Qt (pywebview[qt] + PyQt6) instead of GTK/WebKitGTK
+# GUI backends:
+#   Linux  → Qt WebEngine (bundled)
+#   Windows → Qt WebEngine (full) + Edge WebView2 (slim, modern Windows)
 on:
   push:
     tags: ["v*"]
@@ -38,12 +37,12 @@ jobs:
           - os: windows-latest
             sep: ";"
             asset: loop-cr-review-windows.exe
-            gui_asset: loop-cr-review-gui-windows.exe
+            gui_asset: loop-cr-review-gui-windows-qt.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0    # volle Historie + Tags, sonst liefert 'git describe' nichts
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -56,7 +55,7 @@ jobs:
       - name: Bake in version
         shell: bash
         run: echo "VERSION = \"$(git describe --tags --always)\"" > _version.py
-      - name: Build (onefile, template + locale bundled)
+      - name: Build CLI (onefile, template + locale bundled)
         run: >
           pyinstaller --onefile --name loop-cr-review
           --add-data "templates/report.html.j2${{ matrix.sep }}templates"
@@ -64,7 +63,7 @@ jobs:
           loop_cr_review.py
       - name: Smoke test (generate report from example data)
         run: dist/loop-cr-review example-data -o smoke.html
-      - name: Name artifact
+      - name: Name CLI artifact
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -77,8 +76,8 @@ jobs:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
 
-      # --- Desktop GUI binary (pywebview + local server) -------------------
-      - name: Install GUI deps
+      # --- Desktop GUI: Qt (Linux + Windows full) ---------------------------
+      - name: Install GUI deps (Qt)
         run: pip install -r requirements-gui.txt
       - name: Install Qt runtime libs (Linux)
         if: runner.os == 'Linux'
@@ -95,7 +94,7 @@ jobs:
             libxcb-keysyms1 \
             libxcb-render-util0 \
             libxcb-shape0
-      - name: Build GUI (onefile, windowed; whole templates + static + locale)
+      - name: Build GUI Qt (onefile, windowed)
         run: >
           pyinstaller --onefile --windowed --name loop-cr-review-gui
           --add-data "templates${{ matrix.sep }}templates"
@@ -105,7 +104,7 @@ jobs:
           --collect-all PyQt6
           --collect-all qtpy
           gui.py
-      - name: Name GUI artifact
+      - name: Name GUI Qt artifact
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -118,12 +117,37 @@ jobs:
           name: ${{ matrix.gui_asset }}
           path: ${{ matrix.gui_asset }}
 
+      # --- Desktop GUI: WebView2 slim (Windows only) ------------------------
+      - name: Install GUI deps (WebView2, no Qt)
+        if: runner.os == 'Windows'
+        run: |
+          pip uninstall -y PyQt6 PyQt6-Qt6 PyQt6-WebEngine PyQt6-WebEngine-Qt6 qtpy 2>nul || true
+          pip install -r requirements-gui-webview2.txt
+      - name: Build GUI WebView2 slim (Windows)
+        if: runner.os == 'Windows'
+        run: >
+          pyinstaller --onefile --windowed --name loop-cr-review-gui-webview2
+          --add-data "templates${{ matrix.sep }}templates"
+          --add-data "static${{ matrix.sep }}static"
+          --add-data "locale${{ matrix.sep }}locale"
+          --collect-all webview
+          gui.py
+      - name: Name GUI WebView2 artifact
+        if: runner.os == 'Windows'
+        shell: bash
+        run: mv dist/loop-cr-review-gui-webview2.exe loop-cr-review-gui-windows.exe
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Windows'
+        with:
+          name: loop-cr-review-gui-windows.exe
+          path: loop-cr-review-gui-windows.exe
+
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7   # CHANGELOG.md + Footer vom getaggten Stand
+      - uses: actions/checkout@v7
       - name: Collect artifacts
         uses: actions/download-artifact@v7
         with:
@@ -131,7 +155,7 @@ jobs:
           merge-multiple: true
       - name: Build release notes (changelog section + fixed footer)
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"        # v0.4.6 -> 0.4.6
+          VERSION="${GITHUB_REF_NAME#v}"
           awk -v ver="$VERSION" '
             $0 ~ "^## \\[" ver "\\]" { f=1; next }
             f && /^## \[/            { exit }
