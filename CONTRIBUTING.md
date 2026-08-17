@@ -125,6 +125,6 @@ Full text: <https://developercertificate.org/>
 ## Tests
 
 ```bash
-python3 -m unittest tests.test_example_data -v
+python3 -m unittest tests.test_example_data tests.test_gui tests.test_webapp -v
 ```
 These pin the synthetic demo slot pattern and basic parsers.
