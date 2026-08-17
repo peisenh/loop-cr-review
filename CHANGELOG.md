@@ -8,6 +8,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Changed
+- CI: align checkout/setup-python with build-release (v7; Node 20 deprecation warning).
+
 
 ## [0.8.3] - 2026-08-17
 ### Changed
