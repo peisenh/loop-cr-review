@@ -89,6 +89,16 @@ def setup_i18n(lang):
     return trans
 
 
+def current_translation():
+    """Return the active (context-local) gettext translation catalog.
+
+    Public accessor for front-ends (e.g. the web UI) that need to install the
+    same catalog into their own template environment after calling
+    :func:`setup_i18n`.
+    """
+    return _TRANSLATION.get()
+
+
 # --- Method parameters (data-independent) ----------------------------------
 # Built-in default slots (immutable template). Runtime analysis uses the module
 # globals SLOTS / _slot_state()[1] / _slot_state()[2] / _slot_state()[3], which are installed for
@@ -170,30 +180,30 @@ def build_slots(raw, source="Slots"):
     message as LoopCRError instead of silently using wrong slots.
     """
     if not isinstance(raw, list) or not raw:
-        raise LoopCRError(f"{source}: erwarte eine nicht-leere Liste von Slot-Objekten.")
+        raise LoopCRError(f"{source}: expected a non-empty list of slot objects.")
     slots, seen_keys, catchall = [], set(), 0
     for i, entry in enumerate(raw):
         if not isinstance(entry, dict):
-            raise LoopCRError(f"{source}, Eintrag {i}: erwarte ein Objekt (key/label/start/end).")
+            raise LoopCRError(f"{source}, entry {i}: expected an object (key/label/start/end).")
         missing = [f for f in ("key", "label", "start", "end") if f not in entry]
         if missing:
-            raise LoopCRError(f"{source}, Eintrag {i}: fehlende Felder {missing}.")
+            raise LoopCRError(f"{source}, entry {i}: missing fields {missing}.")
         key, label, start, end = entry["key"], entry["label"], entry["start"], entry["end"]
         if key in seen_keys:
-            raise LoopCRError(f"{source}: doppelter key '{key}'.")
+            raise LoopCRError(f"{source}: duplicate key '{key}'.")
         seen_keys.add(key)
         if (not isinstance(start, int) or not isinstance(end, int)
                 or isinstance(start, bool) or isinstance(end, bool)):
-            raise LoopCRError(f"{source}, '{key}': start/end muss eine ganze Zahl sein.")
+            raise LoopCRError(f"{source}, '{key}': start/end must be a whole number.")
         if start == -1 and end == -1:
             catchall += 1
         elif not (0 <= start < 24 and 0 < end <= 24 and start < end):
-            raise LoopCRError(f"{source}, '{key}': start/end muss 0<=start<end<=24 "
-                     "sein (oder beide -1 fuer den Auffangbecken-Slot).")
+            raise LoopCRError(f"{source}, '{key}': start/end must satisfy 0<=start<end<=24 "
+                              "(or both -1 for the catch-all slot).")
         slots.append((key, label, start, end))
     if catchall != 1:
-        raise LoopCRError(f"{source}: genau ein Auffangbecken-Eintrag (start=-1, end=-1) "
-                 f"noetig, gefunden: {catchall}.")
+        raise LoopCRError(f"{source}: exactly one catch-all entry (start=-1, end=-1) "
+                          f"required, found: {catchall}.")
     return slots
 
 
@@ -206,8 +216,8 @@ def load_slots_file(path):
     try:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise LoopCRError(f"Slots-Datei '{path}' nicht lesbar/kein gueltiges JSON: {exc}")
-    return build_slots(raw, f"Slots-Datei '{path}'")
+        raise LoopCRError(f"Slots file '{path}' unreadable/not valid JSON: {exc}") from exc
+    return build_slots(raw, f"Slots file '{path}'")
 FASTING_HOURS = (0, 1, 2, 3, 4, 5)
 LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
 D4_WEAK, D4_STRONG = 15, -30
@@ -545,8 +555,8 @@ def read_basal_timeline(base):
                     dur = num(row[2])
                     segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
     if not segs:
-        raise LoopCRError(f"Keine Basalraten in {base / 'Insulin data'} gefunden "
-                 "(basal_data_*.csv leer oder fehlt).")
+        raise LoopCRError(f"No basal rates found in {base / 'Insulin data'} "
+                          "(basal_data_*.csv empty or missing).")
     segs.sort()
     t0 = segs[0][0]
     minutes = int((segs[-1][0] + timedelta(minutes=segs[-1][1]) - t0).total_seconds() // 60) + 1
@@ -1254,7 +1264,7 @@ def _daily_days_dual(times, gluc, base, basal):
     return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
 
 
-def build_context(base, window, wlab, daily=False):
+def build_context(base, window, wlab, daily=False, lang="de"):
     """Read all data, analyse, and assemble the template context."""
     times, gluc, name, sensor = read_cgm(base)
     meals, minors, pump = read_meals(base)
@@ -1273,7 +1283,7 @@ def build_context(base, window, wlab, daily=False):
     return {
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
         "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
-        "version": tool_version(),
+        "version": tool_version(), "lang": lang,
         "days": f"{met['days']:.0f}", "device": f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
@@ -1354,7 +1364,7 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
             else f"{window_hours:g}h")
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
     with _slot_scope(slots):
-        context = build_context(Path(export_dir), window, wlab, daily)
+        context = build_context(Path(export_dir), window, wlab, daily, lang=lang)
         return render(context, tpl_dir), context
 
 
@@ -1380,7 +1390,7 @@ def main():
     slug = re.sub(r"[^a-z0-9]+", "_", context["name"].lower()).strip("_") or "patient"
     out = Path(args.out) if args.out else Path(f"{slug}_loop-cr-review_{wlab}.html")
     out.write_text(html, encoding="utf-8")
-    print(f"geschrieben: {out} | {len(html)} bytes")
+    print(f"written: {out} | {len(html)} bytes")
     # Labels from the report context (slot scope already restored)
     print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]))
 

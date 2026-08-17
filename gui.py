@@ -13,6 +13,7 @@ GUI backends (auto-selected unless LOOP_CR_GUI overrides):
 
 Override: LOOP_CR_GUI=qt|edgechromium
 """
+import importlib.util
 import os
 import socket
 import sys
@@ -63,11 +64,9 @@ def _gui_backend():
     if forced == "qt":
         return "qt"
     if sys.platform == "win32":
-        try:
-            import PyQt6  # noqa: F401  # present only in the full Qt Windows build
-            return "qt"
-        except ImportError:
-            return "edgechromium"
+        # Present only in the full Qt Windows build; probe without importing
+        # (find_spec avoids paying PyQt6's import cost just to check presence).
+        return "qt" if importlib.util.find_spec("PyQt6") else "edgechromium"
     return "qt"
 
 

@@ -8,9 +8,29 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Fixed
+- Report: the `<html lang>` attribute now follows the selected report language
+  instead of being hardcoded to `de` (content was already translated correctly;
+  this only affected screen readers and browser language detection).
+- Web front-end: invalid slots entered in the field editor returned HTTP 500
+  instead of 400 — that path still caught only the legacy `SystemExit` and not
+  `LoopCRError`. The uploaded-JSON path was already correct.
+- Web front-end: the automatically appended catch-all slot used a hardcoded
+  label, so a German report showed the English "Other" for field-editor slots.
+  It now uses the same msgid as the built-in slot and is translated normally.
+
 ### Changed
 - Upload form: Babel i18n (de/en), switchable via language field; default remains German.
 - CI: align checkout/setup-python with build-release (v7; Node 20 deprecation warning).
+- All internal error and status messages are now consistently English, matching
+  the rest of the code base (argparse help, web-layer aborts, docstrings). The
+  `LoopCRError` texts and the CLI's success line were the last German holdouts.
+  User-facing output (report, upload form) stays fully localised via gettext.
+- Code quality back to pylint 10.00/10: explicit exception chaining in
+  `load_slots_file`, public `current_translation()` accessor instead of reaching
+  into the core's private ContextVar from the web layer, `importlib.util.find_spec`
+  instead of a throwaway import when probing for PyQt6, and `.pylintrc` limits
+  raised with a rationale for the data-assembly functions and the dark-mode charts.
 
 
 ## [0.8.3] - 2026-08-17

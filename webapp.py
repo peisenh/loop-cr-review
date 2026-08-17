@@ -92,7 +92,7 @@ def _read_options():
     return lang, window_hours, daily
 
 
-def _slots_from_fields(lang):
+def _slots_from_fields():
     """Build a validated slots list from the repeated label/start/end fields.
 
     The catch-all ("other") slot is appended automatically. Returns None when
@@ -112,21 +112,21 @@ def _slots_from_fields(lang):
             abort(400, f"slot '{label}': start/end must be whole numbers")
     if not raw:
         return None
-    raw.append({"key": "other",
-                "label": "Sonstige" if lang == "de" else "Other",
-                "start": -1, "end": -1})
+    # Same msgid as the core's built-in catch-all, so the report catalog
+    # translates it like any other slot label.
+    raw.append({"key": "other", "label": "Other", "start": -1, "end": -1})
     try:
         return core.build_slots(raw, "Slots")
-    except SystemExit as exc:
+    except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"invalid slots: {exc}")
     return None                          # pragma: no cover
 
 
-def _read_slots(tmpd, lang):
+def _read_slots(tmpd):
     """Resolve the slots choice: default / field editor / uploaded JSON."""
     mode = request.form.get("slots_mode", "default")
     if mode == "fields":
-        return _slots_from_fields(lang)
+        return _slots_from_fields()
     if mode == "json":
         slots_up = request.files.get("slots")
         if slots_up is not None and slots_up.filename:
@@ -146,8 +146,7 @@ def _ui_lang():
 def _install_ui_i18n(lang):
     """Load gettext catalogs for Jinja ``{% trans %}`` on the upload page."""
     core.setup_i18n(lang)
-    # pylint: disable=no-member
-    app.jinja_env.install_gettext_translations(core._TRANSLATION.get(), newstyle=True)
+    app.jinja_env.install_gettext_translations(core.current_translation(), newstyle=True)  # pylint: disable=no-member
 
 
 @app.route("/", methods=["GET"])
@@ -188,7 +187,7 @@ def report():
         except zipfile.BadZipFile:
             abort(400, "the uploaded file is not a valid ZIP archive")
 
-        slots = _read_slots(tmpd, lang)
+        slots = _read_slots(tmpd)
         base = _find_export_base(extract)
         html = _generate_or_400(base, lang, window_hours, daily, slots)
 
