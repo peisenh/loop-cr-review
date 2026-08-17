@@ -156,14 +156,15 @@ class TestLoopCRErrorAndSlotScope(unittest.TestCase):
             core.build_slots([{"key": "a", "label": "A", "start": 0, "end": 8}])  # no catch-all
 
     def test_slot_scope_restores_defaults(self):
-        before = list(core.SLOTS)
+        before = [s[0] for s in core.DEFAULT_SLOTS]
         custom = core.build_slots([
             {"key": "brunch", "label": "Brunch", "start": 9, "end": 12},
             {"key": "other", "label": "Other", "start": -1, "end": -1},
         ])
         core.generate_report(EXAMPLE, lang="de", slots=custom)
-        self.assertEqual([s[0] for s in core.SLOTS], [s[0] for s in before])
-        self.assertIn("breakfast", core.MAIN_SLOTS)
+        # After the call, this context should still see default keys
+        self.assertEqual([s[0] for s in core._slot_state()[0]], before)
+        self.assertIn("breakfast", core._slot_state()[1])
 
 
 class TestSelectSlotRows(unittest.TestCase):
@@ -181,3 +182,29 @@ class TestSelectSlotRows(unittest.TestCase):
         self.assertFalse(only)
         self.assertEqual(n_clean, 1)
         self.assertEqual(len(used), 2)
+
+
+class TestContextIsolation(unittest.TestCase):
+    """Language and glucose unit must not leak across concurrent callers."""
+
+    def test_concurrent_lang_and_unit_isolated(self):
+        import concurrent.futures
+        import loop_cr_review as core
+
+        def de_report():
+            html, ctx = core.generate_report(EXAMPLE, lang="de")
+            return "Frühstück" in html, ctx.get("unit")
+
+        def en_report():
+            html, ctx = core.generate_report(EXAMPLE, lang="en")
+            return "Breakfast" in html, ctx.get("unit")
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            f_de = pool.submit(de_report)
+            f_en = pool.submit(en_report)
+            de_ok, de_unit = f_de.result()
+            en_ok, en_unit = f_en.result()
+        self.assertTrue(de_ok)
+        self.assertTrue(en_ok)
+        # both example exports are mg/dL; units must still be consistent per call
+        self.assertEqual(de_unit, en_unit)

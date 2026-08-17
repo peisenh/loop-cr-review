@@ -11,6 +11,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ### Changed
 - Report limitations: note that CamAPS Boost/Ease-off are not in the Glooko CSV export and can
   distort CR signals when active (manual awareness only).
+- Analysis state (slots, language, glucose unit) uses ContextVars so concurrent
+  web/GUI requests do not leak configuration across threads.
 
 
 ## [0.8.1] - 2026-08-16

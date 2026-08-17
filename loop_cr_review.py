@@ -22,6 +22,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from contextlib import contextmanager
+import contextvars
 
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -37,18 +38,8 @@ import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-posi
 # --- i18n -------------------------------------------------------------------
 # gettext-based localisation. Source strings (msgids) are English; the German
 # and English catalogs live under locale/<lang>/LC_MESSAGES/messages.mo.
-# _() is installed into builtins by setup_i18n() so it is available everywhere
-# (module functions and the Jinja2 template) without threading a translator
-# object through every call.
-
-
-def _(message):
-    """Identity translation fallback until setup_i18n() installs the real one.
-
-    setup_i18n() replaces this with the real gettext translator; the identity
-    version returns the English msgid (used on import and by static analysis).
-    """
-    return message
+# Active language is stored in a ContextVar so concurrent callers (threaded
+# waitress/gunicorn) do not leak translations across requests.
 
 
 def N_(message):
@@ -69,15 +60,24 @@ class LoopCRError(Exception):
     """
 
 
-# Active gettext translation for the Jinja2 i18n extension; set by setup_i18n().
-_ACTIVE_TRANSLATION = _gettext_module.NullTranslations()
+_TRANSLATION = contextvars.ContextVar(
+    "loop_cr_translation", default=_gettext_module.NullTranslations())
+
+
+def _(message):
+    """Translate ``message`` using the active (context-local) catalog.
+
+    Falls back to the English msgid when no catalog is installed yet.
+    """
+    return _TRANSLATION.get().gettext(message)
 
 
 def setup_i18n(lang):
-    """Install the gettext translation for `lang` (e.g. 'de', 'en') as _().
+    """Install the gettext translation for ``lang`` (e.g. 'de', 'en').
 
-    Falls back to a no-op translator (msgid == msgstr) if no catalog is found,
-    so an English source string is always shown even without compiled .mo files.
+    The catalog is stored in a ContextVar so concurrent report generations
+    with different languages do not overwrite each other. Falls back to a
+    no-op translator (msgid == msgstr) if no catalog is found.
     """
     localedir = resource_dir() / "locale"
     try:
@@ -85,18 +85,13 @@ def setup_i18n(lang):
                                             languages=[lang])
     except FileNotFoundError:
         trans = _gettext_module.NullTranslations()
-    # Replace the module-level _ (the identity fallback above would otherwise
-    # shadow a builtins install and defeat the translation). Also install into
-    # builtins so the Jinja2 i18n extension picks it up.
-    globals()["_"] = trans.gettext
-    globals()["_ACTIVE_TRANSLATION"] = trans
-    trans.install()
+    _TRANSLATION.set(trans)
     return trans
 
 
 # --- Method parameters (data-independent) ----------------------------------
 # Built-in default slots (immutable template). Runtime analysis uses the module
-# globals SLOTS / MAIN_SLOTS / SLOT_LABEL / SLOT_COLOR, which are installed for
+# globals SLOTS / _slot_state()[1] / _slot_state()[2] / _slot_state()[3], which are installed for
 # the duration of generate_report() via _slot_scope() and then restored so
 # concurrent callers (e.g. threaded waitress in gui.py) do not leak custom slots.
 DEFAULT_SLOTS = (
@@ -109,10 +104,10 @@ _SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085
 
 
 def _derive_slot_globals(slots):
-    """Derive MAIN_SLOTS/SLOT_LABEL/SLOT_COLOR from a SLOTS list.
+    """Derive _slot_state()[1]/_slot_state()[2]/_slot_state()[3] from a SLOTS list.
 
     "other"-like catch-all entries (start < 0) stay out;
-    all other slots automatically land in MAIN_SLOTS and get a
+    all other slots automatically land in _slot_state()[1] and get a
     colour assigned from the palette.
     """
     main_slots = tuple(k for k, _lab, start, _end in slots if start >= 0)
@@ -121,29 +116,44 @@ def _derive_slot_globals(slots):
     return main_slots, label, color
 
 
-SLOTS = list(DEFAULT_SLOTS)
-# All slots with a real time window (start >= 0); "other" (-1,-1) is deliberately
-# the catch-all slot and stays out. Add new slots to DEFAULT_SLOTS --
-# MAIN_SLOTS and all derived analyses follow automatically.
-MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
+# Slot tables are context-local (ContextVar) so concurrent generate_report()
+# calls do not leak custom slots into each other. Accessors below keep call
+# sites readable; _slot_scope() installs a call-specific state.
+_SLOTS_VAR = contextvars.ContextVar("loop_cr_slots", default=None)
+
+
+def _default_slot_state():
+    """Built-in DEFAULT_SLOTS plus derived main/label/color tables."""
+    slots = list(DEFAULT_SLOTS)
+    return (slots, *_derive_slot_globals(slots))
+
+
+def _slot_state():
+    """Active (slots, main_slots, labels, colors) for this context."""
+    state = _SLOTS_VAR.get()
+    if state is None:
+        state = _default_slot_state()
+        _SLOTS_VAR.set(state)
+    return state
 
 
 @contextmanager
 def _slot_scope(slots):
-    """Install slot tables for one report, then restore the previous values.
+    """Install ``slots`` (or the built-in defaults) for the duration of the body.
 
-    ``slots`` is an already-validated list from :func:`build_slots` /
-    :func:`load_slots_file`, or ``None`` for the built-in defaults. Labels are
-    re-derived after ``setup_i18n`` so gettext is applied.
+    State lives in a ContextVar (not process globals) so concurrent callers
+    (threaded waitress/gunicorn) cannot leak custom slots into each other.
+    Labels are re-derived after ``setup_i18n`` so gettext is applied.
     """
-    global SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR  # pylint: disable=global-statement
-    previous = (SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR)
+    slot_list = list(slots) if slots is not None else list(DEFAULT_SLOTS)
+    state = (slot_list, *_derive_slot_globals(slot_list))
+    token = _SLOTS_VAR.set(state)
     try:
-        SLOTS = list(slots) if slots is not None else list(DEFAULT_SLOTS)
-        MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = _derive_slot_globals(SLOTS)
         yield
     finally:
-        SLOTS, MAIN_SLOTS, SLOT_LABEL, SLOT_COLOR = previous
+        _SLOTS_VAR.reset(token)
+
+
 MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 MIN_CLEAN_MEALS = 3        # prefer contamination-free meals; else fall back to all
@@ -216,17 +226,24 @@ HYPO_BG = 70               # mg/dL: glucose below this = hypo (rescue-carb conte
 # then rendered in the export's unit: g() converts an mg/dL threshold into the
 # active unit, so metrics, chart bands and axes all stay consistent.
 MGDL_PER_MMOL = 18.0182
-GLUCOSE_UNIT = "mg/dL"     # active unit, set by set_glucose_unit() at import
+# Active glucose unit is context-local so concurrent report generations
+# (e.g. one mg/dL and one mmol/L request) do not overwrite each other.
+_GLUCOSE_UNIT = contextvars.ContextVar("loop_cr_glucose_unit", default="mg/dL")
 
 
 def set_glucose_unit(unit):
-    """Set the active glucose unit ('mg/dL' or 'mmol/L') for the whole report."""
-    globals()["GLUCOSE_UNIT"] = unit
+    """Set the active glucose unit ('mg/dL' or 'mmol/L') for this report call."""
+    _GLUCOSE_UNIT.set(unit)
+
+
+def glucose_unit():
+    """Return the active glucose unit for this report call."""
+    return _GLUCOSE_UNIT.get()
 
 
 def is_mmol():
     """True if the active glucose unit is mmol/L."""
-    return GLUCOSE_UNIT == "mmol/L"
+    return glucose_unit() == "mmol/L"
 
 
 def g(mgdl):
@@ -297,11 +314,11 @@ def fmt_cr(value):
 
 def slot_of(hour):
     """Time-of-day slot for an hour."""
-    for key, _lab, start, end in SLOTS:
+    for key, _lab, start, end in _slot_state()[0]:
         if 0 <= start <= hour < end:
             return key
     # catch-all: the slot with start < 0 (only one is allowed, see load_slots_file)
-    return next(key for key, _lab, start, _end in SLOTS if start < 0)
+    return next(key for key, _lab, start, _end in _slot_state()[0] if start < 0)
 
 
 # --- Reading ----------------------------------------------------------------
@@ -753,7 +770,7 @@ def _hypo_caution(agg, met, curve_hypo):
       - rescue + otherwise (weak / isolated-in-ok) -> a treated hypo on one meal,
         check that meal rather than tightening the whole slot.
     """
-    base = {"n": met["nadir"], "t": met["nadir_t"], "u": GLUCOSE_UNIT}
+    base = {"n": met["nadir"], "t": met["nadir_t"], "u": glucose_unit()}
     if not agg.get("rescues"):
         return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
                                        "→ secure the hypo window first") % base)
@@ -842,7 +859,7 @@ def build_cr_note(rows, by_slot):
     all_cr = [r["cr"] for r in rows if not np.isnan(r["cr"])]
     med_cr = float(np.median(all_cr)) if all_cr else float("nan")
     dev = []
-    for slot in MAIN_SLOTS:
+    for slot in _slot_state()[1]:
         srows = by_slot.get(slot, [])
         if len(srows) < 3:
             continue
@@ -865,8 +882,8 @@ def build_cr_note(rows, by_slot):
                      "ratio than a pure correction")
         parts.append(_("%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), "
                        "pre-meal BG ~%(bg).0f %(u)s – %(hint)s")
-                     % {"slot": SLOT_LABEL[slot], "scr": scr, "dir": direction,
-                        "m": med_cr, "bg": spre, "hint": hint, "u": GLUCOSE_UNIT})
+                     % {"slot": _slot_state()[2][slot], "scr": scr, "dir": direction,
+                        "m": med_cr, "bg": spre, "hint": hint, "u": glucose_unit()})
     return (_("• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
               "deviations: ") + "; ".join(parts) + _(". Clarification (programmed ratio vs. "
               "correction factor vs. timing) by the care team.<br>"))
@@ -897,7 +914,7 @@ def agp_chart(times, gluc):
     ax.set_xticks(range(0, 25, 3))
     ax.set_ylim(g(40), g(300))
     ax.set_xlabel("Uhrzeit")
-    ax.set_ylabel(GLUCOSE_UNIT)
+    ax.set_ylabel(glucose_unit())
     ax.legend(fontsize=8, ncol=3, loc="upper right")
     ax.grid(alpha=.25)
     return fig_to_b64(fig)
@@ -908,16 +925,16 @@ def slot_curves_chart(meals, window, val_at):
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
     ax.axhspan(g(70), g(180), color="#dff0df")
-    for slot in MAIN_SLOTS:
+    for slot in _slot_state()[1]:
         curve = slot_median_curve(meals, slot, window, val_at)
         if curve is not None:
             n = sum(1 for m in meals if slot_of(m["time"].hour) == slot)
-            ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
-                    label=f"{SLOT_LABEL[slot]} (n={n})")
+            ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
+                    label=f"{_slot_state()[2][slot]} (n={n})")
     ax.set_xlim(0, window)
     ax.set_ylim(g(60), g(240))
     ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel(GLUCOSE_UNIT)
+    ax.set_ylabel(glucose_unit())
     if ax.get_legend_handles_labels()[1]:
         ax.legend(fontsize=8)
     ax.grid(alpha=.25)
@@ -937,7 +954,7 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
     grid = np.arange(0, window + 1, 10)
     fig, ax = plt.subplots(figsize=(10, 3.6))
     ax.axhline(0, color="#888", lw=1)
-    for slot in MAIN_SLOTS:
+    for slot in _slot_state()[1]:
         srows = by_slot.get(slot, [])
         used, n_clean, used_clean_only = select_slot_rows(srows)
         clean_times = {r["time"] for r in used}
@@ -947,11 +964,11 @@ def slot_norm_curves_chart(meals, window, val_at, by_slot):
             # than MIN_CLEAN_MEALS clean) all -- otherwise the legend looks
             # contradictory to the "clean" column of the table.
             basis = "sauber" if used_clean_only else "alle"
-            ax.plot(grid, curve, color=SLOT_COLOR[slot], lw=2,
-                    label=f"{SLOT_LABEL[slot]} (n={n}, {basis})")
+            ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
+                    label=f"{_slot_state()[2][slot]} (n={n}, {basis})")
     ax.set_xlim(0, window)
     ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": GLUCOSE_UNIT})
+    ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": glucose_unit()})
     if ax.get_legend_handles_labels()[1]:
         ax.legend(fontsize=8)
     ax.grid(alpha=.25)
@@ -1035,9 +1052,9 @@ def daily_charts(times, gluc, events, basal, tdd):
 
 
 def slot_definitions():
-    """Human-readable slot time windows for the report legend, derived from SLOTS."""
+    """Human-readable slot time windows for the report legend, derived from _slot_state()[0]."""
     out = []
-    for _key, label, start, end in SLOTS:
+    for _key, label, start, end in _slot_state()[0]:
         if start < 0:
             out.append(_("%(label)s = everything outside the other windows") % {"label": label})
         else:
@@ -1060,12 +1077,12 @@ def _slot_flag(agg, slot, meals, window, val_at):
 
 def _slots_context(by_slot, meals, window, val_at):
     out = []
-    for slot, _label, _start, _end in SLOTS:
+    for slot, _label, _start, _end in _slot_state()[0]:
         agg = aggregate_slot(by_slot.get(slot, []))
         if not agg:
             continue
         out.append({
-            "label": SLOT_LABEL[slot], "n": agg["n"], "clean": agg["clean"],
+            "label": _slot_state()[2][slot], "n": agg["n"], "clean": agg["clean"],
             "cho": f"{agg['cho']:.0f}", "cr": fmt_cr(agg["cr"]), "bol": f"{agg['bol']:.1f}",
             "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
             "flag": _slot_flag(agg, slot, meals, window, val_at), "cls": agg["cls"],
@@ -1081,7 +1098,7 @@ def _meals_context(rows):
             weak = (row["exc"] / row["bolus"] if row["bolus"] else 0) > LOOP_RATIO and row["d4"] > g(D4_WEAK)
             cls = "strong" if row["d4"] < g(D4_STRONG) else "weak" if weak else ""
         out.append({
-            "time": f"{row['time']:%d.%m %H:%M}", "label": SLOT_LABEL[row["slot"]],
+            "time": f"{row['time']:%d.%m %H:%M}", "label": _slot_state()[2][row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
             "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
             "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
@@ -1094,13 +1111,13 @@ def _meals_context(rows):
 def _captions(meals, by_slot, window, val_at):
     """(curve_cap, clean_note) data-driven from the slot curves/contaminations."""
     caps = []
-    for slot in MAIN_SLOTS:
+    for slot in _slot_state()[1]:
         desc = shape_description(slot_median_curve(meals, slot, window, val_at))
         if desc:
-            caps.append(f"{SLOT_LABEL[slot]} {desc}")
+            caps.append(f"{_slot_state()[2][slot]} {desc}")
     curve_cap = "; ".join(caps) + "." if caps else \
         _("Too few meals per slot for a robust shape description.")
-    low_clean = [SLOT_LABEL[s] for s in MAIN_SLOTS if by_slot.get(s)
+    low_clean = [_slot_state()[2][s] for s in _slot_state()[1] if by_slot.get(s)
                  and sum(not r["contam"] for r in by_slot[s]) / len(by_slot[s]) < 0.5]
     clean_note = f" (v.a. {', '.join(low_clean)})" if low_clean else ""
     return curve_cap, clean_note
@@ -1110,14 +1127,14 @@ def _recommendations_context(meals, by_slot, window, val_at):
     """Per slot: curve metrics + derived levers; plus CR_eff example."""
     grid = np.arange(0, window + 1, 10)
     recs, example, example_exc = [], None, 0.0
-    for slot in MAIN_SLOTS:
+    for slot in _slot_state()[1]:
         curve = slot_median_curve(meals, slot, window, val_at)
         agg = aggregate_slot(by_slot.get(slot, []))
         if curve is None or agg is None or np.all(np.isnan(curve)):
             continue
         met = curve_metrics(curve, grid)
         recs.append({
-            "label": SLOT_LABEL[slot], "cls": agg["cls"], "headline": slot_headline(agg, met),
+            "label": _slot_state()[2][slot], "cls": agg["cls"], "headline": slot_headline(agg, met),
             "peak": fmt_glucose(met["peak"]), "peak_t": met["peak_t"],
             "nadir": fmt_glucose(met["nadir"]), "nadir_t": met["nadir_t"],
             "d4": fmt_delta(agg["d4"]), "loop": f"{agg['exc']:+.2f}",
@@ -1126,7 +1143,7 @@ def _recommendations_context(meals, by_slot, window, val_at):
             "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
         })
         if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):
-            example, example_exc = ({"label": SLOT_LABEL[slot], "cho": f"{agg['cho']:.0f}",
+            example, example_exc = ({"label": _slot_state()[2][slot], "cho": f"{agg['cho']:.0f}",
                                      "bol": f"{agg['bol']:.1f}", "loop": f"{agg['exc']:.1f}",
                                      "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
                                      "underdosed": agg["d4"] > g(D4_WEAK)}, agg["exc"])
@@ -1185,7 +1202,7 @@ def build_context(base, window, wlab, daily=False):
         # so that nights with a mean of 0.00 (fully suspended) are also captured
         # correctly -- a factor would be undefined there.
         "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
-        "wlab": wlab, "unit": GLUCOSE_UNIT,
+        "wlab": wlab, "unit": glucose_unit(),
         "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
         "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),
     }
@@ -1196,7 +1213,7 @@ def render(context, template_dir):
     env = Environment(loader=FileSystemLoader(str(template_dir)),
                       extensions=["jinja2.ext.i18n"],
                       autoescape=select_autoescape(["html", "j2"]))
-    env.install_gettext_translations(_ACTIVE_TRANSLATION, newstyle=True)  # pylint: disable=no-member
+    env.install_gettext_translations(_TRANSLATION.get(), newstyle=True)  # pylint: disable=no-member
     return env.get_template("report.html.j2").render(**context)
 
 
@@ -1234,8 +1251,8 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     bundled ``templates`` folder.
 
     Raises :class:`LoopCRError` for invalid exports or slot configuration.
-    Slot tables are installed only for the duration of this call (see
-    :func:`_slot_scope`) so concurrent front-ends do not leak custom slots.
+    Slot tables, language and glucose unit are ContextVar-local for the
+    duration of this call so concurrent front-ends do not leak state.
     """
     setup_i18n(lang)
     window = int(round(window_hours * 60))
