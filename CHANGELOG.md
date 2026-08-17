@@ -17,17 +17,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   return HTTP 400 rather than 500. CI now discovers all test modules and
   installs Flask so the web suite runs on every push.
 
-### Fixed
-- Report: the `<html lang>` attribute now follows the selected report language
-  instead of being hardcoded to `de` (content was already translated correctly;
-  this only affected screen readers and browser language detection).
-- Web front-end: invalid slots entered in the field editor returned HTTP 500
-  instead of 400 — that path still caught only the legacy `SystemExit` and not
-  `LoopCRError`. The uploaded-JSON path was already correct.
-- Web front-end: the automatically appended catch-all slot used a hardcoded
-  label, so a German report showed the English "Other" for field-editor slots.
-  It now uses the same msgid as the built-in slot and is translated normally.
-
 ### Changed
 - Upload form: Babel i18n (de/en), switchable via language field; default remains German.
 - CI: align checkout/setup-python with build-release (v7; Node 20 deprecation warning).
@@ -41,6 +30,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   instead of a throwaway import when probing for PyQt6, and `.pylintrc` limits
   raised with a rationale for the data-assembly functions and the dark-mode charts.
 
+### Fixed
+- Report: the `<html lang>` attribute now follows the selected report language
+  instead of being hardcoded to `de` (content was already translated correctly;
+  this only affected screen readers and browser language detection).
+- Web front-end: invalid slots entered in the field editor returned HTTP 500
+  instead of 400 — that path still caught only the legacy `SystemExit` and not
+  `LoopCRError`. The uploaded-JSON path was already correct.
+- Web front-end: the automatically appended catch-all slot used a hardcoded
+  label, so a German report showed the English "Other" for field-editor slots.
+  It now uses the same msgid as the built-in slot and is translated normally.
 
 ## [0.8.3] - 2026-08-17
 ### Changed

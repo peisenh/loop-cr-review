@@ -125,6 +125,10 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 
 **PDF:** open the report in a browser → Print → "Save as PDF" (cards are protected against page breaks).
 
+Prebuilt CLI binaries (`loop-cr-review-linux` ~50–60 MB, `loop-cr-review-windows.exe`
+~30–40 MB) are attached to each release and need no Python. They are unsigned — see
+the first-start note under [3 · Desktop app](#3--desktop-app-double-click).
+
 ### 2 · Web front-end (homelab)
 
 A small Flask app offers the same analysis in the browser: upload the export
@@ -155,12 +159,20 @@ for HTTPS + Basic-Auth if you want a reverse proxy in front; the real
 Pre-built binaries run the same front-end in a native window — no Python, no
 Docker, no browser tab. Download from the release page:
 
-- **Windows 10 / 11 (recommended):** `loop-cr-review-gui-windows.exe`
+- **Windows 10 / 11 (recommended):** `loop-cr-review-gui-windows.exe` (~35–45 MB)
   Slim; uses **Edge WebView2** (normally already present on Win10/11).
-- **Older Windows / no WebView2:** `loop-cr-review-gui-windows-qt.exe`
+- **Older Windows / no WebView2:** `loop-cr-review-gui-windows-qt.exe` (~245–255 MB)
   Full **Qt WebEngine** bundled — larger, but independent of WebView2
   (e.g. if the slim build fails or WebView2 is missing).
-- **Linux:** `loop-cr-review-gui-linux` (Qt WebEngine, larger)
+- **Linux:** `loop-cr-review-gui-linux` (~275–285 MB, Qt WebEngine bundled)
+  Make it executable once: `chmod +x loop-cr-review-gui-linux`
+
+**First start on Windows.** The binaries are **not code-signed** (a signing
+certificate is out of scope for this project), so Windows SmartScreen shows
+*"Windows protected your PC"* on first launch. If you trust the source:
+**More info → Run anyway**. The file may also need *Properties → Unblock* after
+download. If you would rather not run an unsigned binary, verify the SHA-256
+listed next to the asset on the release page, or run from source instead.
 
 Or from source:
 

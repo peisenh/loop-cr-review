@@ -125,6 +125,10 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 
 **PDF:** Report im Browser öffnen → Drucken → „Als PDF speichern" (Karten sind gegen Seitenumbrüche geschützt).
 
+Fertige CLI-Binaries (`loop-cr-review-linux` ~50–60 MB, `loop-cr-review-windows.exe`
+~30–40 MB) hängen an jedem Release und brauchen kein Python. Sie sind unsigniert —
+siehe den Hinweis zum ersten Start unter [3 · Desktop-App](#3--desktop-app-doppelklick).
+
 ### 2 · Web-Frontend (Homelab)
 
 Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Export-ZIP
@@ -157,12 +161,22 @@ Medizinprodukt** wie für die Kommandozeile.
 Fertige Binaries starten dasselbe Frontend in einem nativen Fenster — ohne
 Python, Docker oder Browser-Tab. Passende Datei von der Release-Seite laden:
 
-- **Windows 10 / 11 (empfohlen):** `loop-cr-review-gui-windows.exe`
+- **Windows 10 / 11 (empfohlen):** `loop-cr-review-gui-windows.exe` (~35–45 MB)
   Schlank, nutzt **Edge WebView2** (unter Win10/11 in der Regel schon installiert).
-- **Ältere Windows-Versionen / ohne WebView2:** `loop-cr-review-gui-windows-qt.exe`
+- **Ältere Windows-Versionen / ohne WebView2:** `loop-cr-review-gui-windows-qt.exe` (~245–255 MB)
   Volles **Qt WebEngine** mitgeliefert — größer, dafür unabhängig von WebView2
   (z. B. wenn der schlanke Build scheitert oder WebView2 fehlt).
-- **Linux:** `loop-cr-review-gui-linux` (Qt WebEngine, größer)
+- **Linux:** `loop-cr-review-gui-linux` (~275–285 MB, Qt WebEngine mitgeliefert)
+  Einmalig ausführbar machen: `chmod +x loop-cr-review-gui-linux`
+
+**Erster Start unter Windows.** Die Binaries sind **nicht signiert** (ein
+Signaturzertifikat ist für dieses Projekt nicht vorgesehen), deshalb meldet
+sich SmartScreen beim ersten Start mit „Der Computer wurde durch Windows
+geschützt“. Wer der Quelle vertraut: **Weitere Informationen → Trotzdem
+ausführen**. Gegebenenfalls muss die Datei nach dem Download noch über
+*Eigenschaften → Zulassen* freigegeben werden. Wer keine unsignierte Datei
+ausführen möchte, prüft die SHA-256-Summe neben dem Asset auf der
+Release-Seite oder startet aus dem Quellcode.
 
 Oder aus dem Quellcode:
 
