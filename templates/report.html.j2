@@ -235,6 +235,9 @@ img { width: 100%; border-radius: 8px }
       longer-standing misconfigurations.{% endtrans %}<br>
     {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
       not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
+    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
+      If either mode is active somewhere in the post-meal window, loop extra basal and CR signals can be
+      distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br>
     {% trans %}• The fasting basal as a reference (mean of the nights) assumes meal-/correction-free nights 00:00–06:00.{% endtrans %}
   </div>
 </div>

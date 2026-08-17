@@ -101,6 +101,7 @@ class TestGenerateReportExample(unittest.TestCase):
             "Hatched row" in self.html or "Schraffierte Zeile" in self.html
             or "low confidence" in self.html or "unsichere Datenlage" in self.html
         )
+        self.assertIn("Boost / Ease-off", self.html)
 
     def test_meta(self):
         self.assertEqual(self.ctx["name"], "Alex Beispiel")

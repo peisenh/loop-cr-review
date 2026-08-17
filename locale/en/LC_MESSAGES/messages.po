@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-16 09:08+0000\n"
+"POT-Creation-Date: 2026-08-17 06:04+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -831,17 +831,33 @@ msgstr "are less certain."
 
 #: templates/report.html.j2:238
 msgid ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
+"cannot be detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop "
+"extra basal and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them"
+" mentally from CR conclusions if known."
+msgstr ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
+"cannot be detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop "
+"extra basal and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them"
+" mentally from CR conclusions if known."
+
+#: templates/report.html.j2:241
+msgid ""
 "• The fasting basal as a reference (mean of the nights) assumes meal"
 "-/correction-free nights 00:00–06:00."
 msgstr ""
 "• The fasting basal as a reference (mean of the nights) assumes meal"
 "-/correction-free nights 00:00–06:00."
 
-#: templates/report.html.j2:243
+#: templates/report.html.j2:246
 msgid "Daily overview — CGM · bolus · basal"
 msgstr "Daily overview — CGM · bolus · basal"
 
-#: templates/report.html.j2:244
+#: templates/report.html.j2:247
 #, python-format
 msgid ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
