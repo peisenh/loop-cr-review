@@ -149,7 +149,7 @@ img { width: 100%; border-radius: 8px }
     fasting basal rate{% endtrans %} ({{ fb }} U/h{% if fb_lo != fb_hi %}, {% trans lo=fb_lo, hi=fb_hi %}mean; nights {{ lo }}–{{ hi }} U/h{% endtrans %}{% if fb_spread %} — {% trans %}strongly varying, use reference with caution{% endtrans %}{% endif %}{% endif %}) {% trans w=wlab %}in the {{ w }} window. Positive → the loop is compensating for a too-weak CR
     (CR too weak). <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s programmed ICR).
     <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
-    {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window.{% endtrans %}
+    {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window and without a large CGM gap.{% endtrans %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
     on contaminated windows and is correspondingly less certain.{% endtrans %}
     {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}</div>
@@ -218,10 +218,10 @@ img { width: 100%; border-radius: 8px }
     {% for m in meals %}
     <tr class="{{ m.cls }}"><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
         <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
-        <td>{{ m.d4 }}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% endif %}</td></tr>
+        <td>{{ m.d4 }}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% elif m.cgm_gap %}<span title="{% trans %}CGM gap in the window{% endtrans %}">⚠︎ G</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
-  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window.{% endtrans %}</div>
+  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window (excluded from the clean median when enough other meals exist).{% endtrans %}</div>
 </div>
 
 <div class="card">

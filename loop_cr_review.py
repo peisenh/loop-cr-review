@@ -157,6 +157,7 @@ def _slot_scope(slots):
 MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 MIN_CLEAN_MEALS = 3        # prefer contamination-free meals; else fall back to all
+MAX_GAP_MIN = 25           # CGM gap (minutes) inside the post-meal window → cgm_gap flag
 
 
 def build_slots(raw, source="Slots"):
@@ -567,6 +568,28 @@ def make_glucose_lookup(times, gluc):
     return val_at
 
 
+def cgm_gap_in_window(start, window_min, times, max_gap_min=MAX_GAP_MIN):
+    """True if CGM coverage in ``[start, start+window]`` has a gap above ``max_gap_min``.
+
+    Gaps are measured between consecutive CGM samples inside the window and at
+    the edges (meal start → first sample, last sample → window end). No sample
+    in the window counts as a gap. Used to exclude poorly covered meals from the
+    clean median when enough alternatives exist (see :func:`select_slot_rows`).
+    """
+    if times is None or len(times) == 0:
+        return True
+    end = start + timedelta(minutes=int(window_min))
+    in_win = [t for t in times if start <= t <= end]
+    if not in_win:
+        return True
+    points = [start, *in_win, end]
+    limit_sec = float(max_gap_min) * 60.0
+    for a, b in zip(points, points[1:]):
+        if (b - a).total_seconds() > limit_sec:
+            return True
+    return False
+
+
 def _scan_minors(start, window, minors, val_at):
     """Scan small carb entries in a meal's window -> (contaminated, hypo_rescue)."""
     contam = hypo = False
@@ -580,13 +603,14 @@ def _scan_minors(start, window, minors, val_at):
     return contam, hypo
 
 
-def analyze_meals(meals, minors, basal, window, val_at):
-    """Per meal: loop extra basal in the window, CR_eff, return Δ, contamination.
+def analyze_meals(meals, minors, basal, window, val_at, cgm_times=None):
+    """Per meal: loop extra basal in the window, CR_eff, return Δ, contamination, CGM gap.
 
     basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) from read_basal_timeline.
     minors: small carb entries (snacks / hypo rescues) below the meal bar. A minor
     inside a meal's window contaminates it; a minor with no bolus at low glucose is
     treated as a hypo rescue, which additionally sets a hypo flag on the meal.
+    cgm_times: CGM timestamps for :func:`cgm_gap_in_window` (optional; gap=False if omitted).
     """
     rate, t0, minutes, fasting = basal[:4]
     meal_times = [m["time"] for m in meals]
@@ -600,6 +624,7 @@ def analyze_meals(meals, minors, basal, window, val_at):
                      for o in meal_times if o != start)
         minor_contam, hypo_rescue = _scan_minors(start, window, minors, val_at)
         contam = contam or minor_contam
+        cgm_gap = cgm_gap_in_window(start, window, cgm_times) if cgm_times is not None else False
         excess = float(np.sum(rate[i0:i0 + window] - fasting) / 60.0)
         pre, post = val_at(start, 0), val_at(start, window)
         total = meal["bolus"] + excess
@@ -609,7 +634,7 @@ def analyze_meals(meals, minors, basal, window, val_at):
             "cr": meal["cho"] / meal["bolus"], "exc": excess,
             "cr_eff": meal["cho"] / total if total > 0 else np.nan,
             "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
-            "contam": contam, "hypo_rescue": hypo_rescue,
+            "contam": contam, "hypo_rescue": hypo_rescue, "cgm_gap": cgm_gap,
         })
     return rows
 
@@ -617,21 +642,24 @@ def analyze_meals(meals, minors, basal, window, val_at):
 def select_slot_rows(slot_rows):
     """Single definition of which meals feed a slot's table/verdict/norm-curve.
 
-    Preference: contamination-free rows (``contam`` is False). If fewer than
-    :data:`MIN_CLEAN_MEALS` clean rows exist, fall back to **all** rows for that
-    slot so a sparse export still yields a median. Returns
-    ``(used_rows, n_clean, used_clean_only)``.
+    Preference: contamination-free rows without a large CGM gap in the window
+    (``contam`` and ``cgm_gap`` both False). If fewer than
+    :data:`MIN_CLEAN_MEALS` such rows exist, fall back to **all** rows for that
+    slot (F1) so a sparse export still yields a median. Returns
+    ``(used_rows, n_clean, used_clean_only)`` where ``n_clean`` counts
+    contamination-free rows (gap flag does not reduce that display count).
 
     Note: the *absolute* median postprandial curve (:func:`slot_median_curve`)
-    still uses every meal in the slot (no contamination filter). Only the
+    still uses every meal in the slot (no contamination/gap filter). Only the
     Δ-oriented table aggregation and the baseline-normalised curves share this
     selector — changing the absolute curve would alter shape captions and
     lever metrics.
     """
-    clean = [r for r in slot_rows if not r["contam"]]
-    n_clean = len(clean)
-    if n_clean >= MIN_CLEAN_MEALS:
-        return clean, n_clean, True
+    n_clean = sum(1 for r in slot_rows if not r["contam"])
+    preferred = [r for r in slot_rows
+                 if not r["contam"] and not r.get("cgm_gap")]
+    if len(preferred) >= MIN_CLEAN_MEALS:
+        return preferred, n_clean, True
     return list(slot_rows), n_clean, False
 
 
@@ -1103,6 +1131,7 @@ def _meals_context(rows):
             "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
             "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
             "contam": row["contam"], "hypo_rescue": row.get("hypo_rescue", False),
+            "cgm_gap": row.get("cgm_gap", False),
             "cls": cls,
         })
     return out
@@ -1170,7 +1199,7 @@ def build_context(base, window, wlab, daily=False):
     val_at = make_glucose_lookup(times, gluc)
 
     met = consensus_metrics(times, gluc)
-    rows = analyze_meals(meals, minors, basal, window, val_at)
+    rows = analyze_meals(meals, minors, basal, window, val_at, cgm_times=times)
     by_slot = defaultdict(list)
     for row in rows:
         by_slot[row["slot"]].append(row)

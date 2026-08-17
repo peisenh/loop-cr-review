@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Changed
+- Clean-meal selection: exclude meals with a CGM gap > 25 min in the post-meal
+  window when at least 3 gap-free clean meals exist (fallback: all meals).
 - README (de/en) and web upload: short privacy / homelab notes (self-hosted only, no public hosting).
 - Unittest + Babel workflow on every push/PR (.github and .gitea, mirrored).
 - Report limitations: note that CamAPS Boost/Ease-off are not in the Glooko CSV export and can

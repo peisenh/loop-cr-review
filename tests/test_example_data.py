@@ -9,6 +9,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 import zipfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import loop_cr_review as core
@@ -208,3 +209,36 @@ class TestContextIsolation(unittest.TestCase):
         self.assertTrue(en_ok)
         # both example exports are mg/dL; units must still be consistent per call
         self.assertEqual(de_unit, en_unit)
+
+
+class TestCgmGap(unittest.TestCase):
+    def test_cgm_gap_in_window_detects_hole(self):
+        start = datetime(2026, 7, 1, 8, 0, 0)
+        # samples every 5 min but a 40 min hole after start+10
+        times = [start + timedelta(minutes=m) for m in (0, 5, 10, 50, 55, 60, 120, 180, 240)]
+        self.assertTrue(core.cgm_gap_in_window(start, 240, times, max_gap_min=25))
+
+    def test_cgm_gap_in_window_dense_ok(self):
+        start = datetime(2026, 7, 1, 8, 0, 0)
+        times = [start + timedelta(minutes=m) for m in range(0, 241, 5)]
+        self.assertFalse(core.cgm_gap_in_window(start, 240, times, max_gap_min=25))
+
+    def test_select_prefers_non_gap_when_enough(self):
+        rows = (
+            [{"contam": False, "cgm_gap": False, "x": i} for i in range(3)]
+            + [{"contam": False, "cgm_gap": True, "x": 99}]
+        )
+        used, n_clean, only = core.select_slot_rows(rows)
+        self.assertTrue(only)
+        self.assertEqual(n_clean, 4)  # contam-free count
+        self.assertEqual(len(used), 3)
+        self.assertTrue(all(not r.get("cgm_gap") for r in used))
+
+    def test_select_fallback_includes_gap_when_few(self):
+        rows = [
+            {"contam": False, "cgm_gap": True, "x": 1},
+            {"contam": False, "cgm_gap": True, "x": 2},
+        ]
+        used, n_clean, only = core.select_slot_rows(rows)
+        self.assertFalse(only)
+        self.assertEqual(len(used), 2)
