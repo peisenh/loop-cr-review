@@ -31,6 +31,13 @@ jobs:
               echo "skip merge   $sha  $subject"
               continue
             fi
+            # Dependabot commits are machine-generated and cannot be signed off.
+            case "$author" in
+              *dependabot*|*"[bot]"*)
+                echo "skip bot     $sha  $subject"
+                continue
+                ;;
+            esac
             if git show -s --format='%B' "$sha" \
                  | grep -Eq '^Signed-off-by: .+ <.+@.+>$'; then
               echo "ok           $sha  $subject"

@@ -57,6 +57,14 @@ jobs:
               echo "skip merge   $sha  $subject"
               continue
             fi
+            # Bot-Commits (z. B. Dependabot) sind maschinell erzeugt und
+            # koennen nicht signiert werden.
+            case "$author" in
+              *dependabot*|*"[bot]"*)
+                echo "skip bot     $sha  $subject"
+                continue
+                ;;
+            esac
             if git show -s --format='%B' "$sha" \
                  | grep -Eq '^Signed-off-by: .+ <.+@.+>$'; then
               echo "ok           $sha  $subject"

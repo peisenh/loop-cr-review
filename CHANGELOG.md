@@ -9,6 +9,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Added
+- Desktop launcher tests (`tests/test_gui.py`, 12 cases): pywebview backend
+  selection per platform/build including the `LOOP_CR_GUI` override, the
+  local-port helpers, and that the bundled waitress server serves the same
+  Flask app on loopback only.
+- Dependabot config for pip, GitHub Actions and Docker (weekly, grouped
+  minor/patch bumps). The DCO workflows now skip bot commits, which cannot
+  carry a Signed-off-by line.
 - Web front-end regression tests (`tests/test_webapp.py`, 25 cases): upload
   hardening (zip-slip, absolute paths, decompression bombs, entry floods,
   corrupt archives), the three slot sources (built-in / field editor / uploaded

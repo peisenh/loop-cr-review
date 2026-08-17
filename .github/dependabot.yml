@@ -1,0 +1,37 @@
+# Dependency monitoring. Weekly is enough for a small project; security
+# advisories are reported by GitHub regardless of this schedule.
+version: 2
+updates:
+  # Python dependencies (all requirements*.txt in the repo root)
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # One PR for the routine bumps instead of four separate ones.
+      python-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Workflow actions — these silently go stale (Node deprecations, v3 -> v7).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+
+  # Base image of the homelab web container
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "docker"
