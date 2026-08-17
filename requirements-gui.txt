@@ -6,5 +6,5 @@
 # (Deliberately does NOT depend on gunicorn — it can't install on Windows.)
 -r requirements.txt
 Flask>=3.0,<4.0
-pywebview[qt]>=5.0
+pywebview[qt]>=6.2.1
 waitress>=3.0
