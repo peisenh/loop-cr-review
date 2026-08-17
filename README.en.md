@@ -167,6 +167,17 @@ python3 gui.py
 
 Everything happens locally; the data never leaves your machine.
 
+
+## Privacy & homelab (short)
+
+> Not legal advice — technical notes for **self-hosted** use only.
+
+- **CLI and desktop app:** analysis runs only on your machine; the export and HTML report stay local. The tool does not upload data to any network service.
+- **Web front-end:** intended for a **private home network**, not the public internet. Uploads are written to a temporary directory and removed after the report; there is deliberately no persistence and no analysis logging of file contents.
+- **Health data** (CGM/pump) is sensitive. If you make the service available to *others* (even on LAN), you are responsible for access control (trusted users only; optionally HTTPS + Basic-Auth behind Traefik as in `docker-compose.example.yml`).
+- **Public hosting** (open internet, accounts, storage) is **not** the intended mode and would trigger much stricter requirements (legal basis, transparency, security measures, often a DPIA) — this project is not designed for that.
+- **Imprint / privacy policy** are typically needed when offering a service *commercially* or publicly — not for personal use on your own machine. If unsure, check yourself or get professional advice.
+
 ## Example data to try it out
 
 The [`example-data/`](example-data/) folder contains a complete, **purely synthetic**

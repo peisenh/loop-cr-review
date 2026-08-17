@@ -169,6 +169,17 @@ python3 gui.py
 
 Alles läuft lokal; die Daten verlassen den Rechner nicht.
 
+
+## Datenschutz & Homelab (kurz)
+
+> Keine Rechtsberatung — nur technische Einordnung für den **selbst betriebenen** Einsatz.
+
+- **CLI und Desktop-App:** Auswertung nur lokal; der Export und der HTML-Report bleiben auf dem Rechner. Es gibt keinen Netz-Upload durch das Tool.
+- **Web-Frontend:** für das **private Heimnetz** gedacht, nicht für öffentliches Internet. Der Upload landet in einem temporären Verzeichnis und wird nach dem Report wieder entfernt; absichtlich keine Persistenz und kein Analyse-Logging der Dateiinhalte.
+- **Gesundheitsdaten** (CGM/Pumpe) sind besonders schützenswert. Wer den Dienst *anderen* zugänglich macht (auch im LAN), trägt die Verantwortung für Zugriffsschutz (z. B. nur vertrauenswürdige Nutzer, optional HTTPS + Basic-Auth hinter Traefik wie in `docker-compose.example.yml`).
+- **Öffentliches Hosting** (freies Internet, Accounts, Speicherung) ist **nicht** der vorgesehene Betrieb und würde deutlich strengere Anforderungen (u. a. Rechtsgrundlage, Transparenz, TOMs, oft DSFA) auslösen — dafür ist dieses Projekt nicht ausgelegt.
+- **Impressum / Datenschutzerklärung** braucht man typischerweise, wenn man einen Dienst *geschäftsmäßig* oder öffentlich anbietet — nicht für den reinen Eigengebrauch auf dem eigenen Rechner. Bei Unsicherheit: selbst prüfen oder fachlich beraten lassen.
+
 ## Beispieldaten zum Ausprobieren
 
 Im Ordner [`example-data/`](example-data/) liegt ein vollständiger, **rein synthetischer**
