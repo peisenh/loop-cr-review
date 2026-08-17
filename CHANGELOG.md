@@ -8,6 +8,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 > Not a medical device — analysis only. No diagnosis, no treatment recommendation.
 
 ## [Unreleased]
+### Added
+- Web front-end regression tests (`tests/test_webapp.py`, 25 cases): upload
+  hardening (zip-slip, absolute paths, decompression bombs, entry floods,
+  corrupt archives), the three slot sources (built-in / field editor / uploaded
+  JSON) including the two bugs fixed below, option validation, the download
+  switch and reverse-proxy sub-path awareness. Malformed input is asserted to
+  return HTTP 400 rather than 500. CI now discovers all test modules and
+  installs Flask so the web suite runs on every push.
+
 ### Fixed
 - Report: the `<html lang>` attribute now follows the selected report language
   instead of being hardcoded to `de` (content was already translated correctly;
