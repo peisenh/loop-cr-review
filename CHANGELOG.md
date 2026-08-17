@@ -9,6 +9,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Changed
+- Unittest + Babel workflow on every push/PR (.github and .gitea, mirrored).
 - Report limitations: note that CamAPS Boost/Ease-off are not in the Glooko CSV export and can
   distort CR signals when active (manual awareness only).
 - Analysis state (slots, language, glucose unit) uses ContextVars so concurrent
