@@ -4,5 +4,5 @@
 # Linux / fully bundled offline Windows: use requirements-gui.txt (Qt) instead.
 -r requirements.txt
 Flask>=3.0,<4.0
-pywebview>=5.0
+pywebview>=6.2.1
 waitress>=3.0
