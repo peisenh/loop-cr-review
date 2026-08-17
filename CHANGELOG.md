@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 ### Changed
+- Dark mode: upload UI and report follow `prefers-color-scheme`; report print stays light;
+  charts embed light+dark PNGs in the same HTML file.
 - Clean-meal selection: exclude meals with a CGM gap > 25 min in the post-meal
   window when at least 3 gap-free clean meals exist (fallback: all meals).
 - README (de/en) and web upload: short privacy / homelab notes (self-hosted only, no public hosting).

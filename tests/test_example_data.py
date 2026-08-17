@@ -124,6 +124,16 @@ class TestGenerateReportExample(unittest.TestCase):
     def test_meals_present(self):
         self.assertGreaterEqual(len(self.ctx["meals"]), 30)
 
+    def test_daily_overview_builds(self):
+        """Daily panels include light+dark images (regression for dual-chart helper)."""
+        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=True)
+        self.assertGreaterEqual(len(ctx["daily_days"]), 1)
+        for day in ctx["daily_days"]:
+            self.assertIn("img", day)
+            self.assertIn("img_dark", day)
+            self.assertTrue(day["img"])
+            self.assertTrue(day["img_dark"])
+
     def test_english_report(self):
         html, ctx = core.generate_report(EXAMPLE, lang="en", window_hours=4.0)
         self.assertIn("Alex Beispiel", html)

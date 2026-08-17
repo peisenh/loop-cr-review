@@ -300,12 +300,59 @@ def parse_ts(val):
 
 
 def fig_to_b64(fig):
-    """Matplotlib figure -> base64 PNG string."""
+    """Matplotlib figure -> base64 PNG string (keeps figure facecolor for dark charts)."""
     buf = io.BytesIO()
     fig.tight_layout()
-    fig.savefig(buf, format="png", dpi=120)
+    fig.savefig(buf, format="png", dpi=120, facecolor=fig.get_facecolor(),
+                edgecolor="none")
     plt.close(fig)
     return base64.b64encode(buf.getvalue()).decode()
+
+
+@contextmanager
+def _chart_theme(dark=False):
+    """Temporary matplotlib rc for light or dark embedded charts."""
+    if dark:
+        params = {
+            "figure.facecolor": "#1c2330",
+            "axes.facecolor": "#1c2330",
+            "axes.edgecolor": "#8a97a8",
+            "axes.labelcolor": "#e8ecf2",
+            "xtick.color": "#c0c8d4",
+            "ytick.color": "#c0c8d4",
+            "text.color": "#e8ecf2",
+            "grid.color": "#5a6b82",
+            "legend.facecolor": "#243044",
+            "legend.edgecolor": "#3a4556",
+        }
+    else:
+        params = {
+            "figure.facecolor": "#ffffff",
+            "axes.facecolor": "#ffffff",
+            "axes.edgecolor": "#1a2233",
+            "axes.labelcolor": "#1a2233",
+            "xtick.color": "#1a2233",
+            "ytick.color": "#1a2233",
+            "text.color": "#1a2233",
+            "grid.color": "#b0b8c4",
+            "legend.facecolor": "#ffffff",
+            "legend.edgecolor": "#dde3ee",
+        }
+    with plt.rc_context(params):
+        yield
+
+
+def _chart_palette(dark=False):
+    """Fill/band colours readable on light or dark chart backgrounds."""
+    if dark:
+        return {
+            "tir": "#1e3a28", "p5": "#2a4060", "p25": "#3a6aaa", "median": "#9ec0ff",
+            "bolus": "#9ec0ff", "carb": "#f0a090", "cgm": "#7eb0ff", "basal": "#6a90c0",
+        }
+    return {
+        "tir": "#dff0df", "p5": "#bcd4ff", "p25": "#5b8def", "median": "#0b2e6b",
+        "bolus": "#0b2e6b", "carb": "#c0392b", "cgm": "#0b2e6b", "basal": "#5b8def",
+    }
 
 
 def fmt_cr(value):
@@ -918,8 +965,8 @@ def build_cr_note(rows, by_slot):
 
 
 # --- Charts -----------------------------------------------------------------
-def agp_chart(times, gluc):
-    """AGP percentile chart as base64 PNG."""
+def agp_chart(times, gluc, dark=False):
+    """AGP percentile chart as base64 PNG (light or dark theme)."""
     minute = np.array([t.hour * 60 + t.minute for t in times])
     bins = np.arange(0, 1441, 15)
     idx = np.digitize(minute, bins) - 1
@@ -931,76 +978,75 @@ def agp_chart(times, gluc):
             for q in perc:
                 perc[q].append(np.percentile(vals, q))
     xs = np.array(xs)
-    fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.axhspan(g(70), g(180), color="#dff0df")
-    ax.axhline(g(70), color="#5a5", lw=.7)
-    ax.axhline(g(180), color="#5a5", lw=.7)
-    ax.fill_between(xs, perc[5], perc[95], color="#bcd4ff", alpha=.6, label="5–95 %")
-    ax.fill_between(xs, perc[25], perc[75], color="#5b8def", alpha=.55, label="25–75 %")
-    ax.plot(xs, perc[50], color="#0b2e6b", lw=2, label="Median")
-    ax.set_xlim(0, 24)
-    ax.set_xticks(range(0, 25, 3))
-    ax.set_ylim(g(40), g(300))
-    ax.set_xlabel("Uhrzeit")
-    ax.set_ylabel(glucose_unit())
-    ax.legend(fontsize=8, ncol=3, loc="upper right")
-    ax.grid(alpha=.25)
-    return fig_to_b64(fig)
+    pal = _chart_palette(dark)
+    with _chart_theme(dark):
+        fig, ax = plt.subplots(figsize=(10, 3.6))
+        ax.axhspan(g(70), g(180), color=pal["tir"])
+        ax.axhline(g(70), color="#5a5", lw=.7)
+        ax.axhline(g(180), color="#5a5", lw=.7)
+        ax.fill_between(xs, perc[5], perc[95], color=pal["p5"], alpha=.6, label="5–95 %")
+        ax.fill_between(xs, perc[25], perc[75], color=pal["p25"], alpha=.55, label="25–75 %")
+        ax.plot(xs, perc[50], color=pal["median"], lw=2, label="Median")
+        ax.set_xlim(0, 24)
+        ax.set_xticks(range(0, 25, 3))
+        ax.set_ylim(g(40), g(300))
+        ax.set_xlabel("Uhrzeit")
+        ax.set_ylabel(glucose_unit())
+        ax.legend(fontsize=8, ncol=3, loc="upper right")
+        ax.grid(alpha=.25)
+        return fig_to_b64(fig)
 
 
-def slot_curves_chart(meals, window, val_at):
-    """Median postprandial curves per slot as base64 PNG."""
+
+def slot_curves_chart(meals, window, val_at, dark=False):
+    """Median postprandial curves per slot as base64 PNG (light or dark theme)."""
     grid = np.arange(0, window + 1, 10)
-    fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.axhspan(g(70), g(180), color="#dff0df")
-    for slot in _slot_state()[1]:
-        curve = slot_median_curve(meals, slot, window, val_at)
-        if curve is not None:
-            n = sum(1 for m in meals if slot_of(m["time"].hour) == slot)
-            ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
-                    label=f"{_slot_state()[2][slot]} (n={n})")
-    ax.set_xlim(0, window)
-    ax.set_ylim(g(60), g(240))
-    ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel(glucose_unit())
-    if ax.get_legend_handles_labels()[1]:
-        ax.legend(fontsize=8)
-    ax.grid(alpha=.25)
-    return fig_to_b64(fig)
+    pal = _chart_palette(dark)
+    with _chart_theme(dark):
+        fig, ax = plt.subplots(figsize=(10, 3.6))
+        ax.axhspan(g(70), g(180), color=pal["tir"])
+        for slot in _slot_state()[1]:
+            curve = slot_median_curve(meals, slot, window, val_at)
+            if curve is not None:
+                n = sum(1 for meal in meals if slot_of(meal["time"].hour) == slot)
+                ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
+                        label=f"{_slot_state()[2][slot]} (n={n})")
+        ax.set_xlim(0, window)
+        ax.set_ylim(g(60), g(240))
+        ax.set_xlabel(_("Minutes after meal"))
+        ax.set_ylabel(glucose_unit())
+        if ax.get_legend_handles_labels()[1]:
+            ax.legend(fontsize=8)
+        ax.grid(alpha=.25)
+        return fig_to_b64(fig)
 
 
-def slot_norm_curves_chart(meals, window, val_at, by_slot):
-    """Baseline-normalised median curves per slot as base64 PNG.
 
-    Shows the course relative to the meal start (start = 0), thereby making the
-    typical net drop/rise (Δ4h) visible that the absolute curve can
-    swallow. Uses the same contamination-cleaned meal selection per slot
-    as the Δ4h table (only clean meals; fallback to
-    all if fewer than 3 clean ones exist), so curve and table do not
-    diverge.
-    """
+def slot_norm_curves_chart(meals, window, val_at, by_slot, dark=False):
+    """Baseline-normalised median curves per slot as base64 PNG (light or dark)."""
     grid = np.arange(0, window + 1, 10)
-    fig, ax = plt.subplots(figsize=(10, 3.6))
-    ax.axhline(0, color="#888", lw=1)
-    for slot in _slot_state()[1]:
-        srows = by_slot.get(slot, [])
-        used, n_clean, used_clean_only = select_slot_rows(srows)
-        clean_times = {r["time"] for r in used}
-        curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
-        if curve is not None:
-            # make transparent whether n are clean meals or (fallback with fewer
-            # than MIN_CLEAN_MEALS clean) all -- otherwise the legend looks
-            # contradictory to the "clean" column of the table.
-            basis = "sauber" if used_clean_only else "alle"
-            ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
-                    label=f"{_slot_state()[2][slot]} (n={n}, {basis})")
-    ax.set_xlim(0, window)
-    ax.set_xlabel(_("Minutes after meal"))
-    ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": glucose_unit()})
-    if ax.get_legend_handles_labels()[1]:
-        ax.legend(fontsize=8)
-    ax.grid(alpha=.25)
-    return fig_to_b64(fig)
+    with _chart_theme(dark):
+        fig, ax = plt.subplots(figsize=(10, 3.6))
+        ax.axhline(0, color="#888", lw=.8)
+        for slot in _slot_state()[1]:
+            clean_times = None
+            if by_slot is not None:
+                use, _n, only = select_slot_rows(by_slot.get(slot, []))
+                if only:
+                    clean_times = {r["time"] for r in use}
+            curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
+            if curve is not None:
+                basis = "clean" if clean_times is not None else "alle"
+                ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
+                        label=f"{_slot_state()[2][slot]} (n={n}, {basis})")
+        ax.set_xlim(0, window)
+        ax.set_xlabel(_("Minutes after meal"))
+        ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": glucose_unit()})
+        if ax.get_legend_handles_labels()[1]:
+            ax.legend(fontsize=8)
+        ax.grid(alpha=.25)
+        return fig_to_b64(fig)
+
 
 
 # --- Context / Rendering ----------------------------------------------------
@@ -1024,14 +1070,14 @@ def _draw_labels(axg, items, base_y, color, bold=False):
                  color=color, ha="center", va="top", fontweight="bold" if bold else "normal")
 
 
-def _draw_day_events(axg, events):
-    """All bolus entries (dark blue/bold, top) and carb entries (red, below) of a day."""
+def _draw_day_events(axg, events, pal):
+    """All bolus entries (top) and carb entries (below) of a day."""
     def hour(event):
         return event["time"].hour + event["time"].minute / 60
     _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} U") for e in events if e["bolus"] > 0],
-                 DAILY_BOLUS_Y, "#0b2e6b", bold=True)
+                 DAILY_BOLUS_Y, pal["bolus"], bold=True)
     _draw_labels(axg, [(hour(e), f"{e['cho']:.0f} g") for e in events if e["cho"] > 0],
-                 DAILY_CARB_Y, "#c0392b")
+                 DAILY_CARB_Y, pal["carb"])
 
 
 def _day_title(day, tdd):
@@ -1043,40 +1089,47 @@ def _day_title(day, tdd):
     return title
 
 
-def daily_charts(times, gluc, events, basal, tdd):
-    """One page-wide panel per day (CGM + all bolus/carb entries + basal + TDD), oldest first."""
+def daily_charts(times, gluc, events, basal, tdd, dark=False):
+    """One page-wide panel per day (CGM + bolus/carb + basal + TDD), oldest first."""
     rate, t0, minutes = basal[:3]
-    gmax = float(np.nanmax(rate)) or 1.0           # global basal scale, same for all days
+    gmax = float(np.nanmax(rate)) or 1.0
     cgm_by, ev_by = defaultdict(list), defaultdict(list)
     for time, value in zip(times, gluc):
         cgm_by[time.date()].append((time.hour + time.minute / 60, value))
     for event in events:
         ev_by[event["time"].date()].append(event)
+    pal = _chart_palette(dark)
     out = []
-    for day in sorted(cgm_by):
-        fig, axg = plt.subplots(figsize=(11, 2.5))
-        axg.axhspan(g(70), g(180), color="#dff0df")
-        axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]], color="#0b2e6b", lw=1.0)
-        axg.set_xlim(0, 24)
-        axg.set_ylim(g(40), g(470))
-        axg.set_xticks(range(0, 25, 3))
-        axg.set_yticks([g(70), g(180), g(300)])
-        axg.tick_params(labelsize=7)
-        axg.grid(axis="x", alpha=.15)
-        axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color="#1a2233")
-        i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
-        bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
-        byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0 for mnt in range(0, 24 * 60, 5)]
-        ax2 = axg.twinx()
-        ax2.fill_between(bxx, byy, step="pre", color="#5b8def", alpha=.35, lw=0)
-        ax2.set_ylim(0, gmax * 2.2)                 # lower ~45%, same scale for all days
-        ax2.set_xlim(0, 24)
-        ax2.set_yticks([0, round(gmax, 1)])
-        ax2.set_ylabel("U/h", fontsize=6, color="#3a63a8")
-        ax2.tick_params(labelsize=6, colors="#3a63a8")
-        _draw_day_events(axg, ev_by.get(day, []))
-        out.append({"img": fig_to_b64(fig)})
+    with _chart_theme(dark):
+        for day in sorted(cgm_by):
+            fig, axg = plt.subplots(figsize=(11, 2.5))
+            axg.axhspan(g(70), g(180), color=pal["tir"])
+            axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]],
+                     color=pal["cgm"], lw=1.0)
+            axg.set_xlim(0, 24)
+            axg.set_ylim(g(40), g(470))
+            axg.set_xticks(range(0, 25, 3))
+            axg.set_yticks([g(70), g(180), g(300)])
+            axg.tick_params(labelsize=7)
+            axg.grid(axis="x", alpha=.15)
+            title_color = "#e8ecf2" if dark else "#1a2233"
+            axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color=title_color)
+            i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
+            bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
+            byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0
+                   for mnt in range(0, 24 * 60, 5)]
+            ax2 = axg.twinx()
+            ax2.fill_between(bxx, byy, step="pre", color=pal["basal"], alpha=.35, lw=0)
+            ax2.set_ylim(0, gmax * 2.2)
+            ax2.set_xlim(0, 24)
+            ax2.set_yticks([0, round(gmax, 1)])
+            spine = "#8bb4ff" if dark else "#3a63a8"
+            ax2.set_ylabel("U/h", fontsize=6, color=spine)
+            ax2.tick_params(labelsize=6, colors=spine)
+            _draw_day_events(axg, ev_by.get(day, []), pal)
+            out.append({"img": fig_to_b64(fig)})
     return out
+
 
 
 def slot_definitions():
@@ -1191,6 +1244,16 @@ def _tir_bands(met):
             (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
 
 
+
+def _daily_days_dual(times, gluc, base, basal):
+    """Light + dark daily panels in one list for the single HTML report."""
+    events = read_bolus_events(base)
+    tdd = read_tdd(base)
+    light = daily_charts(times, gluc, events, basal, tdd, dark=False)
+    dark = daily_charts(times, gluc, events, basal, tdd, dark=True)
+    return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
+
+
 def build_context(base, window, wlab, daily=False):
     """Read all data, analyse, and assemble the template context."""
     times, gluc, name, sensor = read_cgm(base)
@@ -1216,10 +1279,12 @@ def build_context(base, window, wlab, daily=False):
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in _tir_bands(met)],
-        "agp_img": agp_chart(times, gluc), "slot_img": slot_curves_chart(meals, window, val_at),
+        "agp_img": agp_chart(times, gluc), "agp_img_dark": agp_chart(times, gluc, dark=True),
+        "slot_img": slot_curves_chart(meals, window, val_at),
+        "slot_img_dark": slot_curves_chart(meals, window, val_at, dark=True),
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at, by_slot),
-        "daily_days": daily_charts(times, gluc, read_bolus_events(base), basal,
-                                   read_tdd(base)) if daily else [],
+        "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, by_slot, dark=True),
+        "daily_days": _daily_days_dual(times, gluc, base, basal) if daily else [],
         "curve_cap": curve_cap, "slots": _slots_context(by_slot, meals, window, val_at),
         "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,

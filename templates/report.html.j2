@@ -4,66 +4,120 @@
 <meta charset="utf-8">
 <title>{{ tool }} — {{ name }}</title>
 <style>
-@media print { .card { break-inside: avoid } }
-body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; background: #eef1f6; color: #1a2233 }
+:root {
+  --ink:#1a2233; --muted:#5a6b82; --line:#dde3ee; --bg:#eef1f6; --card:#fff;
+  --gen:#8a97a8; --link:#5b8def; --track:#eef1f6; --slot-bg:#fafbfd;
+  --disc-bg:#fff6f3; --disc-border:#f0b7a6; --disc-ink:#7a2318; --disc-b:#a12626;
+  --weak-bg:#fff3e8; --strong-bg:#fdeaea; --ok-bg:#eef8ef;
+  --method-bg:#f7f9fc; --method-border:#c5d0e0; --method-b:#1c4ea8;
+  --eff-bg:#f4f7ff; --eff-border:#cdddff; --code-bg:#eef1f6;
+  --lowconf-a:#f2f2f2; --lowconf-b:#e8e8e8; --lowconf-ink:#7a6a2a;
+  --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18;
+  --tag-sea-bg:#e7efff; --tag-sea:#1c4ea8; --tag-cr-bg:#fdeaea; --tag-cr:#a12626;
+  --tag-fp-bg:#fff3e8; --tag-fp:#a5541b; --tag-obs-bg:#eef8ef; --tag-obs:#2b7a34;
+  --brand:#3F454A;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:#e8ecf2; --muted:#a8b4c4; --line:#3a4556; --bg:#12161c; --card:#1c2330;
+    --gen:#8a97a8; --link:#7eb0ff; --track:#2a3344; --slot-bg:#1a2130;
+    --disc-bg:#2a1c1a; --disc-border:#8a4a3c; --disc-ink:#f0c4bc; --disc-b:#f0a090;
+    --weak-bg:#3a2e22; --strong-bg:#3a2226; --ok-bg:#1e3224;
+    --method-bg:#1a2130; --method-border:#3a4a60; --method-b:#7eb0ff;
+    --eff-bg:#1a2438; --eff-border:#3a5080; --code-bg:#2a3344;
+    --lowconf-a:#2a2a2a; --lowconf-b:#353535; --lowconf-ink:#d4c48a;
+    --lc-tag-bg:#5a4e28; --lc-tag-ink:#f5e6a8;
+    --tag-sea-bg:#1e2e4a; --tag-sea:#8bb4ff; --tag-cr-bg:#4a2828; --tag-cr:#f0a0a0;
+    --tag-fp-bg:#3a2e22; --tag-fp:#e0b080; --tag-obs-bg:#1e3224; --tag-obs:#90d0a0;
+    --brand:#e8ecf2;
+  }
+}
+.chart-wrap { margin: 0 }
+.chart-wrap img { width: 100%; border-radius: 8px; display: block }
+.chart-wrap .chart-dark { display: none }
+@media (prefers-color-scheme: dark) {
+  .chart-wrap .chart-light { display: none }
+  .chart-wrap .chart-dark { display: block }
+}
+@media print {
+  .card { break-inside: avoid }
+  .chart-wrap .chart-dark { display: none !important }
+  .chart-wrap .chart-light { display: block !important }
+  :root {
+    --ink:#1a2233; --muted:#5a6b82; --line:#dde3ee; --bg:#fff; --card:#fff;
+    --gen:#8a97a8; --link:#5b8def; --track:#eef1f6; --slot-bg:#fafbfd;
+    --disc-bg:#fff6f3; --disc-border:#f0b7a6; --disc-ink:#7a2318; --disc-b:#a12626;
+    --weak-bg:#fff3e8; --strong-bg:#fdeaea; --ok-bg:#eef8ef;
+    --method-bg:#f7f9fc; --method-border:#c5d0e0; --method-b:#1c4ea8;
+    --eff-bg:#f4f7ff; --eff-border:#cdddff; --code-bg:#eef1f6;
+    --lowconf-a:#f2f2f2; --lowconf-b:#e8e8e8; --lowconf-ink:#7a6a2a;
+    --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18;
+    --tag-sea-bg:#e7efff; --tag-sea:#1c4ea8; --tag-cr-bg:#fdeaea; --tag-cr:#a12626;
+    --tag-fp-bg:#fff3e8; --tag-fp:#a5541b; --tag-obs-bg:#eef8ef; --tag-obs:#2b7a34;
+    --brand:#3F454A;
+  }
+  body { background: #fff !important; }
+}
+body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--ink) }
 .wrap { max-width: 900px; margin: 0 auto; padding: 22px }
 h1 { font-size: 20px; margin: 0 }
-.tool { font-size: 12px; color: #5a6b82; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 2px }
-.brand { height: 34px; width: auto; display: block; margin: 0 0 8px }
-.sub { color: #5a6b82; font-size: 13px; margin: 2px 0 4px }
-.gen { color: #8a97a8; font-size: 11px; margin: 0 0 16px }
-.gen a { color: #5b8def; text-decoration: none }
-.disclaimer { background: #fff6f3; border: 1px solid #f0b7a6; border-left: 4px solid #c0392b;
-  border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #7a2318; line-height: 1.5 }
-.disclaimer b { color: #a12626 }
-.card { background: #fff; border: 1px solid #dde3ee; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px }
+.tool { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 2px }
+.brand { height: 34px; width: auto; display: block; margin: 0 0 8px; color: var(--brand) }
+.sub { color: var(--muted); font-size: 13px; margin: 2px 0 4px }
+.gen { color: var(--gen); font-size: 11px; margin: 0 0 16px }
+.gen a { color: var(--link); text-decoration: none }
+.disclaimer { background: var(--disc-bg); border: 1px solid var(--disc-border); border-left: 4px solid #c0392b;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: var(--disc-ink); line-height: 1.5 }
+.disclaimer b { color: var(--disc-b) }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px }
 h2 { font-size: 14px; margin: 0 0 10px }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px }
-.kpi { background: #fff; border: 1px solid #dde3ee; border-radius: 10px; padding: 10px 12px }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px }
 .kpi .v { font-size: 21px; font-weight: 700 }
-.kpi .l { font-size: 10.5px; color: #5a6b82; text-transform: uppercase; letter-spacing: .03em }
+.kpi .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em }
 .row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 13px }
 .row span { width: 150px }
 .row b { width: 52px; text-align: right }
-.track { flex: 1; height: 12px; background: #eef1f6; border-radius: 6px; overflow: hidden }
+.track { flex: 1; height: 12px; background: var(--track); border-radius: 6px; overflow: hidden }
 .fill { height: 100% }
 table { width: 100%; border-collapse: collapse; font-size: 12px }
-th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid #eef1f6 }
-th { color: #5a6b82; font-weight: 600 }
-tr.weak { background: #fff3e8 } tr.strong { background: #fdeaea } tr.ok { background: #eef8ef }
-tr.lowconf { background: repeating-linear-gradient(135deg, #f2f2f2, #f2f2f2 8px, #e8e8e8 8px, #e8e8e8 16px);
+th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid var(--line) }
+th { color: var(--muted); font-weight: 600 }
+tr.weak { background: var(--weak-bg) } tr.strong { background: var(--strong-bg) } tr.ok { background: var(--ok-bg) }
+tr.lowconf { background: repeating-linear-gradient(135deg, var(--lowconf-a), var(--lowconf-a) 8px, var(--lowconf-b) 8px, var(--lowconf-b) 16px);
   outline: 1px dashed #a0893a; outline-offset: -1px }
-tr.lowconf td:last-child { color: #7a6a2a; font-weight: 600 }
-.slot.lowconf { background: repeating-linear-gradient(135deg, #fafbfd, #fafbfd 8px, #f0eee6 8px, #f0eee6 16px);
+tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
+.slot.lowconf { background: repeating-linear-gradient(135deg, var(--slot-bg), var(--slot-bg) 8px, var(--lowconf-b) 8px, var(--lowconf-b) 16px);
   border-right: 3px dashed #a0893a }
 .lc-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px;
-  margin-left: 6px; background: #f5e6a8; color: #6a5a18; vertical-align: middle }
-.slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: #fafbfd }
+  margin-left: 6px; background: var(--lc-tag-bg); color: var(--lc-tag-ink); vertical-align: middle }
+.slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: var(--slot-bg) }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
-.mline { font-size: 11.5px; color: #5a6b82; margin: 3px 0 7px }
-.mline b { color: #1a2233 }
+.mline { font-size: 11.5px; color: var(--muted); margin: 3px 0 7px }
+.mline b { color: var(--ink) }
 .lever { font-size: 12.5px; margin: 3px 0 }
 .lever .tag { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 10px; margin-right: 6px }
-.t-sea { background: #e7efff; color: #1c4ea8 } .t-cr { background: #fdeaea; color: #a12626 }
-.t-fp { background: #fff3e8; color: #a5541b } .t-obs { background: #eef8ef; color: #2b7a34 }
-.eff { background: #f4f7ff; border: 1px solid #cdddff; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.6 }
-.methodbox { background: #f7f9fc; border: 1px solid #c5d0e0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.55; color: #1a2233 }
-.methodbox b { color: #1c4ea8 }
-.methodbox code { font-family: monospace; background: #eef1f6; padding: 1px 4px; border-radius: 4px; font-size: 11px }
-.eff b { color: #1c4ea8 } .eff code { font-family: monospace; background: #eef1f6; padding: 1px 4px; border-radius: 4px }
+.t-sea { background: var(--tag-sea-bg); color: var(--tag-sea) } .t-cr { background: var(--tag-cr-bg); color: var(--tag-cr) }
+.t-fp { background: var(--tag-fp-bg); color: var(--tag-fp) } .t-obs { background: var(--tag-obs-bg); color: var(--tag-obs) }
+.eff { background: var(--eff-bg); border: 1px solid var(--eff-border); border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.6 }
+.methodbox { background: var(--method-bg); border: 1px solid var(--method-border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.55; color: var(--ink) }
+.methodbox b { color: var(--method-b) }
+.methodbox code { font-family: monospace; background: var(--code-bg); color: var(--ink); padding: 1px 4px; border-radius: 4px; font-size: 11px }
+.eff b { color: var(--method-b) }
+.eff code { font-family: monospace; background: var(--code-bg); color: var(--ink); padding: 1px 4px; border-radius: 4px }
 .dailyrow { margin: 3px 0 }
 .dailyrow img { width: 100%; border-radius: 6px; display: block }
 @media print { .dailyrow { break-inside: avoid } }
 img { width: 100%; border-radius: 8px }
 .note { font-size: 11.5px; color: #5a6b82; line-height: 1.5 }
 .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-right: 5px }
-.tw { background: #fff3e8; color: #a5541b } .ts { background: #fdeaea; color: #a12626 } .to { background: #eef8ef; color: #2b7a34 }
+.tw { background: var(--tag-fp-bg); color: var(--tag-fp) } .ts { background: var(--tag-cr-bg); color: var(--tag-cr) } .to { background: var(--tag-obs-bg); color: var(--tag-obs) }
 </style>
 </head>
 <body>
 <div class="wrap">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 120" class="brand"><defs><linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A6FC6"/><stop offset="1" stop-color="#2A97DD"/></linearGradient><linearGradient id="wave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2AA8E6"/><stop offset="1" stop-color="#5CC6F1"/></linearGradient></defs><g transform="translate(2,6) scale(0.92)"><path d="M 98.9 48.6 A 42 42 0 1 0 93.6 80.3" fill="none" stroke="url(#ring)" stroke-width="7" stroke-linecap="round"/><path d="M 102.6 65.8 L 100.4 84.5 L 86.8 76.0 Z" fill="url(#ring)"/><path d="M 26 59 C 33 59 35 47 44 47 C 53 47 55 67 63 67 C 71 67 72 55 80 56 C 84 56.5 85 60 88 63" fill="none" stroke="url(#wave)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(106,78) scale(0.052,-0.052)" fill="#3F454A"><path transform="translate(0,0)" d="M228 -9Q150 -9 110.5 36.5Q71 82 71 168V661Q71 686 84.0 699.0Q97 712 121 712Q145 712 158.5 699.0Q172 686 172 661V174Q172 124 192.5 99.5Q213 75 252 75Q261 75 268.0 75.5Q275 76 282 77Q294 78 299.0 70.5Q304 63 304 40Q304 19 295.0 7.5Q286 -4 266 -7Q257 -8 247.0 -8.5Q237 -9 228 -9Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 120" class="brand"><defs><linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A6FC6"/><stop offset="1" stop-color="#2A97DD"/></linearGradient><linearGradient id="wave" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2AA8E6"/><stop offset="1" stop-color="#5CC6F1"/></linearGradient></defs><g transform="translate(2,6) scale(0.92)"><path d="M 98.9 48.6 A 42 42 0 1 0 93.6 80.3" fill="none" stroke="url(#ring)" stroke-width="7" stroke-linecap="round"/><path d="M 102.6 65.8 L 100.4 84.5 L 86.8 76.0 Z" fill="url(#ring)"/><path d="M 26 59 C 33 59 35 47 44 47 C 53 47 55 67 63 67 C 71 67 72 55 80 56 C 84 56.5 85 60 88 63" fill="none" stroke="url(#wave)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(106,78) scale(0.052,-0.052)" fill="currentColor"><path transform="translate(0,0)" d="M228 -9Q150 -9 110.5 36.5Q71 82 71 168V661Q71 686 84.0 699.0Q97 712 121 712Q145 712 158.5 699.0Q172 686 172 661V174Q172 124 192.5 99.5Q213 75 252 75Q261 75 268.0 75.5Q275 76 282 77Q294 78 299.0 70.5Q304 63 304 40Q304 19 295.0 7.5Q286 -4 266 -7Q257 -8 247.0 -8.5Q237 -9 228 -9Z"/>
 <path transform="translate(306,0)" d="M283 -9Q209 -9 155.5 22.0Q102 53 72.0 110.0Q42 167 42 244Q42 303 59.0 349.0Q76 395 107.5 428.5Q139 462 183.5 479.5Q228 497 283 497Q356 497 409.5 466.0Q463 435 493.0 378.5Q523 322 523 244Q523 186 506.0 139.0Q489 92 457.5 59.0Q426 26 381.5 8.5Q337 -9 283 -9ZM283 69Q324 69 355.0 89.0Q386 109 403.5 148.0Q421 187 421 244Q421 330 383.0 374.0Q345 418 283 418Q241 418 210.0 398.5Q179 379 161.5 340.0Q144 301 144 244Q144 159 182.0 114.0Q220 69 283 69Z"/>
 <path transform="translate(871,0)" d="M283 -9Q209 -9 155.5 22.0Q102 53 72.0 110.0Q42 167 42 244Q42 303 59.0 349.0Q76 395 107.5 428.5Q139 462 183.5 479.5Q228 497 283 497Q356 497 409.5 466.0Q463 435 493.0 378.5Q523 322 523 244Q523 186 506.0 139.0Q489 92 457.5 59.0Q426 26 381.5 8.5Q337 -9 283 -9ZM283 69Q324 69 355.0 89.0Q386 109 403.5 148.0Q421 187 421 244Q421 330 383.0 374.0Q345 418 283 418Q241 418 210.0 398.5Q179 379 161.5 340.0Q144 301 144 244Q144 159 182.0 114.0Q220 69 283 69Z"/>
 <path transform="translate(1436,0)" d="M121 -187Q97 -187 84.0 -174.0Q71 -161 71 -136V444Q71 469 84.0 482.0Q97 495 120 495Q144 495 157.0 482.0Q170 469 170 444V357L159 378Q175 432 222.0 464.5Q269 497 333 497Q398 497 446.5 466.0Q495 435 521.5 379.0Q548 323 548 244Q548 167 521.5 109.5Q495 52 447.0 21.5Q399 -9 333 -9Q270 -9 223.0 23.0Q176 55 160 108H172V-136Q172 -161 158.5 -174.0Q145 -187 121 -187ZM308 69Q350 69 381.0 89.0Q412 109 429.0 148.0Q446 187 446 244Q446 330 408.5 374.0Q371 418 308 418Q267 418 235.5 398.5Q204 379 187.0 340.0Q170 301 170 244Q170 159 208.0 114.0Q246 69 308 69Z"/>
@@ -124,10 +178,10 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 <div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
-  <img src="data:image/png;base64,{{ agp_img }}"></div>
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}"><img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}"></div></div>
 
 <div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
-  <img src="data:image/png;base64,{{ slot_img }}">
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_img_dark }}"></div>
   <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
   <div class="note" style="margin-top: 6px">{% trans %}This absolute median uses <b>all meals</b> in each slot (including contaminated windows). The CR table and the baseline-normalised curves below prefer contamination-free meals (same rule: at least 3 clean, otherwise all) — so the count (n) and the shape can differ from those sections on purpose.{% endtrans %}</div></div>
 
@@ -157,7 +211,7 @@ img { width: 100%; border-radius: 8px }
 
 <div class="card">
   <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
-  <img src="data:image/png;base64,{{ slot_norm_img }}">
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}"></div>
   <div class="note" style="margin-top: 8px">
     {% trans w=wlab %}Here each meal is referenced to its <b>own baseline at minute 0</b>
     (start = 0), and only then is the median taken. The curve thus shows the typical
@@ -248,7 +302,7 @@ img { width: 100%; border-radius: 8px }
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
     blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>
 {% for d in daily_days %}
-<div class="dailyrow"><img src="data:image/png;base64,{{ d.img }}"></div>
+<div class="dailyrow chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ d.img }}"><img class="chart-dark" src="data:image/png;base64,{{ d.img_dark }}"></div>
 {% endfor %}
 {% endif %}
 

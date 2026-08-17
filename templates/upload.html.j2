@@ -7,19 +7,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>loop-cr-review</title>
 <style>
-  :root { --ink:#3F454A; --muted:#5a6b82; --line:#dde3ee; --bg:#eef1f6; --blue:#1A6FC6; }
+  :root {
+    --ink:#3F454A; --muted:#5a6b82; --line:#dde3ee; --bg:#eef1f6; --blue:#1A6FC6;
+    --card:#fff; --input-bg:#fff; --btn-sec-bg:#eaf1fb; --btn-sec-hover:#dbe8fb;
+    --disc-bg:#fff6f3; --disc-border:#f0b7a6; --disc-ink:#7a2318; --disc-b:#a12626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:#e6eaf0; --muted:#a8b4c4; --line:#3a4556; --bg:#12161c; --blue:#4d9eef;
+      --card:#1c2330; --input-bg:#161c27; --btn-sec-bg:#243044; --btn-sec-hover:#2c3a52;
+      --disc-bg:#2a1c1a; --disc-border:#8a4a3c; --disc-ink:#f0c4bc; --disc-b:#f0a090;
+    }
+  }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .wrap { max-width: 660px; margin: 0 auto; padding: 28px 20px 56px; }
   .brand { height: 44px; width:auto; display:block; margin: 8px 0 4px; }
   h1 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 0 0 20px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; }
   label { display:block; font-weight:600; margin: 16px 0 6px; }
   label.first { margin-top: 0; }
   input[type=file], select, input[type=number], input[type=text] {
     width:100%; padding:9px 10px; border:1px solid var(--line);
-    border-radius:9px; font-size:14px; background:#fff; color:var(--ink); }
+    border-radius:9px; font-size:14px; background:var(--input-bg); color:var(--ink); }
   .row { display:flex; gap:16px; } .row > div { flex:1; }
   .hint { font-weight:400; color:var(--muted); font-size:12px; margin-top:4px; }
   .check { display:flex; align-items:center; gap:8px; margin-top:16px; font-weight:600; }
@@ -28,12 +39,12 @@
            background:var(--blue); color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
   button:hover { background:#155aa3; }
   .btn-sec { margin:8px 0 0; width:auto; padding:7px 12px; font-size:13px;
-             background:#eaf1fb; color:var(--blue); }
-  .btn-sec:hover { background:#dbe8fb; }
+             background:var(--btn-sec-bg); color:var(--blue); }
+  .btn-sec:hover { background:var(--btn-sec-hover); }
   .disclaimer { margin:18px 0 0; padding:12px 14px; border-radius:10px;
-                background:#fff6f3; border:1px solid #f0b7a6; border-left:4px solid #c0392b;
-                font-size:13px; color:#7a2318; }
-  .disclaimer b { color:#a12626; }
+                background:var(--disc-bg); border:1px solid var(--disc-border); border-left:4px solid #c0392b;
+                font-size:13px; color:var(--disc-ink); }
+  .disclaimer b { color:var(--disc-b); }
   .foot { margin-top:22px; font-size:12px; color:var(--muted); text-align:center; }
   .foot a { color:var(--blue); text-decoration:none; }
   fieldset { border:1px solid var(--line); border-radius:10px; margin:16px 0 0; padding:12px 14px 16px; }
