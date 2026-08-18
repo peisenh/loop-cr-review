@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-18
+
 ### Added
 - Optional **decision stability** next to each slot verdict: whole recorded days
   are resampled with replacement and the same verdict rule is re-run, so the
@@ -464,7 +466,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/peisenh/loop-cr-review/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/peisenh/loop-cr-review/compare/v0.8.1...v0.8.2
