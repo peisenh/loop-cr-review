@@ -9,6 +9,22 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Analysis core tests (`tests/test_analysis_core.py`, 24 cases) with values
+  computed by hand: loop extra basal integrated over the window, CR_eff for
+  positive/negative/zero extra insulin (including the nan guard when a suspend
+  exceeds the bolus), the 4 h delta, contamination windows, the consensus
+  metrics (TIR/TAR/TBR/CV/GMI) and the verdict thresholds around LOOP_RATIO
+  and D4_HIGH. Verified by mutation: breaking the unit conversion, dropping
+  the loop share from CR_eff or shifting the TIR cut-off each make them fail.
+
+### Changed
+- CONTRIBUTING documents the current checks: pylint over all three modules,
+  `unittest discover` (so the command does not go stale when a test file is
+  added), what each test module covers, the extra dependencies the web/GUI
+  tests need, and the expectation that analysis changes come with a
+  hand-computed expected value.
+
 ## [0.8.4] - 2026-08-17
 ### Added
 - Desktop launcher tests (`tests/test_gui.py`, 12 cases): pywebview backend

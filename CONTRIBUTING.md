@@ -34,13 +34,20 @@ cannot be merged. To sign off a range of existing commits, rebase with
 
 1. Fork the repository and create a topic branch.
 2. Make your change; keep the diff focused.
-3. Run the linter — the project targets a clean score:
+3. Run the linter — the project targets a clean 10.00/10:
    ```bash
-   pylint loop_cr_review.py
+   pylint loop_cr_review.py webapp.py gui.py
    ```
-4. Keep logic (`loop_cr_review.py`) and presentation (`templates/report.html.j2`) separate.
+4. Run the test suite; add cases for what you changed:
+   ```bash
+   python3 -m unittest discover -s tests
+   ```
+5. Keep logic (`loop_cr_review.py`) and presentation (`templates/report.html.j2`) separate.
    Layout/wording changes belong in the template, not in Python.
-5. Commit with `-s` (DCO sign-off) and open a Pull Request describing the change.
+6. Commit with `-s` (DCO sign-off) and open a Pull Request describing the change.
+
+Both checks also run in CI on every pull request, together with the Babel
+catalog build.
 
 ### Scope & style
 
@@ -75,13 +82,20 @@ können nicht gemergt werden. Für bestehende Commits: `git rebase --signoff <ba
 
 1. Repository forken, Topic-Branch anlegen.
 2. Änderung umsetzen; Diff fokussiert halten.
-3. Linter laufen lassen — das Projekt zielt auf einen sauberen Score:
+3. Linter laufen lassen — das Projekt zielt auf saubere 10.00/10:
    ```bash
-   pylint loop_cr_review.py
+   pylint loop_cr_review.py webapp.py gui.py
    ```
-4. Logik (`loop_cr_review.py`) und Darstellung (`templates/report.html.j2`) getrennt halten.
+4. Testsuite laufen lassen und Fälle für die Änderung ergänzen:
+   ```bash
+   python3 -m unittest discover -s tests
+   ```
+5. Logik (`loop_cr_review.py`) und Darstellung (`templates/report.html.j2`) getrennt halten.
    Layout/Wording gehört ins Template, nicht ins Python.
-5. Mit `-s` committen (DCO-Sign-off) und Pull Request mit Beschreibung öffnen.
+6. Mit `-s` committen (DCO-Sign-off) und Pull Request mit Beschreibung öffnen.
+
+Beide Prüfungen laufen zusätzlich in der CI bei jedem Pull Request, zusammen
+mit dem Bau der Babel-Kataloge.
 
 ### Umfang & Stil
 
@@ -125,6 +139,27 @@ Full text: <https://developercertificate.org/>
 ## Tests
 
 ```bash
-python3 -m unittest tests.test_example_data tests.test_gui tests.test_webapp -v
+python3 -m unittest discover -s tests -v
 ```
-These pin the synthetic demo slot pattern and basic parsers.
+
+The suite covers four areas:
+
+- `test_analysis_core.py` — the method itself, with values computed by hand:
+  loop extra basal over the window, `CR_eff`, the 4 h delta, contamination,
+  consensus metrics and the verdict thresholds.
+- `test_example_data.py` — parsers and the synthetic demo export end to end
+  (its slot pattern is deliberately breakfast=strong, lunch=weak, dinner=ok).
+- `test_webapp.py` — the web front-end: upload hardening, slot sources,
+  options, reverse-proxy sub-paths.
+- `test_gui.py` — the desktop launcher (backend selection, local server).
+  Skipped automatically when the optional GUI dependencies are missing.
+
+The web and GUI tests need their extra dependencies:
+
+```bash
+pip install -r requirements-web.txt -r requirements-gui.txt
+```
+
+When you change the analysis, add a case with a hand-computed expected value
+rather than only asserting a direction — the whole point of these tests is to
+catch a subtly wrong formula that still produces plausible-looking verdicts.
