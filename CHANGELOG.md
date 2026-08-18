@@ -15,19 +15,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   report states how sensitive a verdict is to which meals happened to be
   recorded. Shown only from 8 meals on 5 separate days (below that the figure
   looks reassuring without carrying information); a verdict that does not
-  survive resampling is called out explicitly. Fixed seed, so reports stay
-  reproducible. The method box states plainly that this is not a statement
-  about whether the carb ratio is correct and not a confidence interval.
-  The existing classification is unchanged — the verdict rule was extracted
-  into `verdict_class()` and is shared by both paths, so a resampled verdict
-  cannot drift from the real one. Shown both in the CR table and in the slot
-  cards; computed once per slot (~0.6 s for a 14-day export). An unstable
-  verdict now uses the same visual language as the "few clean meals" warning
-  (badge plus hatched background), so both caveats read as what they are:
-  reasons not to lean on that verdict.
-  No new dependency (numpy only); catalogs updated for de and en.
-
-### Added
+  survive resampling is called out explicitly, as a badge and in the verdict
+  text. Fixed seed, so reports stay reproducible. The method box states plainly
+  that this is not a statement about whether the carb ratio is correct and not a
+  confidence interval. The existing classification is unchanged — the verdict
+  rule was extracted into `verdict_class()` and is shared by both paths, so a
+  resampled verdict cannot drift from the real one. Shown in the CR table and in
+  the slot cards; computed once per slot (~0.6 s for a 14-day export). No new
+  dependency (numpy only); catalogs updated for de and en.
 - Analysis core tests (`tests/test_analysis_core.py`, 24 cases) with values
   computed by hand: loop extra basal integrated over the window, CR_eff for
   positive/negative/zero extra insulin (including the nan guard when a suspend
@@ -42,6 +37,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   added), what each test module covers, the extra dependencies the web/GUI
   tests need, and the expectation that analysis changes come with a
   hand-computed expected value.
+
+### Fixed
+- The CR table never showed the "few clean meals" caveat as a badge: the slot
+  context did not carry `low_confidence` at all, so the table appended it as
+  text to the verdict while the slot cards used a badge and hatched background
+  for the same slot. Table and cards now agree; both caveats appear as a badge
+  *and* spelled out in the verdict text, which survives copy/paste and print
+  where a badge is easy to miss.
+- Untranslated German string in the web upload form (the slot field hint).
 
 ## [0.8.4] - 2026-08-17
 ### Added
