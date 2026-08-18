@@ -9,6 +9,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- The GUI test asserting the desktop launcher binds to loopback only silently
+  skipped itself on Debian hosts, where the hostname resolves to 127.0.1.1 —
+  so it ran on CI but not on the machines it matters for. It now determines
+  the outward address via a UDP socket and actually runs there.
+
 ## [0.9.0] - 2026-08-18
 
 ### Added

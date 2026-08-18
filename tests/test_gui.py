@@ -106,17 +106,37 @@ class TestBundledServer(unittest.TestCase):
         status, _ = self._get("/static/logo-horizontal.svg")
         self.assertEqual(status, 200)
 
+    @staticmethod
+    def _outward_address():
+        """This host's own non-loopback address, or None.
+
+        ``gethostbyname(gethostname())`` is unreliable: on Debian the hostname
+        maps to 127.0.1.1 via /etc/hosts, so the check below would silently
+        skip on exactly the machines it matters for. Opening a UDP socket
+        towards a non-routable test address sends nothing but makes the kernel
+        pick the interface it would use, which yields the real local address.
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            sock.connect(("192.0.2.1", 9))       # TEST-NET-1 (RFC 5737)
+            addr = sock.getsockname()[0]
+        except OSError:
+            return None
+        finally:
+            sock.close()
+        return None if addr.startswith("127.") else addr
+
     def test_binds_localhost_only(self):
         """Health data stays on the machine: no binding to a public address."""
         # Loopback must answer ...
         with socket.socket() as sock:
             sock.settimeout(0.5)
             self.assertEqual(sock.connect_ex(("127.0.0.1", self.port)), 0)
-        # ... while the same port stays free on this host's outward address,
+        # ... while the same port stays closed on this host's outward address,
         # proving waitress did not bind 0.0.0.0.
-        outward = socket.gethostbyname(socket.gethostname())
-        if outward.startswith("127."):
-            self.skipTest("no non-loopback address available in this environment")
+        outward = self._outward_address()
+        if outward is None:
+            self.skipTest("host has no non-loopback address")
         with socket.socket() as sock:
             sock.settimeout(0.5)
             self.assertNotEqual(sock.connect_ex((outward, self.port)), 0)
