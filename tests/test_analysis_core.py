@@ -241,10 +241,14 @@ class TestSlotVerdicts(unittest.TestCase):
         self.assertIsNone(core.aggregate_slot([]))
 
     def test_few_clean_meals_marks_low_confidence(self):
-        """Below MIN_CLEAN_MEALS clean rows the verdict is flagged as uncertain."""
+        """Below MIN_CLEAN_MEALS clean rows the verdict is flagged as uncertain.
+
+        The caveat lives in the ``low_confidence`` field (the report renders it
+        as a badge), not as text appended to the verdict itself.
+        """
         rows = self._rows(exc=0.0, bolus=6.0, d4=0.0, n=2, contam=True)
         out = core.aggregate_slot(rows)
-        self.assertIn("clean", out["flag"].lower())
+        self.assertTrue(out["low_confidence"])
 
 
 class TestSlotOf(unittest.TestCase):
@@ -259,3 +263,80 @@ class TestSlotOf(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDecisionStability(unittest.TestCase):
+    """Bootstrap of the existing verdict — must never change the verdict itself."""
+
+    @staticmethod
+    def _rows(n_days, per_day=1, exc=1.0, bolus=6.0, d4=10.0, jitter=0.0):
+        rows, day0 = [], datetime(2026, 5, 1, 8, 0)
+        for d in range(n_days):
+            for k in range(per_day):
+                rows.append({
+                    "time": day0 + timedelta(days=d, minutes=k),
+                    "exc": exc + (jitter if d % 2 else -jitter), "bolus": bolus,
+                    "d4": d4, "cho": 60.0, "cr": 10.0, "cr_eff": 8.0,
+                    "contam": False, "cgm_gap": False, "hypo_rescue": False,
+                    "pre": 120.0, "bg": 120.0})
+        return rows
+
+    def test_too_few_meals_returns_none(self):
+        """Below the meal gate no figure is shown at all — see the n=3 problem."""
+        self.assertIsNone(core.decision_stability(self._rows(4)))
+
+    def test_too_few_days_returns_none(self):
+        """Many meals but few days is not enough evidence either."""
+        rows = self._rows(n_days=3, per_day=4)          # 12 meals, 3 days
+        self.assertGreaterEqual(len(rows), core.MIN_MEALS_FOR_STABILITY)
+        self.assertIsNone(core.decision_stability(rows))
+
+    def test_clear_case_is_stable(self):
+        """Every meal far above the threshold -> the verdict cannot flip."""
+        out = core.decision_stability(self._rows(12, exc=3.0))
+        self.assertEqual(out["cls"], "weak")
+        self.assertEqual(out["pct"], 100.0)
+        self.assertEqual(out["band"], "high")
+
+    def test_borderline_case_is_unstable(self):
+        """Meals straddling the threshold must not be reported as stable."""
+        rows = self._rows(12, exc=6.0 * core.LOOP_RATIO, jitter=0.45, d4=0.0)
+        out = core.decision_stability(rows)
+        self.assertLess(out["pct"], 100.0)
+        self.assertGreater(sum(1 for v in out["dist"].values() if v > 0), 1)
+
+    def test_reported_class_matches_full_sample_verdict(self):
+        """The bootstrap must describe the verdict the report actually shows."""
+        rows = self._rows(12, exc=3.0)
+        agg = core.aggregate_slot(rows)
+        self.assertEqual(core.decision_stability(rows)["cls"], agg["cls"])
+
+    def test_is_deterministic(self):
+        """A report must not change between runs — fixed seed."""
+        rows = self._rows(12, exc=6.0 * core.LOOP_RATIO, jitter=0.4, d4=0.0)
+        first = core.decision_stability(rows)
+        second = core.decision_stability(rows)
+        self.assertEqual(first, second)
+
+    def test_distribution_sums_to_hundred(self):
+        out = core.decision_stability(self._rows(12, exc=1.0))
+        self.assertAlmostEqual(sum(out["dist"].values()), 100.0, places=6)
+
+    def test_resamples_days_not_single_meals(self):
+        """Meals of one day travel together, so one odd day cannot be split up."""
+        rows = self._rows(10, per_day=3, exc=0.0, d4=0.0)
+        for r in rows[:3]:                               # one extreme day
+            r["exc"] = 40.0
+        out = core.decision_stability(rows)
+        # With day blocks the outlier day is drawn as a unit: it either shifts
+        # the median or it does not — it can never be spread across resamples.
+        self.assertEqual(out["days"], 10)
+        self.assertIn(out["cls"], ("ok", "weak"))
+
+    def test_verdict_rule_is_shared_with_aggregate_slot(self):
+        """Same inputs, same class — no second implementation of the rule."""
+        for exc, d4 in ((2.0, 0.0), (-2.0, 0.0), (0.0, 0.0), (0.0, core.D4_HIGH + 5)):
+            with self.subTest(exc=exc, d4=d4):
+                rows = self._rows(12, exc=exc, d4=d4)
+                self.assertEqual(core.verdict_class(exc, 6.0, d4),
+                                 core.aggregate_slot(rows)["cls"])

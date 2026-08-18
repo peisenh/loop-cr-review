@@ -18,6 +18,7 @@ import os
 import re
 import subprocess
 import sys
+import warnings
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -167,6 +168,17 @@ def _slot_scope(slots):
 MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 MIN_CLEAN_MEALS = 3        # prefer contamination-free meals; else fall back to all
+# Decision stability (bootstrap): how often the slot verdict survives resampling
+# whole days of meals. Gates are deliberately strict — below them a stability
+# figure looks reassuring without carrying information (a 95% interval from 3
+# meals empirically holds only ~76% of the time). Seed is fixed so a report
+# stays reproducible; the bands are heuristic and labelled as such.
+BOOTSTRAP_N = 2000
+BOOTSTRAP_SEED = 20260817
+MIN_MEALS_FOR_STABILITY = 8
+MIN_DAYS_FOR_STABILITY = 5
+STABILITY_HIGH = 90.0      # >= high, >= STABILITY_MODERATE moderate, else low
+STABILITY_MODERATE = 75.0
 MAX_GAP_MIN = 25           # CGM gap (minutes) inside the post-meal window → cgm_gap flag
 
 
@@ -720,6 +732,72 @@ def select_slot_rows(slot_rows):
     return list(slot_rows), n_clean, False
 
 
+def verdict_class(exc, bol, d4):
+    """The verdict rule itself: median extra basal / bolus / Δ4h -> class.
+
+    Single source of truth, shared by :func:`aggregate_slot` and the
+    decision-stability bootstrap, so a resampled verdict can never drift
+    from the real one.
+    """
+    ratio = exc / bol if bol else 0
+    if ratio > LOOP_RATIO or d4 > g(D4_HIGH):
+        return "weak"
+    if ratio < -LOOP_RATIO or d4 < g(D4_STRONG):
+        return "strong"
+    return "ok"
+
+
+def decision_stability(use_rows, n_boot=BOOTSTRAP_N, seed=BOOTSTRAP_SEED):
+    """How often the slot's verdict survives resampling its meals. -> dict|None.
+
+    Resamples whole **days** with replacement (not individual meals): meals of
+    one day share basal need, sensor and daily routine, so treating them as
+    independent draws would overstate how much evidence there is.
+
+    Returns ``{"pct", "cls", "dist", "band", "days"}`` where ``pct`` is the
+    share of resamples reproducing the class of the full sample, or ``None``
+    when there is too little data (see :data:`MIN_MEALS_FOR_STABILITY` /
+    :data:`MIN_DAYS_FOR_STABILITY`) — a stability figure from a handful of
+    meals looks reassuring without being informative.
+
+    This measures sensitivity to *which meals happened to be recorded*, not
+    whether the carb ratio itself is right.
+    """
+    by_day = {}
+    for row in use_rows:
+        by_day.setdefault(row["time"].date(), []).append(row)
+    days = list(by_day.values())
+    if len(use_rows) < MIN_MEALS_FOR_STABILITY or len(days) < MIN_DAYS_FOR_STABILITY:
+        return None
+
+    pos, day_index = 0, []
+    for rows in days:
+        day_index.append(np.arange(pos, pos + len(rows)))
+        pos += len(rows)
+    order = [r for rows in days for r in rows]          # array order == day order
+    exc = np.array([r["exc"] for r in order], dtype=float)
+    bol = np.array([r["bolus"] for r in order], dtype=float)
+    d4v = np.array([r["d4"] for r in order], dtype=float)
+
+    rng = np.random.default_rng(seed)                   # fixed: reports stay reproducible
+    counts = {"weak": 0, "ok": 0, "strong": 0}
+    with warnings.catch_warnings():                     # all-NaN slices are expected
+        warnings.simplefilter("ignore", RuntimeWarning)
+        for pick in rng.integers(0, len(days), size=(n_boot, len(days))):
+            idx = np.concatenate([day_index[i] for i in pick])
+            counts[verdict_class(float(np.nanmedian(exc[idx])),
+                                 float(np.nanmedian(bol[idx])),
+                                 float(np.nanmedian(d4v[idx])))] += 1
+
+    cls = verdict_class(float(np.nanmedian(exc)), float(np.nanmedian(bol)),
+                        float(np.nanmedian(d4v)))
+    pct = 100.0 * counts[cls] / n_boot
+    band = ("high" if pct >= STABILITY_HIGH
+            else "moderate" if pct >= STABILITY_MODERATE else "low")
+    return {"pct": pct, "cls": cls, "band": band, "days": len(days),
+            "dist": {k: 100.0 * v / n_boot for k, v in counts.items()}}
+
+
 def aggregate_slot(slot_rows):
     """Median aggregation of a slot + verdict. -> dict or None."""
     use, n_clean, used_clean_only = select_slot_rows(slot_rows)
@@ -732,13 +810,10 @@ def aggregate_slot(slot_rows):
 
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     rescues = sum(1 for r in slot_rows if r.get("hypo_rescue"))
-    ratio = exc / bol if bol else 0
-    if ratio > LOOP_RATIO or d4 > g(D4_HIGH):
-        flag, cls = _("too weak → tighten"), "weak"
-    elif ratio < -LOOP_RATIO or d4 < g(D4_STRONG):
-        flag, cls = _("too strong → loosen"), "strong"
-    else:
-        flag, cls = _("plausibly adequate"), "ok"
+    cls = verdict_class(exc, bol, d4)
+    flag = {"weak": _("too weak → tighten"),
+            "strong": _("too strong → loosen"),
+            "ok": _("plausibly adequate")}[cls]
     # A hypo rescue means an individual meal went low enough to need treatment.
     # How that reflects on the slot depends on the verdict and on how many meals
     # are affected — a single rescue among many meals is scatter, not a systematic
@@ -756,6 +831,8 @@ def aggregate_slot(slot_rows):
             flag += _(" ⚠︎ (isolated hypo(s) — mixed, check meals individually)")
     else:
         systematic = False
+    # Deliberately also spelled out in the verdict text, not only as a badge:
+    # the wording survives copy/paste and print, where the badge is easy to miss.
     if low_confidence:
         flag += _(" ⚠︎ (few clean meals)")
     return {"n": len(slot_rows), "clean": n_clean, "cho": med("cho"), "cr": med("cr"),
@@ -1166,8 +1243,16 @@ def _slot_flag(agg, slot, meals, window, val_at):
     return flag
 
 
-def _slots_context(by_slot, meals, window, val_at):
+def _fmt_stability(stab):
+    """Stability dict -> template-ready strings (or None)."""
+    if stab is None:
+        return None
+    return {"pct": f"{stab['pct']:.0f}", "band": stab["band"], "days": stab["days"]}
+
+
+def _slots_context(by_slot, meals, window, val_at, stability=None):
     out = []
+    stability = stability or {}
     for slot, _label, _start, _end in _slot_state()[0]:
         agg = aggregate_slot(by_slot.get(slot, []))
         if not agg:
@@ -1177,6 +1262,8 @@ def _slots_context(by_slot, meals, window, val_at):
             "cho": f"{agg['cho']:.0f}", "cr": fmt_cr(agg["cr"]), "bol": f"{agg['bol']:.1f}",
             "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
             "flag": _slot_flag(agg, slot, meals, window, val_at), "cls": agg["cls"],
+            "low_confidence": agg.get("low_confidence", False),
+            "stability": _fmt_stability(stability.get(slot)),
         })
     return out
 
@@ -1215,10 +1302,11 @@ def _captions(meals, by_slot, window, val_at):
     return curve_cap, clean_note
 
 
-def _recommendations_context(meals, by_slot, window, val_at):
+def _recommendations_context(meals, by_slot, window, val_at, stability=None):
     """Per slot: curve metrics + derived levers; plus CR_eff example."""
     grid = np.arange(0, window + 1, 10)
     recs, example, example_exc = [], None, 0.0
+    stability = stability or {}
     for slot in _slot_state()[1]:
         curve = slot_median_curve(meals, slot, window, val_at)
         agg = aggregate_slot(by_slot.get(slot, []))
@@ -1232,6 +1320,7 @@ def _recommendations_context(meals, by_slot, window, val_at):
             "d4": fmt_delta(agg["d4"]), "loop": f"{agg['exc']:+.2f}",
             "cr": fmt_cr(agg["cr"]), "cre": fmt_cr(agg["cre"]),
             "low_confidence": agg.get("low_confidence", False),
+            "stability": _fmt_stability(stability.get(slot)),
             "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
         })
         if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):
@@ -1277,7 +1366,9 @@ def build_context(base, window, wlab, daily=False, lang="de"):
     for row in rows:
         by_slot[row["slot"]].append(row)
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
-    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at)
+    stability = {slot: decision_stability(select_slot_rows(rows)[0])
+                 for slot, rows in by_slot.items()}
+    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at, stability)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
 
     return {
@@ -1295,7 +1386,8 @@ def build_context(base, window, wlab, daily=False, lang="de"):
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at, by_slot),
         "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, by_slot, dark=True),
         "daily_days": _daily_days_dual(times, gluc, base, basal) if daily else [],
-        "curve_cap": curve_cap, "slots": _slots_context(by_slot, meals, window, val_at),
+        "curve_cap": curve_cap,
+        "slots": _slots_context(by_slot, meals, window, val_at, stability),
         "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),
