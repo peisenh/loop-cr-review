@@ -652,7 +652,7 @@ msgstr "nadir"
 
 #: templates/report.html.j2:245
 msgid "Spread"
-msgstr "Peak"
+msgstr "Spread"
 
 #: templates/report.html.j2:245
 msgid "loop"
@@ -661,9 +661,7 @@ msgstr "Loop"
 #: templates/report.html.j2:245
 #, python-format
 msgid "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
-msgstr ""
-"Too few days for a %(pct)s %% spread — observed CR_eff range %(cre)s (%(meals)s meals on %(days)s"
-" days)"
+msgstr "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 
 #: templates/report.html.j2:245
 #, python-format
