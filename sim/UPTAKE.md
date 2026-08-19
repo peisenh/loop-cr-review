@@ -106,3 +106,18 @@ is a partial correction, not the needed ratio.
 Caveat: one patient, one gain setting, five days, three slots. This is a working
 demonstration that the path is closed and the quantities are consistent, not a
 detection statistic.
+
+## Phase A.3 — why 21/30 fail the gate
+
+Same CSV, zero-error rows only: `python3 -m sim.phase_a3`.
+
+E0 shifts with gain: weak mean −0.40 (pass 2/10), mid +0.10 (5/10),
+strong +0.97 (2/10). Weak under-delivers, strong over-delivers; Δ4h
+goes more negative as the gain rises.
+
+Only adult#002 passes all three gains. #003, #006, #009 pass none.
+CR_true does not sort them (#009 at 1:3.9 and #003 at 1:11.7 both fail
+all three; #007 at 1:25 still passes mid).
+
+So gate failure is both PID working point and S2008 heterogeneity.
+Extra basal is not a general CR signal under this controller.

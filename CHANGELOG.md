@@ -10,6 +10,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase A.3: diagnose the 21/30 neutrality failures from the same CSV.
+  E0 tracks PID gain (weak under, strong over); only adult#002 passes
+  all three gains. `python3 -m sim.phase_a3`.
+
+### Added
 - `sim/export.py`: a simulated run is now written as a Glooko-style export and
   read back by the real readers, so the simulation exercises the actual parsing,
   fasting-basal reference and slot logic instead of a simulation-only path.
