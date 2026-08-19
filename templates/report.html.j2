@@ -93,10 +93,12 @@ tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
   margin-left: 6px; background: var(--lc-tag-bg); color: var(--lc-tag-ink); vertical-align: middle }
 .spread { font-size: 11px; font-weight: 400; color: var(--gen); margin-top: 3px; line-height: 1.35 }
 .stab { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
+.meta { font-size: 11px; font-weight: 400; color: var(--gen); margin-top: 3px; line-height: 1.35 }
+.meta.low { color: #a5541b; font-weight: 600 }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: var(--slot-bg) }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
-.mline { font-size: 11.5px; color: var(--muted); margin: 3px 0 7px }
+.mline { font-size: 11.5px; color: var(--muted); margin: 3px 0 4px }
 .mline b { color: var(--ink) }
 .lever { font-size: 12.5px; margin: 3px 0 }
 .lever .tag { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 10px; margin-right: 6px }
@@ -196,7 +198,7 @@ img { width: 100%; border-radius: 8px }
     {% set unstable = s.stability and s.stability.band == 'low' %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence or unstable }}"><td>{{ s.label }}{% if s.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}{% if unstable %} <span class="lc-tag">{% trans %}verdict not stable{% endtrans %}</span>{% endif %}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
-        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="stab {{ s.stability.band }}">{% if s.stability.band == 'low' %}{% trans pct=s.stability.pct, days=s.stability.days %}Verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=s.stability.pct, days=s.stability.days %}Stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}</td></tr>
+        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
   <div class="note" style="margin: 6px 0 0">
@@ -209,26 +211,27 @@ img { width: 100%; border-radius: 8px }
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window and without a large CGM gap.{% endtrans %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
     on contaminated windows and is correspondingly less certain.{% endtrans %}
-    {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}</div>
+    {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}
+    <br>
+    {% trans %}<b>Stability:</b> How often does the same verdict (too strong / too weak / ok) remain when the recorded days are reshuffled?{% endtrans %}
+    90 % = {% trans %}robust{% endtrans %}; 40 % = {% trans %}a few days flip it{% endtrans %}.
+    {% trans %}Does not say whether the CR is correct.{% endtrans %}
+    <br>
+    {% trans %}<b>Spread:</b> typical{% endtrans %} 95 % {% trans %}band of CR_eff (and loop share) when days are reshuffled (enough days only).{% endtrans %}
+    <br>
+    {% trans %}<b>Observed range:</b> min–max of the actual values when there are too few days for a spread.{% endtrans %}
+    {% trans %}Neither is a confidence interval for “the true CR”.{% endtrans %}</div>
 </div>
 
 <div class="card">
   <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}"></div>
   <div class="note" style="margin-top: 8px">
-    {% trans w=wlab %}Here each meal is referenced to its <b>own baseline at minute 0</b>
-    (start = 0), and only then is the median taken. The curve thus shows the typical
-    <b>net course</b> and matches the Δ{{ w }} column of the table above directly: if a
-    curve ends clearly in the negative, glucose on average returns <i>below</i> baseline
-    (a sign of overdosing); if it stays up, it remains elevated (underdosing).
-    The absolute curve further above can <b>hide</b> such a net drop, because there
-    start and end are averaged independently over all meals and a high peak
-    in between visually overlays the return. This curve uses the same (clean)
-    meals as the Δ{{ w }} column above, so the two do not diverge; if
-    fewer than 3 clean meals are available, the same exception as in the table applies (all
-    meals) — the legend marks this per slot as "clean" or "all". Meals
-    without a CGM value exactly at minute 0 are not included, so the count (n) may differ slightly
-    from the table.{% endtrans %}</div>
+    {% trans w=wlab %}Each meal is set to <b>0 at minute 0</b>, then the median is taken — the typical
+    <b>net course</b>, aligned with the Δ{{ w }} column. Ending negative → often below baseline
+    (overdosing); staying high → underdosing. Same clean-meal rule as the table (or all meals
+    if fewer than 3 clean); legend shows "clean" or "all". n can differ slightly when minute 0
+    has no CGM sample.{% endtrans %}</div>
 </div>
 
 <div class="card">
@@ -240,8 +243,7 @@ img { width: 100%; border-radius: 8px }
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
       {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
-    {% if not r.spread and r.range %}<div class="spread">{% trans pct=95, cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Too few days for a {{ pct }} % spread — observed CR_eff range {{ cre }} ({{ meals }} meals on {{ days }} days){% endtrans %}</div>{% endif %}{% if r.spread %}<div class="spread">{% trans %}Spread across days{% endtrans %} (95 %){% if r.spread.cre %} — CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop share{% endtrans %} {{ r.spread.ratio }}{% endif %}</div>{% endif %}
-    {% if r.stability %}<div class="stab {{ r.stability.band }}">{% if r.stability.band == 'low' %}{% trans pct=r.stability.pct, days=r.stability.days %}Verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=r.stability.pct, days=r.stability.days %}Stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}
+    {% if r.spread or r.range or r.stability %}<div class="meta{{ ' low' if r.stability and r.stability.band == 'low' }}">{% if r.spread %}{% trans %}Spread{% endtrans %}{% if r.spread.cre %} CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop{% endtrans %} {{ r.spread.ratio }}{% endif %}{% elif r.range %}{% trans cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Observed CR_eff {{ cre }} ({{ meals }} meals / {{ days }} days){% endtrans %}{% endif %}{% if (r.spread or r.range) and r.stability %} · {% endif %}{% if r.stability %}{% trans pct=r.stability.pct %}stability {{ pct }}{% endtrans %} % ({{ r.stability.days }} {% trans %}calendar days{% endtrans %}){% endif %}</div>{% endif %}
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}
@@ -262,12 +264,9 @@ img { width: 100%; border-radius: 8px }
     {{ w }} is still <b>{{ d4 }} {{ unit }}</b> above baseline — the loop-boosted amount
     was not enough within the window. <b>CR_eff is a lower bound here</b>: the actually needed CR
     is even tighter (roughly: an additional ~Δ/ISF units).{% endtrans %}{% endif %}{% endif %}
-    <br><br>{% trans %}<b>Meant as:</b> direction and order of magnitude ("rather tighter, roughly this much") —
-    <b>not</b> "set the CR exactly to this value". <b>Why only an approximation:</b> it assumes the
-    loop extra belongs entirely to the meal (ignores correction of pre-existing highs, exercise,
-    adaptation); the derived CR may contain blended-in corrections; single-window view.
-    Therefore: read off direction + rough magnitude, decide the step small and iteratively with the team
-    and re-measure every ~1–2 weeks.{% endtrans %}</div>
+    <br><br>{% trans %}<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact pump setting.
+    Approximation (loop extra fully attributed to the meal; corrections/exercise/adaptation possible).
+    Small step with the team; re-check after ~1–2 weeks.{% endtrans %}</div>
 </div>
 
 <div class="card">

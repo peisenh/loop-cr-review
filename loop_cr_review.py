@@ -1248,12 +1248,15 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False):
 
 def slot_definitions():
     """Human-readable slot time windows for the report legend, derived from _slot_state()[0]."""
+    labels = _slot_state()[2]
     out = []
-    for _key, label, start, end in _slot_state()[0]:
+    for key, _lab, start, end in _slot_state()[0]:
+        label = labels.get(key, _lab)
         if start < 0:
             out.append(_("%(label)s = everything outside the other windows") % {"label": label})
         else:
-            out.append(f"{label} = {start:02d}:00–{end:02d}:00 Uhr")
+            out.append(_("%(label)s = %(start)s–%(end)s") % {
+                "label": label, "start": f"{start:02d}:00", "end": f"{end:02d}:00"})
     return out
 
 
@@ -1307,20 +1310,24 @@ def _fmt_range(use_rows):
     return {"cre": f"{fmt_cr(lo)} – {fmt_cr(hi)}", "meals": n, "days": days}
 
 
-def _slots_context(by_slot, meals, window, val_at, stability=None):
+def _slots_context(by_slot, meals, window, val_at, stability=None, selected=None):
     out = []
     stability = stability or {}
+    selected = selected or {}
     for slot, _label, _start, _end in _slot_state()[0]:
         agg = aggregate_slot(by_slot.get(slot, []))
         if not agg:
             continue
+        stab = stability.get(slot)
         out.append({
             "label": _slot_state()[2][slot], "n": agg["n"], "clean": agg["clean"],
             "cho": f"{agg['cho']:.0f}", "cr": fmt_cr(agg["cr"]), "bol": f"{agg['bol']:.1f}",
             "exc": f"{agg['exc']:+.2f}", "cre": fmt_cr(agg["cre"]), "d4": fmt_delta(agg["d4"]),
             "flag": _slot_flag(agg, slot, meals, window, val_at), "cls": agg["cls"],
             "low_confidence": agg.get("low_confidence", False),
-            "stability": _fmt_stability(stability.get(slot)),
+            "stability": _fmt_stability(stab),
+            "spread": _fmt_spread(stab),
+            "range": (None if stab else _fmt_range(selected.get(slot, []))),
         })
     return out
 
@@ -1449,7 +1456,7 @@ def build_context(base, window, wlab, daily=False, lang="de"):
         "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, by_slot, dark=True),
         "daily_days": _daily_days_dual(times, gluc, base, basal) if daily else [],
         "curve_cap": curve_cap,
-        "slots": _slots_context(by_slot, meals, window, val_at, stability),
+        "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),

@@ -9,6 +9,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Report UI denser (screen = print): one uncertainty legend; stability and day-spread
+  on a single meta line in table and slot cards; shorter curve/CR_eff notes.
+
 ### Added
 - Slot cards now show the day-to-day spread (2.5th/97.5th percentile over the
   same day-clustered resamples) for the two quantities a reader acts on:
