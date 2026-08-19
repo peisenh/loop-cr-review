@@ -121,3 +121,22 @@ all three; #007 at 1:25 still passes mid).
 
 So gate failure is both PID working point and S2008 heterogeneity.
 Extra basal is not a general CR signal under this controller.
+
+## Phase A.3 close — is E proportional to D?
+
+Same 390 rows, no new runs. Drop err=0 (D=0). Fit `E ≈ a + L̂·D`.
+
+| set | n | a | L̂ | R² |
+|-----|--:|--:|----:|---:|
+| gate pass | 108 | +0.02 | **0.29** | **0.87** |
+| gate fail | 252 | +0.33 | 0.29 | **0.22** |
+| pass, CR too weak | 54 | −0.01 | 0.36 | 0.76 |
+| pass, CR too strong | 54 | −0.14 | 0.20 | 0.68 |
+
+Through the origin, pass: L̂=0.29, R²=0.87.
+
+Per passing patient×gain (12 errors each): R² 0.99–1.00, but L̂ from
+0.23 (`adult#001` mid) to 0.53 (`adult#007` mid).
+
+There *is* an uptake relation, only behind the gate, and L is per
+work-point, not universal. That closes A.3. Do not set `LOOP_RATIO` from it.

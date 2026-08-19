@@ -10,11 +10,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- A.3 close: on the gate population E ≈ 0.29·D (R²=0.87); on failures
+  R²=0.22. L is per work-point (0.23–0.53), not universal.
 - Phase A.3: diagnose the 21/30 neutrality failures from the same CSV.
   E0 tracks PID gain (weak under, strong over); only adult#002 passes
   all three gains. `python3 -m sim.phase_a3`.
-
-### Added
 - `sim/export.py`: a simulated run is now written as a Glooko-style export and
   read back by the real readers, so the simulation exercises the actual parsing,
   fasting-basal reference and slot logic instead of a simulation-only path.
@@ -37,18 +37,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   adult-grid extra basal. At a pass gate, zero CR error stays `ok`;
   detection of ±15–20 % is poor because measured L is ~0.3–0.4.
   `python3 -m sim.phase_a2`. Do not retune `LOOP_RATIO` from this PID.
-
-### Added
 - Phase A close: [sim/UPTAKE.md](sim/UPTAKE.md) states the three levels
   (9/30 pass, L only on the gate population, failures kept), gate sensitivity
   0.1/0.2/0.3 U, and the reading: B/C border, no `LOOP_RATIO` change. Phase B is not a hard stop.
-
-### Added
 - Independent simulator under `sim/` (physiology, measured CR_true, CGM-only
   PID, isolation, empirical L). `phase_a.py` writes 10 adults × 3 gains ×
   −30…+30 %. Dependency only in `requirements-sim.txt`.
-
-### Added
 - `SIMULATION-SPEC.md`: specification for an independent simulator that tests
   the method’s core premise instead of its statistics. Hard requirements up
   front — controller isolation, measured reference ratio, empirical loop
