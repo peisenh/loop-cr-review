@@ -260,6 +260,8 @@ loop-cr-review/
 ├── requirements-web.txt       # zusätzliche Abhängigkeiten fürs Web-Frontend
 ├── requirements-gui.txt       # Desktop-App Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
+├── tools/                     # Validierungsskripte (nicht Teil der Auswertung)
+├── VALIDATION.md              # gemessene Belastbarkeit von Streubereich/Stabilität
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE
@@ -276,6 +278,10 @@ Als benannte Konstanten oben in `loop_cr_review.py` gebündelt und anpassbar: Sl
 - Das **Fasten-Basal** als Referenz (Mittel der Nächte) setzt mahlzeit-/korrekturfreie Nächte (00:00–06:00 Uhr) voraus.
 - Die aus `CHO/Bolus` abgeleitete CR kann vom Bolusrechner beigemischte Korrekturen enthalten (das Tool weist darauf hin, wenn ein Slot auffällig abweicht).
 - CamAPS' Adaption über Tage kann länger bestehende Fehleinstellungen teilweise glätten.
+- **Streubereich und Entscheidungsstabilität** beziffern nur, wie empfindlich ein
+  Ergebnis von der Auswahl der aufgezeichneten Tage abhängt — nicht, ob die CR
+  richtig ist. Wie belastbar diese Zahlen selbst sind (gemessene Deckung,
+  Grenzen des Verfahrens): [VALIDATION.md](VALIDATION.md).
 
 ## Mitwirken
 

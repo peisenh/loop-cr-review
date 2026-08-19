@@ -9,6 +9,24 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- `tools/validate_bootstrap.py` plus [VALIDATION.md](VALIDATION.md): a reproducible
+  check of the statistics against a known truth — does the "95 %" day spread
+  actually cover the true median, and does decision stability separate a clear
+  slot from a borderline one. This is where the day gate comes from (74.9 %
+  coverage at 3 days, 88.4 % at 4, 93.9 % at 5). The document also records what
+  the check cannot show: the generator draws independent, clean days, so the
+  numbers validate the resampling procedure, not the carb-ratio inference on
+  real data. Linked from the limitations section of both READMEs.
+
+### Fixed
+- Report contrast: the meta line under a verdict used `--gen`, which is 2.9:1 on
+  the light card background (WCAG asks 4.5) — it now uses `--muted` (5.3:1). The
+  low-stability highlight was a hardcoded colour that dropped to 3.0:1 in dark
+  mode; it is now a `--meta-low` variable defined per colour scheme.
+- A stray `#, fuzzy` marker in the German catalog made Babel skip one entry, so
+  the report showed "loop" instead of "Loop".
+
 ### Changed
 - Report UI denser (screen = print): one uncertainty legend; stability and day-spread
   on a single meta line in table and slot cards; shorter curve/CR_eff notes.

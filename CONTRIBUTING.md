@@ -136,6 +136,22 @@ By making a contribution to this project, I certify that:
 
 Full text: <https://developercertificate.org/>
 
+## Method validation
+
+The unit tests pin the arithmetic; they do not validate the statistics. For that
+there is a separate, reproducible script:
+
+```bash
+python3 tools/validate_bootstrap.py                  # quick run
+PYTHONPATH=. pylint tools/validate_bootstrap.py
+```
+
+It measures, against a known truth, whether the "95 %" day spread really covers
+it and whether decision stability separates clear from borderline slots. The
+committed results and their limits are in [VALIDATION.md](VALIDATION.md). If you
+change the gates, the bootstrap or the verdict rule, re-run it and update that
+document.
+
 ## Tests
 
 ```bash

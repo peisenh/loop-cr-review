@@ -255,6 +255,8 @@ loop-cr-review/
 ├── requirements-web.txt       # extra dependencies for the web front-end
 ├── requirements-gui.txt       # desktop app Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # desktop app Windows slim (WebView2)
+├── tools/                     # validation scripts (not part of the analysis)
+├── VALIDATION.md              # measured reliability of spread/stability
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE
@@ -271,6 +273,10 @@ Bundled as named constants at the top of `loop_cr_review.py` and adjustable: slo
 - The **fasting basal** as a reference assumes meal-/correction-free nights (00:00–06:00).
 - The CR derived from `CHO/bolus` may include corrections blended in by the bolus calculator (the tool flags this when a slot deviates noticeably).
 - CamAPS's adaptation over days can partly smooth out longer-standing misconfigurations.
+- **Spread and decision stability** only quantify how sensitive a result is to
+  which days happened to be recorded — not whether the carb ratio is right.
+  How trustworthy those numbers are themselves (measured coverage, limits of
+  the procedure): [VALIDATION.md](VALIDATION.md).
 
 ## Contributing
 

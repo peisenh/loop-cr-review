@@ -12,7 +12,7 @@
   --method-bg:#f7f9fc; --method-border:#c5d0e0; --method-b:#1c4ea8;
   --eff-bg:#f4f7ff; --eff-border:#cdddff; --code-bg:#eef1f6;
   --lowconf-a:#f2f2f2; --lowconf-b:#e8e8e8; --lowconf-ink:#7a6a2a;
-  --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18;
+  --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18; --meta-low:#a5541b;
   --tag-sea-bg:#e7efff; --tag-sea:#1c4ea8; --tag-cr-bg:#fdeaea; --tag-cr:#a12626;
   --tag-fp-bg:#fff3e8; --tag-fp:#a5541b; --tag-obs-bg:#eef8ef; --tag-obs:#2b7a34;
   --brand:#3F454A;
@@ -26,7 +26,7 @@
     --method-bg:#1a2130; --method-border:#3a4a60; --method-b:#7eb0ff;
     --eff-bg:#1a2438; --eff-border:#3a5080; --code-bg:#2a3344;
     --lowconf-a:#2a2a2a; --lowconf-b:#353535; --lowconf-ink:#d4c48a;
-    --lc-tag-bg:#5a4e28; --lc-tag-ink:#f5e6a8;
+    --lc-tag-bg:#5a4e28; --lc-tag-ink:#f5e6a8; --meta-low:#e8a06a;
     --tag-sea-bg:#1e2e4a; --tag-sea:#8bb4ff; --tag-cr-bg:#4a2828; --tag-cr:#f0a0a0;
     --tag-fp-bg:#3a2e22; --tag-fp:#e0b080; --tag-obs-bg:#1e3224; --tag-obs:#90d0a0;
     --brand:#e8ecf2;
@@ -51,7 +51,7 @@
     --method-bg:#f7f9fc; --method-border:#c5d0e0; --method-b:#1c4ea8;
     --eff-bg:#f4f7ff; --eff-border:#cdddff; --code-bg:#eef1f6;
     --lowconf-a:#f2f2f2; --lowconf-b:#e8e8e8; --lowconf-ink:#7a6a2a;
-    --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18;
+    --lc-tag-bg:#f5e6a8; --lc-tag-ink:#6a5a18; --meta-low:#a5541b;
     --tag-sea-bg:#e7efff; --tag-sea:#1c4ea8; --tag-cr-bg:#fdeaea; --tag-cr:#a12626;
     --tag-fp-bg:#fff3e8; --tag-fp:#a5541b; --tag-obs-bg:#eef8ef; --tag-obs:#2b7a34;
     --brand:#3F454A;
@@ -93,8 +93,8 @@ tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
   margin-left: 6px; background: var(--lc-tag-bg); color: var(--lc-tag-ink); vertical-align: middle }
 .spread { font-size: 11px; font-weight: 400; color: var(--gen); margin-top: 3px; line-height: 1.35 }
 .stab { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
-.meta { font-size: 11px; font-weight: 400; color: var(--gen); margin-top: 3px; line-height: 1.35 }
-.meta.low { color: #a5541b; font-weight: 600 }
+.meta { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
+.meta.low { color: var(--meta-low); font-weight: 600 }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: var(--slot-bg) }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
