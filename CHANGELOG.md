@@ -9,7 +9,29 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Slot cards now show the day-to-day spread (2.5th/97.5th percentile over the
+  same day-clustered resamples) for the two quantities a reader acts on:
+  CR_eff and the loop share. Called "spread across days", not a confidence
+  interval — it covers the choice of recorded days only, not the systematic
+  confounding by loop adaptation. Nominal CR (a setting, not an estimate) and
+  the Δ4h spread (regularly wider than the value itself) are left out. Same
+  gates, seed and resampling pass as decision stability, so the extra cost is
+  negligible (~0.7 s total for a 14-day export).
+- Slots below those gates no longer just stay silent, which looked like a
+  defect: they show the plainly observed CR_eff range instead, labelled as
+  such ("too few days for a 95 % spread — observed range …"), together with
+  the meals and days it rests on. The gate follows the measurement: coverage
+  of the spread is driven by the number of days (79 % at 3 days, 85 % at 4,
+  ~90 % from 5), so the day gate stays at 5 and the meal gate dropped from 8
+  to 5, which no longer excludes slots that are thin in meals but spread over
+  enough days.
+
 ### Fixed
+- A `{% trans %}` block containing a literal percent sign was never translated:
+  Jinja escapes it to `%%` in the lookup key while Babel writes a single `%`
+  to the catalog, so the two never matched. The percent sign now sits outside
+  the translated text.
 - The GUI test asserting the desktop launcher binds to loopback only silently
   skipped itself on Debian hosts, where the hostname resolves to 127.0.1.1 —
   so it ran on CI but not on the machines it matters for. It now determines

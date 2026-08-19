@@ -291,6 +291,14 @@ class TestDecisionStability(unittest.TestCase):
         self.assertGreaterEqual(len(rows), core.MIN_MEALS_FOR_STABILITY)
         self.assertIsNone(core.decision_stability(rows))
 
+    def test_gate_is_driven_by_days_not_meals(self):
+        """5 days is the point where the spread's coverage becomes honest."""
+        self.assertEqual(core.MIN_DAYS_FOR_STABILITY, 5)
+        # Enough meals but only 4 days -> no bootstrap.
+        self.assertIsNone(core.decision_stability(self._rows(n_days=4, per_day=3)))
+        # Five days with one meal each is enough.
+        self.assertIsNotNone(core.decision_stability(self._rows(n_days=5)))
+
     def test_clear_case_is_stable(self):
         """Every meal far above the threshold -> the verdict cannot flip."""
         out = core.decision_stability(self._rows(12, exc=3.0))
@@ -340,3 +348,78 @@ class TestDecisionStability(unittest.TestCase):
                 rows = self._rows(12, exc=exc, d4=d4)
                 self.assertEqual(core.verdict_class(exc, 6.0, d4),
                                  core.aggregate_slot(rows)["cls"])
+
+
+class TestSpread(unittest.TestCase):
+    """Day-clustered spread of CR_eff and the loop share."""
+
+    @staticmethod
+    def _rows(n_days, cre=8.0, exc=1.0, bolus=6.0, jitter=0.0):
+        rows, day0 = [], datetime(2026, 5, 1, 8, 0)
+        for d in range(n_days):
+            sign = 1 if d % 2 else -1
+            rows.append({"time": day0 + timedelta(days=d),
+                         "exc": exc + sign * jitter, "bolus": bolus, "d4": 10.0,
+                         "cho": 60.0, "cr": 10.0, "cr_eff": cre + sign * jitter,
+                         "contam": False, "cgm_gap": False, "hypo_rescue": False,
+                         "pre": 120.0, "bg": 120.0})
+        return rows
+
+    def test_spread_brackets_the_reported_value(self):
+        """The median must lie inside its own spread."""
+        out = core.decision_stability(self._rows(12, cre=8.0, jitter=1.5))
+        lo, hi = out["spread"]["cre"]
+        self.assertLessEqual(lo, 8.0)
+        self.assertGreaterEqual(hi, 8.0)
+
+    def test_noisier_days_give_a_wider_spread(self):
+        narrow = core.decision_stability(self._rows(12, jitter=0.2))["spread"]["cre"]
+        wide = core.decision_stability(self._rows(12, jitter=3.0))["spread"]["cre"]
+        self.assertGreater(wide[1] - wide[0], narrow[1] - narrow[0])
+
+    def test_identical_days_give_a_point_spread(self):
+        """With no variation between days there is nothing to resample away."""
+        lo, hi = core.decision_stability(self._rows(12, jitter=0.0))["spread"]["cre"]
+        self.assertAlmostEqual(lo, hi, places=6)
+
+    def test_loop_share_spread_is_a_ratio(self):
+        """The loop share is extra basal / bolus, not the absolute units."""
+        out = core.decision_stability(self._rows(12, exc=1.2, bolus=6.0, jitter=0.3))
+        lo, hi = out["spread"]["ratio"]
+        self.assertLessEqual(lo, 1.2 / 6.0)
+        self.assertGreaterEqual(hi, 1.2 / 6.0)
+
+    def test_no_spread_below_the_gates(self):
+        self.assertIsNone(core.decision_stability(self._rows(4)))
+
+    def test_display_strings_only_for_the_two_chosen_quantities(self):
+        out = core._fmt_spread(core.decision_stability(self._rows(12, jitter=1.0)))
+        self.assertEqual(set(out), {"cre", "ratio"})
+
+
+class TestObservedRange(unittest.TestCase):
+    """Fallback for slots below the bootstrap gates."""
+
+    @staticmethod
+    def _rows(values):
+        day0 = datetime(2026, 5, 1, 12, 0)
+        return [{"time": day0 + timedelta(days=i), "cr_eff": v, "exc": 1.0,
+                 "bolus": 6.0, "d4": 10.0, "cho": 60.0, "cr": 10.0,
+                 "contam": False, "cgm_gap": False, "hypo_rescue": False,
+                 "pre": 120.0, "bg": 120.0} for i, v in enumerate(values)]
+
+    def test_range_is_min_and_max(self):
+        lo, hi, n = core.observed_range(self._rows([8.0, 6.5, 9.25, 7.0]))
+        self.assertEqual((lo, hi, n), (6.5, 9.25, 4))
+
+    def test_needs_at_least_two_values(self):
+        self.assertIsNone(core.observed_range(self._rows([7.0])))
+
+    def test_ignores_nan_values(self):
+        lo, hi, n = core.observed_range(self._rows([7.0, float("nan"), 9.0]))
+        self.assertEqual((lo, hi, n), (7.0, 9.0, 2))
+
+    def test_display_string_for_gated_slot(self):
+        out = core._fmt_range(self._rows([6.5, 8.7, 7.1, 7.9]))
+        self.assertEqual(out["meals"], 4)
+        self.assertIn("–", out["cre"])

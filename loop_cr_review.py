@@ -169,13 +169,14 @@ MEAL_MIN_CHO = 20          # g, lower bound for a "real" meal
 MERGE_SEC = 45 * 60        # Boli innerhalb dieser Spanne zusammenfassen
 MIN_CLEAN_MEALS = 3        # prefer contamination-free meals; else fall back to all
 # Decision stability (bootstrap): how often the slot verdict survives resampling
-# whole days of meals. Gates are deliberately strict — below them a stability
-# figure looks reassuring without carrying information (a 95% interval from 3
-# meals empirically holds only ~76% of the time). Seed is fixed so a report
-# stays reproducible; the bands are heuristic and labelled as such.
+# whole days of meals. Coverage of the spread is driven by the number of *days*,
+# not of meals: measured against a known median it reaches ~90 % from 5 days
+# (79 % at 3 days, 85 % at 4), so that is where the gate sits. Below it the card
+# falls back to the plainly observed range. Seed is fixed so a report stays
+# reproducible; the bands are heuristic and labelled as such.
 BOOTSTRAP_N = 2000
 BOOTSTRAP_SEED = 20260817
-MIN_MEALS_FOR_STABILITY = 8
+MIN_MEALS_FOR_STABILITY = 5
 MIN_DAYS_FOR_STABILITY = 5
 STABILITY_HIGH = 90.0      # >= high, >= STABILITY_MODERATE moderate, else low
 STABILITY_MODERATE = 75.0
@@ -747,6 +748,20 @@ def verdict_class(exc, bol, d4):
     return "ok"
 
 
+def observed_range(use_rows, key="cr_eff"):
+    """Plain min/max of a quantity across the meals. -> (lo, hi, n) or None.
+
+    Fallback for slots below the bootstrap gates: a resampled 95 % spread would
+    pretend to a precision the data cannot carry, but the range actually seen is
+    a fact and still tells the reader how far the meals sit apart. Needs at
+    least two usable values.
+    """
+    vals = [r[key] for r in use_rows if not np.isnan(r[key])]
+    if len(vals) < 2:
+        return None
+    return min(vals), max(vals), len(vals)
+
+
 def decision_stability(use_rows, n_boot=BOOTSTRAP_N, seed=BOOTSTRAP_SEED):
     """How often the slot's verdict survives resampling its meals. -> dict|None.
 
@@ -761,7 +776,11 @@ def decision_stability(use_rows, n_boot=BOOTSTRAP_N, seed=BOOTSTRAP_SEED):
     meals looks reassuring without being informative.
 
     This measures sensitivity to *which meals happened to be recorded*, not
-    whether the carb ratio itself is right.
+    whether the carb ratio itself is right. The same pass also records the
+    spread of CR_eff and of the loop share over those resampled days, reported
+    as ``spread`` (2.5th/97.5th percentile) — deliberately not called a
+    confidence interval: it covers the choice of days only, not the systematic
+    confounding by loop adaptation.
     """
     by_day = {}
     for row in use_rows:
@@ -778,24 +797,32 @@ def decision_stability(use_rows, n_boot=BOOTSTRAP_N, seed=BOOTSTRAP_SEED):
     exc = np.array([r["exc"] for r in order], dtype=float)
     bol = np.array([r["bolus"] for r in order], dtype=float)
     d4v = np.array([r["d4"] for r in order], dtype=float)
+    cre = np.array([r["cr_eff"] for r in order], dtype=float)
 
     rng = np.random.default_rng(seed)                   # fixed: reports stay reproducible
     counts = {"weak": 0, "ok": 0, "strong": 0}
+    cre_boot, ratio_boot = [], []
     with warnings.catch_warnings():                     # all-NaN slices are expected
         warnings.simplefilter("ignore", RuntimeWarning)
         for pick in rng.integers(0, len(days), size=(n_boot, len(days))):
             idx = np.concatenate([day_index[i] for i in pick])
-            counts[verdict_class(float(np.nanmedian(exc[idx])),
-                                 float(np.nanmedian(bol[idx])),
-                                 float(np.nanmedian(d4v[idx])))] += 1
+            m_exc = float(np.nanmedian(exc[idx]))
+            m_bol = float(np.nanmedian(bol[idx]))
+            counts[verdict_class(m_exc, m_bol, float(np.nanmedian(d4v[idx])))] += 1
+            cre_boot.append(float(np.nanmedian(cre[idx])))
+            ratio_boot.append(m_exc / m_bol if m_bol else np.nan)
 
-    cls = verdict_class(float(np.nanmedian(exc)), float(np.nanmedian(bol)),
-                        float(np.nanmedian(d4v)))
+        cls = verdict_class(float(np.nanmedian(exc)), float(np.nanmedian(bol)),
+                            float(np.nanmedian(d4v)))
+        spread = {key: tuple(np.nanpercentile(np.array(vals, dtype=float), [2.5, 97.5]))
+                  for key, vals in (("cre", cre_boot), ("ratio", ratio_boot))
+                  if not np.all(np.isnan(vals))}
     pct = 100.0 * counts[cls] / n_boot
     band = ("high" if pct >= STABILITY_HIGH
             else "moderate" if pct >= STABILITY_MODERATE else "low")
     return {"pct": pct, "cls": cls, "band": band, "days": len(days),
-            "dist": {k: 100.0 * v / n_boot for k, v in counts.items()}}
+            "dist": {k: 100.0 * v / n_boot for k, v in counts.items()},
+            "spread": spread}
 
 
 def aggregate_slot(slot_rows):
@@ -1250,6 +1277,36 @@ def _fmt_stability(stab):
     return {"pct": f"{stab['pct']:.0f}", "band": stab["band"], "days": stab["days"]}
 
 
+def _fmt_spread(stab):
+    """Day-to-day spread of CR_eff and loop share -> display strings (or None).
+
+    Only the two quantities a reader acts on: CR_eff (the number that invites
+    being read as a target) and the loop share (the number the threshold is
+    applied to). Nominal CR is a setting rather than an estimate, and the Δ4h
+    spread is regularly wider than the value itself — neither adds information.
+    """
+    if stab is None or not stab.get("spread"):
+        return None
+    out = {}
+    cre = stab["spread"].get("cre")
+    if cre and not any(np.isnan(v) for v in cre):
+        out["cre"] = f"{fmt_cr(cre[0])} – {fmt_cr(cre[1])}"
+    ratio = stab["spread"].get("ratio")
+    if ratio and not any(np.isnan(v) for v in ratio):
+        out["ratio"] = f"{ratio[0] * 100:+.0f} … {ratio[1] * 100:+.0f} %"
+    return out or None
+
+
+def _fmt_range(use_rows):
+    """Observed CR_eff range -> display strings (or None), for gated slots."""
+    rng = observed_range(use_rows, "cr_eff")
+    if rng is None:
+        return None
+    lo, hi, n = rng
+    days = len({r["time"].date() for r in use_rows})
+    return {"cre": f"{fmt_cr(lo)} – {fmt_cr(hi)}", "meals": n, "days": days}
+
+
 def _slots_context(by_slot, meals, window, val_at, stability=None):
     out = []
     stability = stability or {}
@@ -1302,11 +1359,12 @@ def _captions(meals, by_slot, window, val_at):
     return curve_cap, clean_note
 
 
-def _recommendations_context(meals, by_slot, window, val_at, stability=None):
+def _recommendations_context(meals, by_slot, window, val_at, stability=None, selected=None):
     """Per slot: curve metrics + derived levers; plus CR_eff example."""
     grid = np.arange(0, window + 1, 10)
     recs, example, example_exc = [], None, 0.0
     stability = stability or {}
+    selected = selected or {}
     for slot in _slot_state()[1]:
         curve = slot_median_curve(meals, slot, window, val_at)
         agg = aggregate_slot(by_slot.get(slot, []))
@@ -1321,6 +1379,9 @@ def _recommendations_context(meals, by_slot, window, val_at, stability=None):
             "cr": fmt_cr(agg["cr"]), "cre": fmt_cr(agg["cre"]),
             "low_confidence": agg.get("low_confidence", False),
             "stability": _fmt_stability(stability.get(slot)),
+            "spread": _fmt_spread(stability.get(slot)),
+            "range": (None if stability.get(slot)
+                      else _fmt_range(selected.get(slot, []))),
             "levers": [{"tag": t, "cls": c, "text": x} for t, c, x in slot_levers(agg, met, window)],
         })
         if agg["cls"] == "weak" and (example is None or agg["exc"] > example_exc):
@@ -1366,9 +1427,10 @@ def build_context(base, window, wlab, daily=False, lang="de"):
     for row in rows:
         by_slot[row["slot"]].append(row)
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
-    stability = {slot: decision_stability(select_slot_rows(rows)[0])
-                 for slot, rows in by_slot.items()}
-    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at, stability)
+    selected = {slot: select_slot_rows(rows)[0] for slot, rows in by_slot.items()}
+    stability = {slot: decision_stability(rows) for slot, rows in selected.items()}
+    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
+                                                stability, selected)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
 
     return {

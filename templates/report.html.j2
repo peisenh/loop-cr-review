@@ -91,6 +91,7 @@ tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
   border-right: 3px dashed #a0893a }
 .lc-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px;
   margin-left: 6px; background: var(--lc-tag-bg); color: var(--lc-tag-ink); vertical-align: middle }
+.spread { font-size: 11px; font-weight: 400; color: var(--gen); margin-top: 3px; line-height: 1.35 }
 .stab { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: var(--slot-bg) }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
@@ -195,7 +196,7 @@ img { width: 100%; border-radius: 8px }
     {% set unstable = s.stability and s.stability.band == 'low' %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence or unstable }}"><td>{{ s.label }}{% if s.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}{% if unstable %} <span class="lc-tag">{% trans %}verdict not stable{% endtrans %}</span>{% endif %}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
-        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="stab {{ s.stability.band }}">{% if s.stability.band == 'low' %}{% trans pct=s.stability.pct, days=s.stability.days %}verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=s.stability.pct, days=s.stability.days %}stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}</td></tr>
+        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="stab {{ s.stability.band }}">{% if s.stability.band == 'low' %}{% trans pct=s.stability.pct, days=s.stability.days %}Verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=s.stability.pct, days=s.stability.days %}Stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
   <div class="note" style="margin: 6px 0 0">
@@ -239,7 +240,8 @@ img { width: 100%; border-radius: 8px }
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
       {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
-    {% if r.stability %}<div class="stab {{ r.stability.band }}">{% if r.stability.band == 'low' %}{% trans pct=r.stability.pct, days=r.stability.days %}verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=r.stability.pct, days=r.stability.days %}stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}
+    {% if not r.spread and r.range %}<div class="spread">{% trans pct=95, cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Too few days for a {{ pct }} % spread — observed CR_eff range {{ cre }} ({{ meals }} meals on {{ days }} days){% endtrans %}</div>{% endif %}{% if r.spread %}<div class="spread">{% trans %}Spread across days{% endtrans %} (95 %){% if r.spread.cre %} — CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop share{% endtrans %} {{ r.spread.ratio }}{% endif %}</div>{% endif %}
+    {% if r.stability %}<div class="stab {{ r.stability.band }}">{% if r.stability.band == 'low' %}{% trans pct=r.stability.pct, days=r.stability.days %}Verdict not stable — holds in only {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% else %}{% trans pct=r.stability.pct, days=r.stability.days %}Stable in {{ pct }} % of resamples ({{ days }} days){% endtrans %}{% endif %}</div>{% endif %}
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}
