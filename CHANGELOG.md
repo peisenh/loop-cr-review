@@ -10,6 +10,23 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `sim/loop_uptake.py`: empirical loop uptake L = extra basal / insulin
+  shortfall, mid PID, one adult. First reading: L ≈ 0.30 when the CR is too
+  weak, ≈ 0.19 when too strong — below the 0.7 the statistical generator
+  assumed. Not a LOOP_RATIO change: the controller is not CamAPS.
+- `sim/controller.py`: CGM-only PID (profile + delta, capped). Isolation
+  test: extra meal/state kwargs must not change the output. With a CR_true
+  bolus the extra basal stays small vs. the meal dose.
+- `sim/cr_true.py`: measure the reference carb ratio with the controller
+  still off. Two definitions — bolus that returns glucose at 4 h, and bolus
+  that minimises the area vs. baseline — reported together, not mixed.
+- `sim/`: first physiology-only step of the independent simulator
+  (SIMULATION-SPEC §13.1). Open-loop UVa/Padova patient, no controller, no
+  import from the analysis core. Three plausibility checks: night stays flat,
+  a meal without bolus raises glucose, a provisional bolus cuts the 4 h rise.
+  Dependency is `requirements-sim.txt` only.
+
+### Added
 - `SIMULATION-SPEC.md`: specification (not yet implemented) for an independent
   simulator that would test the method's core premise instead of its statistics.
   The existing validations prescribe the loop extra basal; here it would emerge
