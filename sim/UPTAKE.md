@@ -1,5 +1,16 @@
 # Phase A — close and conclusion
 
+## Preliminary result of the simulation
+
+Under an independent CGM-only controller, extra basal tracks a carb-ratio
+shortfall only at some work-points. There, \(E \approx L\cdot D\) with L
+about 0.2–0.5 per work-point, not a universal constant. Outside that
+neutrality window extra basal barely depends on the shortfall. `CR_eff`
+improves on the programmed ratio only in the first case, and only as a
+partial correction. The sensitivity generator’s share is not a target and
+is not revoked. `LOOP_RATIO` is not retuned from this PID. CamAPS was not
+simulated.
+
 Non-circular check: extra basal comes from a CGM-only PID. Formal adult
 grid: 10 S2008 adults × weak/mid/strong × CR error −30…+30 % (390 rows).
 Gate `|E₀| ≤ 0.2 U` is fixed before L is read. Reproduce:

@@ -10,49 +10,32 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Independent simulator under `sim/` (physiology, measured CR_true, CGM-only
+  PID, isolation). `phase_a.py` writes the adult grid 10 × 3 × −30…+30 %.
+  Dependency only in `requirements-sim.txt`. Summary: [sim/UPTAKE.md](sim/UPTAKE.md).
+- Phase A.2: analysis `LOOP_RATIO` (E/bolus > 0.12) on that extra basal.
+  At a pass gate, zero CR error stays ok; ±15–20 % is rarely flagged.
+  `python3 -m sim.phase_a2`.
+- Phase A.3: 21/30 work-points fail the neutrality gate. E0 tracks PID
+  gain (weak under, strong over); only adult#002 passes all three gains.
+  Behind the gate E ≈ 0.29·D (R²=0.87); on failures R²=0.22. L per
+  work-point 0.23–0.53, not universal. `python3 -m sim.phase_a3`.
 - Phase A.4: CR_eff vs CR_set as estimators of CR_ref. Behind the gate
-  CR_eff is closer in 87 % of rows (mae 10.8 % vs 16.2 %); outside it
-  is not. `python3 -m sim.phase_a4`.
-
-### Added
-- A.3 close: on the gate population E ≈ 0.29·D (R²=0.87); on failures
-  R²=0.22. L is per work-point (0.23–0.53), not universal.
-- Phase A.3: diagnose the 21/30 neutrality failures from the same CSV.
-  E0 tracks PID gain (weak under, strong over); only adult#002 passes
-  all three gains. `python3 -m sim.phase_a3`.
-- `sim/export.py`: a simulated run is now written as a Glooko-style export and
-  read back by the real readers, so the simulation exercises the actual parsing,
-  fasting-basal reference and slot logic instead of a simulation-only path.
-  First end-to-end result for `adult#001`: at a correctly set ratio the tool does
-  not false-alarm and CR_eff lands ~3 % from the measured reference; at a 25 %
-  error CR_eff closes only about 45 % of the gap and one slot in three is
-  flagged — consistent with the measured uptake of L ≈ 0.35.
+  CR_eff is closer in 87 % of rows (mae 10.8 % vs 16.2 %); outside it is
+  not. `python3 -m sim.phase_a4`.
+- `sim/export.py`: Glooko-style export through the real readers (parse,
+  fasting basal, slots). adult#001, 5 days: correct CR → no false alarm,
+  CR_eff ~3 % from the measured reference; 25 % too-weak CR → CR_eff
+  closes about 45 % of the gap, one slot in three flagged.
+- `SIMULATION-SPEC.md`: independent check of the method premise. simglucose
+  is MIT.
 
 ### Changed
-- `sim/phase_a2.py` imports `verdict_class`/`LOOP_RATIO` from the analysis instead
-  of restating the threshold, which would have drifted silently. Generation stays
-  independent of the analysis; only the evaluation depends on it.
-- `sim/UPTAKE.md` reports the spread of L as quartiles and full range
-  (median 0.33, 0.24–0.49, −0.19…0.80) instead of a narrower band, names the two
-  negative work-points, and states that the asymmetry hypothesis is **not**
-  confirmed by these data.
-
-### Added
-- Phase A.2: apply the analysis `LOOP_RATIO` (E/bolus > 0.12) to the
-  adult-grid extra basal. At a pass gate, zero CR error stays `ok`;
-  detection of ±15–20 % is poor because measured L is ~0.3–0.4.
-  `python3 -m sim.phase_a2`. Do not retune `LOOP_RATIO` from this PID.
-- Phase A close: [sim/UPTAKE.md](sim/UPTAKE.md) states the three levels
-  (9/30 pass, L only on the gate population, failures kept), gate sensitivity
-  0.1/0.2/0.3 U, and the reading: B/C border, no `LOOP_RATIO` change. Phase B is not a hard stop.
-- Independent simulator under `sim/` (physiology, measured CR_true, CGM-only
-  PID, isolation, empirical L). `phase_a.py` writes 10 adults × 3 gains ×
-  −30…+30 %. Dependency only in `requirements-sim.txt`.
-- `SIMULATION-SPEC.md`: specification for an independent simulator that tests
-  the method’s core premise instead of its statistics. Hard requirements up
-  front — controller isolation, measured reference ratio, empirical loop
-  uptake as primary endpoint, stopping rule. simglucose licence: plain MIT;
-  the “research purpose only” phrase is origin, not a second licence.
+- `sim/phase_a2.py` imports `verdict_class` / `LOOP_RATIO` from the
+  analysis instead of restating 0.12.
+- `sim/UPTAKE.md` reports L as median 0.33, quartiles 0.24–0.49, range
+  −0.19…0.80, names the two negative work-points, and states that the
+  asymmetry hypothesis is not confirmed.
 
 ## [0.10.0] - 2026-08-19
 
