@@ -10,35 +10,23 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
-- `sim/phase_a.py`: three PID strengths × CR-error grid on adults that
-  pass the phase-0 gate. Outcome B is not treated as final.
-- `sim/loop_uptake.py`: empirical loop uptake L = extra basal / insulin
-  shortfall, mid PID, one adult. First reading: L ≈ 0.30 when the CR is too
-  weak, ≈ 0.19 when too strong — below the 0.7 the statistical generator
-  assumed. Not a LOOP_RATIO change: the controller is not CamAPS.
-- `sim/controller.py`: CGM-only PID (profile + delta, capped). Isolation
-  test: extra meal/state kwargs must not change the output. With a CR_true
-  bolus the extra basal stays small vs. the meal dose.
-- `sim/cr_true.py`: measure the reference carb ratio with the controller
-  still off. Two definitions — bolus that returns glucose at 4 h, and bolus
-  that minimises the area vs. baseline — reported together, not mixed.
-- `sim/`: first physiology-only step of the independent simulator
-  (SIMULATION-SPEC §13.1). Open-loop UVa/Padova patient, no controller, no
-  import from the analysis core. Three plausibility checks: night stays flat,
-  a meal without bolus raises glucose, a provisional bolus cuts the 4 h rise.
-  Dependency is `requirements-sim.txt` only.
+- Independent simulator under `sim/` (physiology, CR_true, CGM-only PID, L).
+  `sim/phase_a.py` writes the full adult × gain × error table; gate is a
+  priori. Adult-grid summary in sim/UPTAKE.md; LOOP_RATIO unchanged.
+  Open-loop UVa/Padova physiology, measured `CR_true`, CGM-only PID with
+  isolation test, empirical loop uptake L. Phase-0 gate: |E| ≈ 0 at zero CR
+  error before L is read. On adults that pass, L is about 0.2–0.55, not the
+  generator’s `LOOP_SHARE = 0.7`. Bolus delay and CGM gaps break the gate;
+  fat/protein is out of scope for S2008. Outcome B is the working reading;
+  `LOOP_RATIO` is unchanged. Dependency only in `requirements-sim.txt`.
+  Summary: [sim/UPTAKE.md](sim/UPTAKE.md).
 
 ### Added
-- `SIMULATION-SPEC.md`: specification (not yet implemented) for an independent
-  simulator that would test the method's core premise instead of its statistics.
-  The existing validations prescribe the loop extra basal; here it would emerge
-  from a control loop that does not know the meal, making the check
-  non-circular. Fixes the hard requirements up front — controller isolation,
-  a measured rather than stipulated reference ratio, empirical loop uptake as
-  the primary endpoint, and a stopping rule if that uptake turns out not to
-  track the insulin shortfall. The licence question around the candidate
-  simulator is settled in the document: plain MIT, the "research purpose
-  only" wording is README prose rather than a licence term.
+- `SIMULATION-SPEC.md`: specification for an independent simulator that tests
+  the method’s core premise instead of its statistics. Hard requirements up
+  front — controller isolation, measured reference ratio, empirical loop
+  uptake as primary endpoint, stopping rule. simglucose licence: plain MIT;
+  the “research purpose only” phrase is origin, not a second licence.
 
 ## [0.10.0] - 2026-08-19
 

@@ -5,9 +5,9 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 # Specification: an independent simulator to test the loop-CR method hypothesis
 
-Status: **draft, not implemented.** This document fixes what is to be built and
-what the result will be measured against — before any code exists. Companion to
-[VALIDATION.md](VALIDATION.md), where the results would be reported.
+Status: **code for steps 1–3 exists** under `sim/`. Formal Phase A adult grid is specified in `sim/phase_a.py` and summarised
+in [sim/UPTAKE.md](sim/UPTAKE.md). Phase B–C not started.
+Companion to [VALIDATION.md](VALIDATION.md).
 
 ---
 
