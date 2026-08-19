@@ -17,16 +17,16 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+# Import the rule instead of restating it: a local copy would drift silently
+# if the tool's threshold ever changes. Evaluation may depend on the analysis;
+# the simulation itself (sim/export.py, sim/closed_loop.py) may not.
+from loop_cr_review import LOOP_RATIO, verdict_class
+
 CHO = 50.0
-LOOP_RATIO = 0.12
 
 
 def verdict(ratio: float) -> str:
-    if ratio > LOOP_RATIO:
-        return "weak"
-    if ratio < -LOOP_RATIO:
-        return "strong"
-    return "ok"
+    return verdict_class(ratio * 1.0, 1.0, 0.0)   # same rule as the report
 
 
 def truth(err: float) -> str:

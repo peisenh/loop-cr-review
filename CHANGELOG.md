@@ -10,6 +10,24 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `sim/export.py`: a simulated run is now written as a Glooko-style export and
+  read back by the real readers, so the simulation exercises the actual parsing,
+  fasting-basal reference and slot logic instead of a simulation-only path.
+  First end-to-end result for `adult#001`: at a correctly set ratio the tool does
+  not false-alarm and CR_eff lands ~3 % from the measured reference; at a 25 %
+  error CR_eff closes only about 45 % of the gap and one slot in three is
+  flagged — consistent with the measured uptake of L ≈ 0.35.
+
+### Changed
+- `sim/phase_a2.py` imports `verdict_class`/`LOOP_RATIO` from the analysis instead
+  of restating the threshold, which would have drifted silently. Generation stays
+  independent of the analysis; only the evaluation depends on it.
+- `sim/UPTAKE.md` reports the spread of L as quartiles and full range
+  (median 0.33, 0.24–0.49, −0.19…0.80) instead of a narrower band, names the two
+  negative work-points, and states that the asymmetry hypothesis is **not**
+  confirmed by these data.
+
+### Added
 - Phase A.2: apply the analysis `LOOP_RATIO` (E/bolus > 0.12) to the
   adult-grid extra basal. At a pass gate, zero CR error stays `ok`;
   detection of ±15–20 % is poor because measured L is ~0.3–0.4.

@@ -13,7 +13,7 @@ PYTHONPATH=. python3 -m sim.phase_a --out sim/phase_a_results.csv
 | Level | Claim |
 |-------|--------|
 | All 30 patient×gain | **9 pass / 21 fail** the neutrality gate. The 21 failures *are* the result. |
-| Gate population | On the coarse band (\|error\| ≥ 15 %), L ≈ **0.2–0.55** (mean ~0.33 too-weak, ~0.38 too-strong). That measured L is the uptake figure, not a generator parameter. |
+| Gate population | On the coarse band (\|error\| ≥ 15 %, n=72): median **0.33**, quartiles 0.24–0.49, full range **−0.19 … 0.80**. 28 % of points fall outside 0.2–0.55, and two are negative (`adult#004 weak`, +15/+20 %: extra basal runs *against* the shortfall). Mean 0.33 too-weak / 0.38 too-strong. That measured L is the uptake figure, not a generator parameter. |
 | Fail population | L is not a CR signal (`E/D` from about −4 to +6). |
 
 Only adult#002 passes all three gains. Mid: 5/10. Weak/strong: 2/10 each.
@@ -67,7 +67,42 @@ Gate-pass only (n=9 per error step):
 | +20 % | 0 % | 0 | 9 | 0 | +0.072 | 0.36 |
 | +30 % | 44 % | 4 | 5 | 0 | +0.106 | 0.35 |
 
+**Asymmetry hypothesis: not confirmed here.** Median E/B is −0.103 at −30 % and +0.106 at +30 % — near symmetric, no saturation visible in this range. It was pre-registered as refutable, so this is reported as it stands. Note also that the hit rates below rest on n=9 per step: 33 % is three cases.
+
 At zero error the 0.12 threshold does not false-alarm. With L ≈ 0.3–0.4,
 E/B stays below 0.12 until the CR error is large, so the tool mostly says
 ok. E/bolus follows the measured L, not the generator. Do not retune
 `LOOP_RATIO` from this PID.
+
+## Export path — end to end through the real readers
+
+`sim/export.py` writes a Glooko-style export (BOM, German decimal comma, 5-min
+CGM grid, 10-min basal segments, `Insulin data/` subfolder), so a simulated run
+goes through the **actual** readers, fasting-basal reference and slot logic
+rather than a simulation-only shortcut.
+
+```bash
+PYTHONPATH=. python3 -c "
+from pathlib import Path
+from sim.export import run_days, write_export
+write_export(run_days(days=5, cr_set=5.89), Path('/tmp/exp'))"
+python3 loop_cr_review.py /tmp/exp -o /tmp/exp.html
+```
+
+First result, `adult#001`, mid gains, 5 days, 45 g meals, `CR_ref_Δ4h = 5.89`:
+
+| CR_set | verdict per slot | CR_eff (breakfast/lunch/dinner) |
+|---|---|---|
+| 5.89 (correct) | ok / ok / ok | 5.3 / 6.1 / 5.7 — mean 5.7 vs ref 5.89 (≈3 % off) |
+| 7.36 (25 % too weak) | **weak** / ok / ok | 6.2 / 7.3 / 6.6 — mean 6.7 |
+
+Two things follow. At a correctly set ratio the tool does **not** false-alarm and
+`CR_eff` lands close to the measured reference. At a 25 % error `CR_eff` closes
+only about **45 % of the gap** between setting and reference (7.36 → 6.7 of the
+way to 5.89) and one slot in three crosses the threshold — which is what an
+uptake of L ≈ 0.35 predicts: the loop absorbs part of the shortfall, so `CR_eff`
+is a partial correction, not the needed ratio.
+
+Caveat: one patient, one gain setting, five days, three slots. This is a working
+demonstration that the path is closed and the quantities are consistent, not a
+detection statistic.

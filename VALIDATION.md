@@ -83,6 +83,16 @@ The step that closes that gap is specified in
 extra basal arises from a CGM-only PID that does not know the meal. Phase A (10 adults × 3 gains): 9/30 work-points pass a neutrality gate;
 there measured L is about 0.2–0.55. The 21 failures are reported, not dropped.
 `LOOP_SHARE` in the sensitivity generator is unchanged; it is not a target.
+
+But it is worth stating what it carries: the "below ~15 %, reliable from ~25 %"
+figures shown in the report legend were measured *under* that generator setting
+of 0.7. The independent simulator (see `sim/UPTAKE.md`) measures an uptake of
+roughly 0.33–0.38 for a generic CGM-only PID. With that lower uptake the same
+arithmetic would place the 50/50 mark nearer 26 % than 15 %. This does not make
+the legend wrong — CamAPS is an adaptive MPC, not a PID, and may well absorb
+more — but the figures rest on the optimistic end of an assumption that has now
+been measured once and came out lower.
+
 `LOOP_RATIO` unchanged. Phase B is not a hard stop; the reading is a B/C
 border. [sim/UPTAKE.md](sim/UPTAKE.md).
 
