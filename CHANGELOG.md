@@ -10,16 +10,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
-- Independent simulator under `sim/` (physiology, CR_true, CGM-only PID, L).
-  `sim/phase_a.py` writes the full adult × gain × error table; gate is a
-  priori. Adult-grid summary in sim/UPTAKE.md; LOOP_RATIO unchanged.
-  Open-loop UVa/Padova physiology, measured `CR_true`, CGM-only PID with
-  isolation test, empirical loop uptake L. Phase-0 gate: |E| ≈ 0 at zero CR
-  error before L is read. On adults that pass, L is about 0.2–0.55, not the
-  generator’s `LOOP_SHARE = 0.7`. Bolus delay and CGM gaps break the gate;
-  fat/protein is out of scope for S2008. Outcome B is the working reading;
-  `LOOP_RATIO` is unchanged. Dependency only in `requirements-sim.txt`.
-  Summary: [sim/UPTAKE.md](sim/UPTAKE.md).
+- Phase A close: [sim/UPTAKE.md](sim/UPTAKE.md) states the three levels
+  (9/30 pass, L only on the gate population, failures kept), gate sensitivity
+  0.1/0.2/0.3 U, and the reading: B/C border, no `LOOP_RATIO` change. Phase B is not a hard stop.
+
+### Added
+- Independent simulator under `sim/` (physiology, measured CR_true, CGM-only
+  PID, isolation, empirical L). `phase_a.py` writes 10 adults × 3 gains ×
+  −30…+30 %. Dependency only in `requirements-sim.txt`.
 
 ### Added
 - `SIMULATION-SPEC.md`: specification for an independent simulator that tests
