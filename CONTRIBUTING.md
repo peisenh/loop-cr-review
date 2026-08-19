@@ -142,12 +142,14 @@ The unit tests pin the arithmetic; they do not validate the statistics. For that
 there is a separate, reproducible script:
 
 ```bash
-python3 tools/validate_bootstrap.py                  # quick run
-PYTHONPATH=. pylint tools/validate_bootstrap.py
+python3 tools/validate_bootstrap.py                  # coverage of the spread
+python3 tools/validate_sensitivity.py                # what the rule can detect
+PYTHONPATH=. pylint tools/validate_*.py
 ```
 
-It measures, against a known truth, whether the "95 %" day spread really covers
-it and whether decision stability separates clear from borderline slots. The
+They measure, against a known truth, whether the "95 %" day spread really
+covers it, whether decision stability separates clear from borderline slots,
+and how large a carb-ratio error has to be before the rule notices it. The
 committed results and their limits are in [VALIDATION.md](VALIDATION.md). If you
 change the gates, the bootstrap or the verdict rule, re-run it and update that
 document.

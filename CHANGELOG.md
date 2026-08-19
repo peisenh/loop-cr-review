@@ -10,6 +10,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `tools/validate_sensitivity.py` and a second section in VALIDATION.md: how
+  large a carb-ratio error has to be before the verdict rule reacts, measured
+  against a known truth. The rule reaches 50/50 at roughly a 15 % error and
+  becomes reliable (>90 %) from about 25 %, which follows from the 0.12
+  loop-share threshold. More days help mainly against false alarms — a
+  correctly set slot is still flagged in a third of runs at five days, in 3 %
+  at 21. Outliers, CGM gaps and bolus noise barely change detection but roughly
+  double the false alarms. Noise levels are calibrated against real exports.
+
+### Added
 - `tools/validate_bootstrap.py` plus [VALIDATION.md](VALIDATION.md): a reproducible
   check of the statistics against a known truth — does the "95 %" day spread
   actually cover the true median, and does decision stability separate a clear

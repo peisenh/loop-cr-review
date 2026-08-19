@@ -76,3 +76,73 @@ estimator behaves as advertised on data that matches its assumptions. They are
 an upper bound. They say nothing about whether the carb-ratio inference itself
 is correct on real data — that would need either a physiological simulator that
 does not share this tool's assumptions, or clinical reference data.
+
+## Sensitivity: what the rule can actually see
+
+Reproduce with:
+
+```bash
+python3 tools/validate_sensitivity.py --reps 1500 --markdown
+```
+
+Slots are generated from a **known** carb-ratio error, then run through the real
+verdict rule. The table gives how often a slot is called "too weak" (and, in the
+first row, how often a correctly set slot is correctly left at "ok").
+
+| true CR error | 5 days | 7 days | 10 days | 14 days | 21 days |
+|---:|---:|---:|---:|---:|---:|
+| 0 % (correct) | 66 % | 76 % | 87 % | 94 % | 97 % |
+| 5 % | 27 % | 20 % | 13 % | 11 % | 6 % |
+| 10 % | 39 % | 34 % | 32 % | 27 % | 23 % |
+| 15 % | 55 % | 57 % | 54 % | 55 % | 54 % |
+| 20 % | 73 % | 77 % | 81 % | 81 % | 86 % |
+| 25 % | 89 % | 91 % | 96 % | 97 % | 98 % |
+| 30 % | 97 % | 98 % | 100 % | 100 % | 100 % |
+
+**Reading it.** The rule crosses the 50/50 mark at roughly a **15 % carb-ratio
+error** — that follows directly from the 0.12 loop-share threshold and the
+assumption that the loop absorbs about 70 % of a meal's shortfall. It becomes
+reliable (>90 %) only from about **25 %**. A 10 % error is below what the method
+is built to react to, and firing there would not be desirable anyway.
+
+The more uncomfortable column is the first one: with only **five days a
+correctly set slot is still flagged in a third of runs**. Days help far more
+against false alarms than they help detection — detection at a 20 % error rises
+only from 73 % to 86 % between 5 and 21 days, while the false-alarm rate on a
+correct slot falls from 34 % to 3 %. That is the strongest argument for
+collecting a couple of weeks before acting on a verdict.
+
+### Robustness (20 % error, 10 days)
+
+| disturbance | detected | false alarm |
+|:---|---:|---:|
+| clean | 81 % | 14 % |
+| 20 % outlier days | 78 % | 22 % |
+| 20 % CGM gaps | 78 % | 13 % |
+| 10 % bolus noise | 78 % | 13 % |
+| all three | 76 % | 26 % |
+
+Outliers, CGM gaps and bolus noise barely move detection; what they do is raise
+false alarms (14 % → 26 % with all three). Noise makes the method **more likely
+to cry wolf**, not more likely to miss a real error.
+
+### Threshold sensitivity
+
+| threshold | value | detected | false alarm |
+|:---|---:|---:|---:|
+| -10 % | 0.108 | 83 % | 17 % |
+| as shipped | 0.120 | 78 % | 12 % |
+| +10 % | 0.132 | 73 % | 11 % |
+
+Moving `LOOP_RATIO` by ±10 % shifts detection and false alarms by only a few
+points — the rule is not balanced on a knife edge with respect to that constant.
+
+### Limits of this section
+
+The generator uses the tool's own premise: the loop extra basal covers a fixed
+share of the meal's shortfall, days are independent, and only the listed
+disturbances occur. Noise levels are calibrated against real exports (day-to-day
+sd of the loop extra 1.1–3.7 U, of the 4 h delta 27–78 mg/dL), but adaptation
+over days, fat/protein tails, corrections blended into a bolus and exercise are
+**not** simulated. These are therefore best-case detection rates.
+
