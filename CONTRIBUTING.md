@@ -150,7 +150,10 @@ PYTHONPATH=. pylint tools/validate_*.py
 They measure, against a known truth, whether the "95 %" day spread really
 covers it, whether decision stability separates clear from borderline slots,
 and how large a carb-ratio error has to be before the rule notices it. The
-committed results and their limits are in [VALIDATION.md](VALIDATION.md). If you
+committed results and their limits are in [VALIDATION.md](VALIDATION.md). The
+next, not yet implemented step — an independent simulator to test the method's
+core premise rather than its statistics — is specified in
+[SIMULATION-SPEC.md](SIMULATION-SPEC.md). If you
 change the gates, the bootstrap or the verdict rule, re-run it and update that
 document.
 

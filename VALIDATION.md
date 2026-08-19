@@ -77,6 +77,12 @@ an upper bound. They say nothing about whether the carb-ratio inference itself
 is correct on real data — that would need either a physiological simulator that
 does not share this tool's assumptions, or clinical reference data.
 
+
+The step that would close that gap is specified in
+[SIMULATION-SPEC.md](SIMULATION-SPEC.md): an independent simulator whose extra
+basal arises from a control loop that does not know the meal, so the method's
+core premise can be tested rather than assumed.
+
 ## Sensitivity: what the rule can actually see
 
 Reproduce with:

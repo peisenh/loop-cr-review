@@ -9,6 +9,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- `SIMULATION-SPEC.md`: specification (not yet implemented) for an independent
+  simulator that would test the method's core premise instead of its statistics.
+  The existing validations prescribe the loop extra basal; here it would emerge
+  from a control loop that does not know the meal, making the check
+  non-circular. Fixes the hard requirements up front — controller isolation,
+  a measured rather than stipulated reference ratio, empirical loop uptake as
+  the primary endpoint, and a stopping rule if that uptake turns out not to
+  track the insulin shortfall.
+
 ## [0.10.0] - 2026-08-19
 
 ### Added

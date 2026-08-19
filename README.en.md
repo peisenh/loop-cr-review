@@ -257,6 +257,7 @@ loop-cr-review/
 ├── requirements-gui-webview2.txt  # desktop app Windows slim (WebView2)
 ├── tools/                     # validation scripts (not part of the analysis)
 ├── VALIDATION.md              # measured reliability of spread/stability
+├── SIMULATION-SPEC.md         # spec for the outstanding method validation
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE
