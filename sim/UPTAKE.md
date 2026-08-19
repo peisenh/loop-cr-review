@@ -13,7 +13,7 @@ PYTHONPATH=. python3 -m sim.phase_a --out sim/phase_a_results.csv
 | Level | Claim |
 |-------|--------|
 | All 30 patient×gain | **9 pass / 21 fail** the neutrality gate. The 21 failures *are* the result. |
-| Gate population | On the coarse band (\|error\| ≥ 15 %), L ≈ **0.2–0.55** (mean ~0.33 too-weak, ~0.38 too-strong). Not 0.7. |
+| Gate population | On the coarse band (\|error\| ≥ 15 %), L ≈ **0.2–0.55** (mean ~0.33 too-weak, ~0.38 too-strong). That measured L is the uptake figure, not a generator parameter. |
 | Fail population | L is not a CR signal (`E/D` from about −4 to +6). |
 
 Only adult#002 passes all three gains. Mid: 5/10. Weak/strong: 2/10 each.
@@ -27,7 +27,7 @@ Only adult#002 passes all three gains. Mid: 5/10. Weak/strong: 2/10 each.
 | 0.30 | 9/30 | 5 | 2 | 2 |
 
 0.20 and 0.30 select the same set. 0.10 keeps only mid. Mean L stays ~0.3–0.4;
-nobody clusters at 0.7. `|E₀|` median is ~0.40; 21/30 already exceed 0.3 U.
+L stays in that band at 0.10 and 0.30 U as well. `|E₀|` median is ~0.40; 21/30 already exceed 0.3 U.
 
 ## Fine grid (±5 / ±10 %)
 
@@ -36,7 +36,10 @@ Read L on the coarse band.
 
 ## Conclusion
 
-- `LOOP_SHARE = 0.7` is not supported by this controller+model.
+- Measured L on the gate population is stable enough to test the method here;
+  it is not a constant across all 30 work-points.
+- `LOOP_SHARE` in `validate_sensitivity.py` is a generator setting, not a
+  target. Phase A does not revoke that statistical test.
 - Do **not** change `LOOP_RATIO` (report threshold ≠ uptake).
 - Working reading: **B/C border** — a CR-linked extra basal exists in a
   minority of work-points; it is not a general calibration. That is not a
@@ -44,7 +47,8 @@ Read L on the coarse band.
   varying one kinetic factor on a few patients could separate “PID not
   neutral” from “no CR signal”.
 
-That is what the simulator was built for: it did not return the assumed 0.7.
+The question Phase A answers is whether L is stable enough for an independent
+check of the method: yes on the gate population, not on the full 30.
 
 ## Phase A.2 — LOOP_RATIO on simulated E/bolus
 
@@ -65,5 +69,5 @@ Gate-pass only (n=9 per error step):
 
 At zero error the 0.12 threshold does not false-alarm. With L ≈ 0.3–0.4,
 E/B stays below 0.12 until the CR error is large, so the tool mostly says
-ok. That is expected once E is no longer 0.7 × D. Do not retune
+ok. E/bolus follows the measured L, not the generator. Do not retune
 `LOOP_RATIO` from this PID.

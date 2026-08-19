@@ -81,7 +81,8 @@ does not share this tool's assumptions, or clinical reference data.
 The step that closes that gap is specified in
 [SIMULATION-SPEC.md](SIMULATION-SPEC.md). Phase A is implemented under `sim/`:
 extra basal arises from a CGM-only PID that does not know the meal. Phase A (10 adults × 3 gains): 9/30 work-points pass a neutrality gate;
-there L is about 0.2–0.55, not 0.7. The 21 failures are reported, not dropped.
+there measured L is about 0.2–0.55. The 21 failures are reported, not dropped.
+`LOOP_SHARE` in the sensitivity generator is unchanged; it is not a target.
 `LOOP_RATIO` unchanged. Phase B is not a hard stop; the reading is a B/C
 border. [sim/UPTAKE.md](sim/UPTAKE.md).
 

@@ -12,7 +12,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ### Added
 - Phase A.2: apply the analysis `LOOP_RATIO` (E/bolus > 0.12) to the
   adult-grid extra basal. At a pass gate, zero CR error stays `ok`;
-  detection of ±15–20 % is poor because L is ~0.3–0.4, not 0.7.
+  detection of ±15–20 % is poor because measured L is ~0.3–0.4.
   `python3 -m sim.phase_a2`. Do not retune `LOOP_RATIO` from this PID.
 
 ### Added
