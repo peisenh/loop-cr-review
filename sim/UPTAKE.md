@@ -45,3 +45,25 @@ Read L on the coarse band.
   neutral” from “no CR signal”.
 
 That is what the simulator was built for: it did not return the assumed 0.7.
+
+## Phase A.2 — LOOP_RATIO on simulated E/bolus
+
+Same rule as `loop_cr_review`: `ratio = E / bolus`, threshold 0.12.
+No new runs; `python3 -m sim.phase_a2 --in sim/phase_a_results.csv`.
+
+Gate-pass only (n=9 per error step):
+
+| CR error | hit | weak | ok | strong | med E/B | med L |
+|---------:|----:|-----:|---:|-------:|--------:|------:|
+| −30 % | 33 % | 0 | 6 | 3 | −0.103 | 0.34 |
+| −20 % | 22 % | 0 | 7 | 2 | −0.065 | 0.32 |
+| −15 % | 11 % | 0 | 8 | 1 | −0.045 | 0.30 |
+| 0 % | 100 % | 0 | 9 | 0 | +0.005 | — |
+| +15 % | 0 % | 0 | 9 | 0 | +0.057 | 0.38 |
+| +20 % | 0 % | 0 | 9 | 0 | +0.072 | 0.36 |
+| +30 % | 44 % | 4 | 5 | 0 | +0.106 | 0.35 |
+
+At zero error the 0.12 threshold does not false-alarm. With L ≈ 0.3–0.4,
+E/B stays below 0.12 until the CR error is large, so the tool mostly says
+ok. That is expected once E is no longer 0.7 × D. Do not retune
+`LOOP_RATIO` from this PID.

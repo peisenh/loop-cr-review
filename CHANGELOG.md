@@ -10,6 +10,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase A.2: apply the analysis `LOOP_RATIO` (E/bolus > 0.12) to the
+  adult-grid extra basal. At a pass gate, zero CR error stays `ok`;
+  detection of ±15–20 % is poor because L is ~0.3–0.4, not 0.7.
+  `python3 -m sim.phase_a2`. Do not retune `LOOP_RATIO` from this PID.
+
+### Added
 - Phase A close: [sim/UPTAKE.md](sim/UPTAKE.md) states the three levels
   (9/30 pass, L only on the gate population, failures kept), gate sensitivity
   0.1/0.2/0.3 U, and the reading: B/C border, no `LOOP_RATIO` change. Phase B is not a hard stop.
