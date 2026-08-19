@@ -95,6 +95,7 @@ tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
 .stab { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
 .meta { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 3px; line-height: 1.35 }
 .meta.low { color: var(--meta-low); font-weight: 600 }
+.fewd { color: var(--meta-low); font-weight: 600 }
 .slot { border-left: 4px solid #ccc; padding: 9px 13px; margin: 9px 0; border-radius: 0 8px 8px 0; background: var(--slot-bg) }
 .slot.strong { border-color: #c0392b } .slot.weak { border-color: #e0913a } .slot.ok { border-color: #3a9b46 }
 .slot h3 { margin: 0 0 3px; font-size: 13.5px }
@@ -198,7 +199,7 @@ img { width: 100%; border-radius: 8px }
     {% set unstable = s.stability and s.stability.band == 'low' %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence or unstable }}"><td>{{ s.label }}{% if s.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}{% if unstable %} <span class="lc-tag">{% trans %}verdict not stable{% endtrans %}</span>{% endif %}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
-        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
+        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
   <div class="note" style="margin: 6px 0 0">
@@ -220,7 +221,9 @@ img { width: 100%; border-radius: 8px }
     {% trans %}<b>Spread:</b> typical{% endtrans %} 95 % {% trans %}band of CR_eff (and loop share) when days are reshuffled (enough days only).{% endtrans %}
     <br>
     {% trans %}<b>Observed range:</b> min–max of the actual values when there are too few days for a spread.{% endtrans %}
-    {% trans %}Neither is a confidence interval for “the true CR”.{% endtrans %}</div>
+    {% trans %}Neither is a confidence interval for “the true CR”.{% endtrans %}
+    <br>
+    {% trans lo=15, hi=25, few=34, many=3 %}<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below about {{ lo }} % stays invisible to this method, from about {{ hi }} % it is flagged reliably. Days matter mostly against false alarms — with five days a correctly set slot is still flagged in roughly {{ few }} % of cases, with three weeks in about {{ many }} %. A day count marked {% endtrans %}<b>{% trans %}(few){% endtrans %}</b>{% trans n=10 %} is below {{ n }} days, where that risk is still noticeable.{% endtrans %}</div>
 </div>
 
 <div class="card">
@@ -243,7 +246,7 @@ img { width: 100%; border-radius: 8px }
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
       {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
-    {% if r.spread or r.range or r.stability %}<div class="meta{{ ' low' if r.stability and r.stability.band == 'low' }}">{% if r.spread %}{% trans %}Spread{% endtrans %}{% if r.spread.cre %} CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop{% endtrans %} {{ r.spread.ratio }}{% endif %}{% elif r.range %}{% trans cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Observed CR_eff {{ cre }} ({{ meals }} meals / {{ days }} days){% endtrans %}{% endif %}{% if (r.spread or r.range) and r.stability %} · {% endif %}{% if r.stability %}{% trans pct=r.stability.pct %}stability {{ pct }}{% endtrans %} % ({{ r.stability.days }} {% trans %}calendar days{% endtrans %}){% endif %}</div>{% endif %}
+    {% if r.spread or r.range or r.stability %}<div class="meta{{ ' low' if r.stability and r.stability.band == 'low' }}">{% if r.spread %}{% trans %}Spread{% endtrans %}{% if r.spread.cre %} CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop{% endtrans %} {{ r.spread.ratio }}{% endif %}{% elif r.range %}{% trans cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Observed CR_eff {{ cre }} ({{ meals }} meals / {{ days }} days){% endtrans %}{% endif %}{% if (r.spread or r.range) and r.stability %} · {% endif %}{% if r.stability %}{% trans pct=r.stability.pct %}stability {{ pct }}{% endtrans %} % ({{ r.stability.days }} {% trans %}calendar days{% endtrans %}){% if r.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% endif %}</div>{% endif %}
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}

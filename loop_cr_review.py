@@ -178,6 +178,9 @@ BOOTSTRAP_N = 2000
 BOOTSTRAP_SEED = 20260817
 MIN_MEALS_FOR_STABILITY = 5
 MIN_DAYS_FOR_STABILITY = 5
+# Below this many days a correctly set slot is still flagged fairly often
+# (measured: 34 % at 5 days, 24 % at 7, 13 % at 10 — see VALIDATION.md).
+FEW_DAYS_HINT = 10
 STABILITY_HIGH = 90.0      # >= high, >= STABILITY_MODERATE moderate, else low
 STABILITY_MODERATE = 75.0
 MAX_GAP_MIN = 25           # CGM gap (minutes) inside the post-meal window → cgm_gap flag
@@ -1277,7 +1280,8 @@ def _fmt_stability(stab):
     """Stability dict -> template-ready strings (or None)."""
     if stab is None:
         return None
-    return {"pct": f"{stab['pct']:.0f}", "band": stab["band"], "days": stab["days"]}
+    return {"pct": f"{stab['pct']:.0f}", "band": stab["band"], "days": stab["days"],
+            "few_days": stab["days"] < FEW_DAYS_HINT}
 
 
 def _fmt_spread(stab):

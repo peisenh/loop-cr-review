@@ -10,6 +10,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- The report now states what the method can actually see, taken from the
+  sensitivity measurement rather than left implicit: a carb-ratio error below
+  ~15 % stays invisible, from ~25 % it is flagged reliably, and days help mainly
+  against false alarms (a correctly set slot is still flagged in ~34 % of cases
+  at five days, ~3 % at three weeks). A day count below 10 is marked "(few)" so
+  a verdict resting on a short window is visible as such.
+
+### Added
 - `tools/validate_sensitivity.py` and a second section in VALIDATION.md: how
   large a carb-ratio error has to be before the verdict rule reacts, measured
   against a known truth. The rule reaches 50/50 at roughly a 15 % error and
