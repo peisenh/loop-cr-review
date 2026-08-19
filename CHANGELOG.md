@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-19
+
 ### Added
 - The report now states what the method can actually see, taken from the
   sensitivity measurement rather than left implicit: a carb-ratio error below
@@ -534,7 +536,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/peisenh/loop-cr-review/compare/v0.8.2...v0.8.3
