@@ -140,3 +140,24 @@ Per passing patient×gain (12 errors each): R² 0.99–1.00, but L̂ from
 
 There *is* an uptake relation, only behind the gate, and L is per
 work-point, not universal. That closes A.3. Do not set `LOOP_RATIO` from it.
+
+## Phase A.4 — does CR_eff beat CR_set?
+
+`CR_eff = CHO/(bolus+E)` from the same CSV. Relative error vs `CR_ref`.
+
+    python3 -m sim.phase_a4 --in sim/phase_a_results.csv
+
+| set | n | mae CR_set | mae CR_eff | CR_eff closer |
+|-----|--:|----------:|----------:|--------------:|
+| all | 390 | 16.2 % | 14.7 % | 59 % |
+| gate pass | 117 | 16.2 % | **10.8 %** | **87 %** |
+| gate fail | 273 | 16.2 % | 16.3 % | 47 % |
+| pass, \|error\|≥15 % | 72 | 22.5 % | **14.6 %** | **97 %** |
+| pass, error=0 | 9 | 0 % | 2.3 % | 0/9 |
+
+Behind the gate, CR_eff is a *partial* correction: better than the programmed
+ratio, not the true ratio. Outside the gate it does not help. At zero error
+the set is already the ref, so CR_eff can only add noise (here 2 %).
+
+Do not retune `LOOP_RATIO`. The method has a use where the work-point is
+neutral, and none where it is not.

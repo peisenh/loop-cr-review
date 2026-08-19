@@ -10,6 +10,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase A.4: CR_eff vs CR_set as estimators of CR_ref. Behind the gate
+  CR_eff is closer in 87 % of rows (mae 10.8 % vs 16.2 %); outside it
+  is not. `python3 -m sim.phase_a4`.
+
+### Added
 - A.3 close: on the gate population E ≈ 0.29·D (R²=0.87); on failures
   R²=0.22. L is per work-point (0.23–0.53), not universal.
 - Phase A.3: diagnose the 21/30 neutrality failures from the same CSV.
