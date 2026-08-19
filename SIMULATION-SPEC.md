@@ -115,9 +115,8 @@ a gym-style interface, a shipped PID controller and free meal scenarios.
   lives. S2013/S2017 are not freely available.
   → Consequence: the "carb ratio too strong" branch is only partly trustworthy
   with S2008 and must be labelled as such in the results.
-* **To clarify:** the README calls the simulator "for research purpose only"
-  while the repository is MIT-licensed. Before adopting it, establish whether
-  that describes the model's provenance or is meant as a usage restriction.
+* **Licence: clear.** The `LICENSE` file is plain MIT with no extra clause; the
+  README's "for research purpose only" is prose, not a term (details in §10).
 * **Dependencies:** pulls in scipy/pandas among others. Development tool only
   (simulation in `sim/`, evaluation script in `tools/`), **never** in the
   analysis tool's `requirements.txt`.
@@ -356,9 +355,21 @@ documented invocation — like the two existing validations.
 
 ## 10. Dependency and licence
 
-* simglucose is MIT-licensed while its README describes it as an implementation
-  of the 2008 version "for research purpose only". Clarify before adopting
-  whether that is a usage restriction or a description of provenance.
+* **Licence, resolved.** The repository's `LICENSE` is an unmodified MIT licence
+  (Copyright (c) 2017 Jinyu Xie) with no additional clause; the package metadata
+  states `License: MIT`. The phrase "for research purpose only" appears only in
+  the README prose, not in the licence, and reads as two caveats rather than
+  terms: the implementation follows the 2008 model version, and it is not meant
+  for clinical use. Neither conflicts with our purpose. MIT is also compatible
+  with this project's AGPL — and the question barely arises, since simglucose is
+  not redistributed here but used as an optional development dependency.
+  (This is a reading of the files, not legal advice; if certainty matters, one
+  question to the author via a GitHub issue settles it.)
+* **Attribution.** MIT requires the copyright notice only on redistribution, but
+  the author explicitly asks to be cited. The citation belongs in `VALIDATION.md`
+  next to the results, together with the model references the parameter
+  definitions are derived from (Dalla Man et al., meal simulation model; UVA/
+  PADOVA T1D simulator, new features).
 * **Pin the version**, record commit/tag in the result document — otherwise the
   numbers are not reproducible.
 * Carry or reference the licence text.

@@ -17,7 +17,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   non-circular. Fixes the hard requirements up front — controller isolation,
   a measured rather than stipulated reference ratio, empirical loop uptake as
   the primary endpoint, and a stopping rule if that uptake turns out not to
-  track the insulin shortfall.
+  track the insulin shortfall. The licence question around the candidate
+  simulator is settled in the document: plain MIT, the "research purpose
+  only" wording is README prose rather than a licence term.
 
 ## [0.10.0] - 2026-08-19
 
