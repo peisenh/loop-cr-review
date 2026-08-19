@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `sim/phase_a.py`: three PID strengths × CR-error grid on adults that
+  pass the phase-0 gate. Outcome B is not treated as final.
 - `sim/loop_uptake.py`: empirical loop uptake L = extra basal / insulin
   shortfall, mid PID, one adult. First reading: L ≈ 0.30 when the CR is too
   weak, ≈ 0.19 when too strong — below the 0.7 the statistical generator

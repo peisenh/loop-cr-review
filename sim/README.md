@@ -27,3 +27,7 @@ python3 -m sim.loop_uptake
 ```
 
 First L numbers: [UPTAKE.md](UPTAKE.md).
+
+```bash
+python3 -m sim.phase_a
+```
