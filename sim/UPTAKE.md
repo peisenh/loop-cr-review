@@ -253,3 +253,14 @@ Hourly extra at ±20 %:
 
 Hour 1 is the meal rise, almost independent of D. Hours 2–4 pay it back.
 Net 4 h L is the leftover, not a programmed share of the shortfall.
+
+## Phase A.8 — why 9/30 pass
+
+Same CSV, err=0. `python3 -m sim.phase_a8`.
+
+Gain accounts for **63 %** of E0 variance, patient **18 %**. Together
+R²=0.81: E0 ≈ −0.43 (weak) +0.49 mid +1.37 strong. CR_true does not
+sort them (corr with E0 ≈ 0).
+
+Only adult#002 passes all three gains. Neutrality is mostly the PID
+working point, then who the S2008 adult is.

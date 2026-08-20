@@ -10,6 +10,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase A.8: E0 variance is 63 % gain, 18 % patient. `python3 -m sim.phase_a8`.
 - `sim/uptake_mech.py`: off-grid L and hourly extra. Net 4 h L is a
   leftover after a meal-driven first hour, not a set share of D.
 - Phase A.5–A.7 on the same CSV: fail is an E0 offset (not a shallower

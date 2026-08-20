@@ -19,6 +19,7 @@ PYTHONPATH=. python3 -m sim.phase_a4 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a5 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a6 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a7 --in sim/phase_a_results.csv
+PYTHONPATH=. python3 -m sim.phase_a8 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.uptake_mech           # off-grid + hourly E
 ```
 
