@@ -10,6 +10,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase A.5–A.7 on the same CSV: fail is an E0 offset (not a shallower
+  L); cluster-bootstrap L̂ 0.25–0.35 on pass; L̂ stable for gates
+  0.10–0.30 U.
 - Independent simulator under `sim/` (physiology, measured CR_true, CGM-only
   PID, isolation). `phase_a.py` writes the adult grid 10 × 3 × −30…+30 %.
   Dependency only in `requirements-sim.txt`. Summary: [sim/UPTAKE.md](sim/UPTAKE.md).

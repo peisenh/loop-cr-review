@@ -172,3 +172,30 @@ the set is already the ref, so CR_eff can only add noise (here 2 %).
 
 Do not retune `LOOP_RATIO`. The method has a use where the work-point is
 neutral, and none where it is not.
+
+## Phase A.5 — why fail is not E ≈ L·D
+
+Same CSV, err≠0. `python3 -m sim.phase_a5`.
+
+The intercept-form slope is ~0.29 on **both** sides. Fail differs by a
+large offset and scatter: residual RMSE 0.15 (pass) vs 0.91 (fail).
+Through the origin, fail R² drops to 0.11 because E0 is already in E.
+Strong-gain failures: residual median +1.22 U.
+
+So the 252 fails are not a shallower uptake. They are a biased, noisy
+baseline. L̂ from all 360 rows is therefore not a CR factor.
+
+## Phase A.6 — cluster bootstrap of L̂
+
+Resample the 9 passing patient×gain units, not rows.
+`python3 -m sim.phase_a6`.
+
+Pass: L̂=0.29, bootstrap 95% **0.25–0.35**. Per cluster 0.22–0.54.
+Fail gets a similar interval; that is not uptake (through-origin R²=0.11).
+
+## Phase A.7 — L̂ vs gate threshold
+
+Same CSV. `python3 -m sim.phase_a7`.
+
+θ=0.10…0.30: L̂ stays 0.26–0.29, R² 0.87–0.91. Opening the gate to 0.40
+drops R² to 0.63. 0.29 is not an artefact of the 0.2 U cut.
