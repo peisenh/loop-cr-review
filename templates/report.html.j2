@@ -156,7 +156,7 @@ img { width: 100%; border-radius: 8px }
   <b>modulated basal</b> (not auto-bolus). Other AID systems need a different signal.{% endtrans %}<br>
   {% trans %}• <b>Loop extra basal</b> in the post-meal window:
   <code>∫ (basal rate − fasting basal) dt</code>.
-  Positive → the loop is adding insulin (often a too-weak meal bolus/CR).{% endtrans %}<br>
+  Positive → extra Auto Mode activity after the meal. It can fit a too-weak CR, but on real CamAPS it is not specific to that.{% endtrans %}<br>
   {% trans %}• <b>Two ratios:</b>
   <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include correction insulin).
   <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective ratio <i>including</i> loop compensation.
@@ -216,8 +216,8 @@ img { width: 100%; border-radius: 8px }
     <b>{% trans %}Time windows:{% endtrans %}</b> {{ slot_defs | join(' · ') }}</div>
   <div class="note" style="margin-top: 8px">
     {% trans w=wlab %}<b>Method:</b> Loop {{ w }} = basal delivered by Auto Mode in addition to the
-    fasting basal rate{% endtrans %} ({{ fb }} U/h{% if fb_lo != fb_hi %}, {% trans lo=fb_lo, hi=fb_hi %}mean; nights {{ lo }}–{{ hi }} U/h{% endtrans %}{% if fb_spread %} — {% trans %}strongly varying, use reference with caution{% endtrans %}{% endif %}{% endif %}) {% trans w=wlab %}in the {{ w }} window. Positive → the loop is compensating for a too-weak CR
-    (CR too weak). <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s programmed ICR).
+    fasting basal rate{% endtrans %} ({{ fb }} U/h{% if fb_lo != fb_hi %}, {% trans lo=fb_lo, hi=fb_hi %}mean; nights {{ lo }}–{{ hi }} U/h{% endtrans %}{% if fb_spread %} — {% trans %}strongly varying, use reference with caution{% endtrans %}{% endif %}{% endif %}) {% trans w=wlab %}in the {{ w }} window. Positive → extra Auto Mode activity after the meal; it can fit a too-weak CR, but is not specific to that.
+    <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s programmed ICR).
     <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window and without a large CGM gap.{% endtrans %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)

@@ -51,7 +51,7 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 
 > **This tool is developed and tested exclusively for CamAPS FX (Auto Mode).**
 
-The core method relies on CamAPS delivering auto-corrections as **modulated basal**. The loop's extra basal within the meal window is therefore the signal for a too-weak/too-strong CR. Other systems work differently:
+The core method relies on CamAPS delivering auto-corrections as **modulated basal**. Extra basal in the meal window is additional Auto Mode activity; it *may* fit a too-weak/too-strong CR, but on real CamAPS it is not specific to that. Other systems work differently:
 
 - **Tandem Control-IQ, Omnipod 5, and others** deliver auto-corrections partly as **boluses**. These do not appear in the basal → the loop extra basal underestimates the compensation, and the verdict is distorted.
 - **AndroidAPS, Loop/Trio** have their own export/data structures (e.g. Nightscout instead of Glooko).
@@ -60,14 +60,14 @@ Use with other loops is **conceivable with adaptations**, but untested — in pa
 
 ## The core idea
 
-Under CamAPS FX Auto Mode, the algorithm corrects a too-weak CR via **increased basal**. Blood glucose then still returns to baseline — the classic postprandial-return test *misses* the too-weak CR. The actual signal is therefore **not** the glucose curve, but the basal additionally delivered by the loop within the meal window:
+Under CamAPS FX Auto Mode the algorithm often changes **basal** after a meal. Glucose may still return to baseline — a return test alone then says little. The report also shows extra basal delivered in the meal window:
 
 ```
 loop extra basal = ∫ (basal rate − fasting basal) dt   over the window after the meal
 CR_eff           = CHO / (meal bolus + loop extra basal)
 ```
 
-Positive loop extra basal ⇒ the loop is compensating for a too-weak CR ⇒ `CR_eff` is tighter than the derived CR. The return Δ then serves only as confirmation.
+Positive extra basal means the loop gave more than the fasting mean after the meal. That *may* fit a too-weak CR; on CamAPS it is not proof. `CR_eff` turns that amount into a rough observed ratio — not a target, not a finding. Δ at most backs the direction.
 
 ## Installation
 

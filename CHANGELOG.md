@@ -30,6 +30,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   signal-to-noise.
 
 ### Changed
+- Wording: extra basal is Auto Mode activity, not proof of a CR error.
 - Rest note is descriptive only (no quiet/active verdict).
 
 ## [0.10.1] - 2026-08-20

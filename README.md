@@ -51,7 +51,7 @@ Wertet einen CamAPS/Glooko-Export aus und erzeugt einen eigenständigen HTML-Rep
 
 > **Dieses Tool ist ausschließlich für CamAPS FX (Auto Mode) entwickelt und getestet.**
 
-Die Kernmethode setzt darauf, dass CamAPS Auto-Korrekturen als **moduliertes Basal** liefert. Das Loop-Mehrbasal im Mahlzeitfenster ist damit das Signal für eine zu schwache/starke CR. Andere Systeme funktionieren anders:
+Die Kernmethode setzt darauf, dass CamAPS Auto-Korrekturen als **moduliertes Basal** liefert. Das Loop-Mehrbasal im Mahlzeitfenster beschreibt zusätzliche Auto-Mode-Aktivität; sie *kann* zu einer zu schwachen/starken CR passen, ist bei realem CamAPS aber nicht spezifisch dafür. Andere Systeme funktionieren anders:
 
 - **Tandem Control-IQ, Omnipod 5 u. a.** geben Auto-Korrekturen teils als **Boli** ab. Diese tauchen dann nicht im Basal auf → das Loop-Mehrbasal unterschätzt die Kompensation, der Befund wird verfälscht.
 - **AndroidAPS, Loop/Trio** haben eigene Export-/Datenstrukturen (z. B. Nightscout statt Glooko).
@@ -60,14 +60,14 @@ Für andere Loops ist eine Nutzung **mit Anpassungen denkbar**, aber nicht getes
 
 ## Die zentrale Idee
 
-Unter CamAPS FX Auto Mode korrigiert der Algorithmus eine zu schwache CR über **erhöhtes Basal**. Der Blutzucker kehrt dann trotzdem zur Baseline zurück — der klassische Postprandial-Return-Test *übersieht* die zu schwache CR. Das eigentliche Signal ist deshalb **nicht** die Glukosekurve, sondern das vom Loop im Mahlzeitfenster zusätzlich gelieferte Basal:
+Unter CamAPS FX Auto Mode ändert der Algorithmus nach der Mahlzeit oft das **Basal**. Der Blutzucker kann trotzdem zur Baseline zurückkehren — ein reiner Kurven-Return-Test sagt dann wenig. Was der Report zusätzlich zeigt, ist das im Mahlzeitfenster gelieferte Extra-Basal:
 
 ```
 Loop-Mehrbasal   = ∫ (Basalrate − Fasten-Basal) dt   über das Fenster nach der Mahlzeit
 CR_eff           = CHO / (Mahlzeitbolus + Loop-Mehrbasal)
 ```
 
-Positives Loop-Mehrbasal ⇒ der Loop gleicht eine zu schwache CR aus ⇒ `CR_eff` ist straffer als die abgeleitete CR. Der Return Δ dient nur noch als Bestätigung.
+Positives Extra-Basal heißt: der Loop hat nach der Mahlzeit mehr gegeben als das Fasten-Mittel. Das *kann* zu einer zu schwachen CR passen, ist bei CamAPS aber nicht der Nachweis. `CR_eff` rechnet diese Menge in eine beobachtete Größenordnung um — kein Zielwert, kein Beweis. Δ bestätigt höchstens die Richtung.
 
 ## Installation
 
