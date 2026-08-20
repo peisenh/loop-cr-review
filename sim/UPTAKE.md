@@ -264,3 +264,27 @@ sort them (corr with E0 ≈ 0).
 
 Only adult#002 passes all three gains. Neutrality is mostly the PID
 working point, then who the S2008 adult is.
+
+
+## Blind start
+
+`python3 -m sim.blind_eval --days 5 --errors 0,-0.2,0.2 --reps 1`
+
+Score uses `cls`, not the translated flag. First runs, `adult#001` mid,
+one replicate:
+
+| days | err | result | slots |
+|--:|--:|--|--|
+| 2 | 0 | ok | all ok, but few-clean warning |
+| 3 | 0 | fp | breakfast weak, lunch/dinner ok |
+
+Local 0 % run, adult#001 mid, reps=5 (deterministic — same trajectory):
+
+| days | n | result |
+|--:|--:|--|
+| 5 | 5 | 5/5 fp, breakfast weak |
+| 7 | 5 | 5/5 fp |
+| 10 | 5 | 5/5 fp |
+
+Lunch/dinner stay ok. More days do not remove the breakfast false alarm.
+`--reps` without noise is not independent.

@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Blind path: `sim/blind_eval.py` + `sim/blind_score.py` (hit/fp),
+  `tests/test_blind_score.py`.
 - Phase A.8: E0 variance is 63 % gain, 18 % patient. `python3 -m sim.phase_a8`.
 - `sim/uptake_mech.py`: off-grid L and hourly extra. Net 4 h L is a
   leftover after a meal-driven first hour, not a set share of D.

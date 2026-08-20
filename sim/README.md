@@ -35,3 +35,9 @@ write_export(run_days(days=5, cr_set=5.89), Path('/tmp/exp'))
 "
 python3 loop_cr_review.py /tmp/exp -o /tmp/exp.html
 ```
+
+Blind:
+
+```bash
+PYTHONPATH=. python3 -m sim.blind_eval --days 5 --errors 0,-0.20,0.20
+```
