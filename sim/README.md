@@ -16,9 +16,12 @@ PYTHONPATH=. python3 -m sim.phase_a --out sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a2 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a3 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a4 --in sim/phase_a_results.csv
+PYTHONPATH=. python3 -m sim.phase_a5 --in sim/phase_a_results.csv
+PYTHONPATH=. python3 -m sim.phase_a6 --in sim/phase_a_results.csv
+PYTHONPATH=. python3 -m sim.phase_a7 --in sim/phase_a_results.csv
 ```
 
-A.2–A.4 reuse the CSV; no new physiology runs.
+A.2–A.7 reuse the CSV; no new physiology runs.
 
 End-to-end through the real readers:
 
