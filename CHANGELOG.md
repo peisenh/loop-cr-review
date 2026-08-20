@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-08-20
+
 ### Added
 - VALIDATION.md records two more findings from the single real export: the
   signal is a property of the per-slot median, not of individual meals (pooled
@@ -616,7 +618,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...v0.9.0
