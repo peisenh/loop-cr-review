@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Meal-free rest flag (quiet / active / unclear) vs fasting basal.
+  Context for the CR table, not a new estimate.
 - Phase B exit: [sim/PHASE_B_ROBUST.md](sim/PHASE_B_ROBUST.md). Same seed
   reproduces; 0 % quiet; +20 % verdict jitters; simulation frozen.
 - `sim/robust_check.py` / [sim/PHASE_B_ROBUST.md](sim/PHASE_B_ROBUST.md):

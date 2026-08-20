@@ -235,6 +235,13 @@ def load_slots_file(path):
         raise LoopCRError(f"Slots file '{path}' unreadable/not valid JSON: {exc}") from exc
     return build_slots(raw, f"Slots file '{path}'")
 FASTING_HOURS = (0, 1, 2, 3, 4, 5)
+# Meal-free rest vs fasting basal (context, not a CR estimate).
+REST_EXCL_AFTER_MEAL_MIN = 180   # minutes after a meal start are not "rest"
+REST_MIN_WINDOW_MIN = 120        # shortest usable meal-free stretch
+REST_MIN_WINDOWS = 3
+REST_MIN_HOURS = 6
+REST_REL = 0.20                  # |mean rate / fasting − 1|
+REST_OFF_FRAC = 0.30             # share of minutes that far off
 LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
 D4_WEAK, D4_STRONG = 15, -30
 D4_HIGH = 40               # Δ4h clearly too high from here (even without loop signal)
@@ -603,6 +610,58 @@ def read_basal_timeline(base):
     fasting_lo = min(night_means) if night_means else fasting
     fasting_hi = max(night_means) if night_means else fasting
     return rate, t0, minutes, fasting, fasting_lo, fasting_hi
+
+
+def loop_rest(basal, meals):
+    """Meal-free stretches vs fasting basal → quiet / active / unclear.
+
+    Nights that *define* the fasting reference are excluded (would be circular).
+    This is a context flag for how readable the CR table is, not a new CR.
+    """
+    rate, t0, minutes, fasting = basal[:4]
+    if fasting <= 0 or minutes <= 0:
+        return {"state": "unclear", "windows": 0, "hours": 0.0,
+                "rel": None, "off": None}
+    blocked = np.zeros(minutes, dtype=bool)
+    for i in range(minutes):
+        if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS:
+            blocked[i] = True
+    for m in meals:
+        i0 = int((m["time"] - t0).total_seconds() // 60)
+        a = max(0, i0)
+        b = min(minutes, i0 + REST_EXCL_AFTER_MEAL_MIN)
+        if b > a:
+            blocked[a:b] = True
+    windows = []
+    i = 0
+    while i < minutes:
+        if blocked[i]:
+            i += 1
+            continue
+        j = i
+        while j < minutes and not blocked[j]:
+            j += 1
+        if j - i >= REST_MIN_WINDOW_MIN:
+            sl = rate[i:j]
+            mean_r = float(np.mean(sl))
+            rel = (mean_r / fasting) - 1.0
+            off = float(np.mean(np.abs(sl / fasting - 1.0) >= REST_REL))
+            extra_u = float(np.sum(sl - fasting) / 60.0)
+            windows.append({
+                "min": j - i, "rel": rel, "off": off, "extra_u": extra_u,
+            })
+        i = j
+    hours = sum(w["min"] for w in windows) / 60.0
+    n = len(windows)
+    if n < REST_MIN_WINDOWS or hours < REST_MIN_HOURS:
+        state = "unclear"
+        rel = off = None
+    else:
+        rel = float(np.median([abs(w["rel"]) for w in windows]))
+        off = float(np.median([w["off"] for w in windows]))
+        state = "active" if (rel >= REST_REL or off >= REST_OFF_FRAC) else "quiet"
+    return {"state": state, "windows": n, "hours": hours, "rel": rel, "off": off}
+
 
 
 # --- Analysis ---------------------------------------------------------------
@@ -1471,6 +1530,7 @@ def build_context(base, window, wlab, daily=False, lang="de"):
         # so that nights with a mean of 0.00 (fully suspended) are also captured
         # correctly -- a factor would be undefined there.
         "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
+        "rest": loop_rest(basal, meals),
         "wlab": wlab, "unit": glucose_unit(),
         "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
         "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),

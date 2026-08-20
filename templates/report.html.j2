@@ -193,6 +193,21 @@ img { width: 100%; border-radius: 8px }
 
 <div class="card">
   <h2>{% trans %}CR assessment per slot (loop-aware){% endtrans %}</h2>
+  {% if rest %}
+  <div class="note" style="margin:0 0 10px; padding:8px 10px; border-left:3px solid var(--method-b); background:var(--method-bg)">
+    <b>{% trans %}Loop at rest (meal-free windows){% endtrans %}</b> —
+    {% if rest.state == 'quiet' %}
+      {% trans %}Quiet: away from meals the basal stays close to the fasting reference. The CR table is more readable here.{% endtrans %}
+    {% elif rest.state == 'active' %}
+      {% trans %}Active: even without a meal the loop often runs away from the fasting basal. The CR table then says little about the carb ratios.{% endtrans %}
+    {% else %}
+      {% trans %}Unclear: too few meal-free windows to judge rest. Do not lean on the CR table.{% endtrans %}
+    {% endif %}
+    {% if rest.windows %}
+      · {{ rest.windows }} {% trans %}windows{% endtrans %}, {{ '%.0f'|format(rest.hours) }} {% trans %}h{% endtrans %}
+    {% endif %}
+  </div>
+  {% endif %}
   <table>
     <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
         <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
