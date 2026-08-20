@@ -199,3 +199,23 @@ Same CSV. `python3 -m sim.phase_a7`.
 
 θ=0.10…0.30: L̂ stays 0.26–0.29, R² 0.87–0.91. Opening the gate to 0.40
 drops R² to 0.63. 0.29 is not an artefact of the 0.2 U cut.
+
+## Mechanistic check
+
+`python3 -m sim.uptake_mech` — off-grid errors and hourly E, same
+`closed_loop` path.
+
+On `adult#001` mid, L at 7/18/22 % matches the 10/20/30 % neighbours
+(+20 %: L=0.30; −20 %: L=0.19). The 0.29 is not a 5 %-grid artefact.
+
+Hourly extra at ±20 %:
+
+| | +20 % (D=+1.4 U) | −20 % (D=−2.1 U) |
+|--|--|--|
+| 1 h | E=+1.93 | E=+1.93 |
+| 2 h | E=+1.85 | E=+1.39 |
+| 3 h | E=+0.58 | E=+0.12 |
+| 4 h | E=+0.42 (L=0.30) | E=−0.41 (L=0.19) |
+
+Hour 1 is the meal rise, almost independent of D. Hours 2–4 pay it back.
+Net 4 h L is the leftover, not a programmed share of the shortfall.

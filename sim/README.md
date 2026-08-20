@@ -19,9 +19,10 @@ PYTHONPATH=. python3 -m sim.phase_a4 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a5 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a6 --in sim/phase_a_results.csv
 PYTHONPATH=. python3 -m sim.phase_a7 --in sim/phase_a_results.csv
+PYTHONPATH=. python3 -m sim.uptake_mech           # off-grid + hourly E
 ```
 
-A.2–A.7 reuse the CSV; no new physiology runs.
+A.2–A.7 reuse the CSV. `uptake_mech` runs new short closed-loop traces.
 
 End-to-end through the real readers:
 
