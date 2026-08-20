@@ -9,6 +9,26 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- VALIDATION.md records two more findings from the single real export: the
+  signal is a property of the per-slot median, not of individual meals (pooled
+  correlation +0.26, absent in two of four slots), and `loop_rest()` classifies
+  that export as `active` (131 meal-free stretches, ~499 h, 38 % median
+  deviation from the fasting reference). Also notes that extra basal and Δ4h
+  share the same glucose curve, so part of their agreement is built in.
+
+### Added
+- VALIDATION.md gains a real-data counter-check against one 88-day CamAPS FX
+  export (aggregates only). The real loop is less neutral than the simulated
+  PID — 11.6 % of meal-free windows fall inside the 0.2 U gate and 37.7 % of
+  minutes are delivered at zero basal — the 0-4 h integral is shown to mix a
+  throttling phase around the meal with a top-up phase from about +3 h, and the
+  carb-linked basal response that does exist cannot be attributed to a ratio
+  error. Recorded, not acted upon: a later window correlates better with the
+  glucose outcome in this one export, which is too thin to move the core
+  measure. The conclusion is that the obstacle is identifiability, not
+  signal-to-noise.
+
 ### Changed
 - Rest note is descriptive only (no quiet/active verdict).
 

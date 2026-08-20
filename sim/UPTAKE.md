@@ -354,3 +354,13 @@ exit check) are closed. The simulation is **frozen**.
 | Tool | `loop_cr_review` is discussion material. Extra basal is a CR cue only when the loop is already quiet without a meal. Not a CamAPS result. Do not retune the analyzer from this PID. |
 
 Specs: [SIMULATION-SPEC.md](SIMULATION-SPEC.md) · [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md) · [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md).
+
+## Real-data counter-check
+
+A single 88-day CamAPS FX export was held against these findings; see the
+"Real-data counter-check" section in [VALIDATION.md](../VALIDATION.md). Short
+version: the real loop is **less** neutral than this PID (11.6 % of meal-free
+windows inside the 0.2 U gate, 37.7 % of minutes at zero basal), the 0–4 h
+integral hides two opposing phases there as well, and the carb-linked basal
+response that does exist cannot be attributed to a ratio error. The simulation's
+detection result is therefore a lower bound, not a statement about CamAPS.

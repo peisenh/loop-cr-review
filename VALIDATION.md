@@ -192,3 +192,144 @@ sd of the loop extra 1.1–3.7 U, of the 4 h delta 27–78 mg/dL), but adaptatio
 over days, fat/protein tails, corrections blended into a bolus and exercise are
 **not** simulated. These are therefore best-case detection rates.
 
+## Real-data counter-check (one 88-day CamAPS FX export)
+
+The simulation runs on a generic CGM-only PID. This section is the only place
+where the method has been held against a **real adaptive loop**. It is a single
+export from one adult, so everything below is a description of that dataset, not
+a statistic. Only aggregates over the whole period are reported; no dates, no
+therapy settings, no per-meal values.
+
+### Is the loop ever quiet?
+
+Meal-free four-hour stretches were scored the way `E₀` is scored in the
+simulation: the integral of `basal − fasting basal`.
+
+| | value |
+|---|---|
+| meal-free 4 h windows | 438 |
+| median \|E\| in those windows | 0.92 U |
+| share within the simulation's 0.2 U neutrality gate | **11.6 %** |
+| minutes delivered at exactly 0 U/h | **37.7 %** |
+| night-to-night spread of the fasting reference | factor ≈ 6 |
+
+The real loop is **less** neutral than the simulated PID, where 9 of 30
+work-points passed the same gate. Two consequences. First, the condition under
+which the simulation found the method usable is the exception here, not the
+rule. Second, the downward saturation discussed as a hypothesis in
+[sim/SIMULATION-SPEC.md](sim/SIMULATION-SPEC.md) is not a corner case: with more
+than a third of all minutes already at zero, "the loop can only throttle down to
+zero" is the normal operating regime.
+
+### Is a meal-related basal response visible at all?
+
+Yes, and it has a shape the 4 h integral hides. Median basal deviation from the
+fasting reference, meal-aligned, against meal-free windows as reference:
+
+| hour relative to meal | difference vs meal-free |
+|---|---|
+| −1 h | −0.44 U/h |
+| 0 h | −0.28 U/h |
+| +1 h | −0.50 U/h |
+| +2 h | 0.00 U/h |
+| +3 h | **+0.38 U/h** |
+| +4 h | 0.00 U/h |
+
+Around the meal the loop **throttles** — the bolus is acting and it protects
+against a low. Only from about +3 h does it **add**. So the 0–4 h integral is
+the difference of two opposing phases, which is the same structural problem the
+mechanistic check found in the simulation (there with the signs reversed:
+hour 1 large and independent of the shortfall, hours 2–4 paying it back).
+
+Measured effect on how well the extra basal tracks the glucose outcome:
+
+| window | correlation of extra basal with Δ4h |
+|---|---|
+| 0–4 h (as shipped) | +0.26 |
+| 1–4 h | +0.43 |
+| 2–5 h | **+0.60** |
+| 3–5 h | +0.59 |
+
+**Not acted upon.** One export cannot justify moving the core window: it would
+reclassify every existing report, and the simulation cannot confirm it because
+the PID produced the opposite sign pattern. Recorded as a hypothesis for the day
+more exports exist, together with the caveat that a later window would also
+require moving the glucose measure alongside it.
+
+### Does the basal response identify a carb-ratio error?
+
+On 83 meals isolated by at least four hours from any other carb entry:
+
+| relation | r | slope |
+|---|---|---|
+| carbs ↔ meal bolus | +0.43 | — |
+| carbs ↔ basal over 4 h | **+0.56** | 0.050 U/g |
+| carbs ↔ total insulin over 4 h | +0.68 | 0.096 U/g |
+
+So the basal response is real and scales with meal size — its slope is about the
+same as the bolus component's. That is **not** evidence that the method can see a
+carb-ratio error, for two reasons.
+
+1. **A carb-linked basal response also arises with a correct ratio.** A larger
+   meal produces a larger excursion through absorption and timing mismatch
+   alone, and the loop reacts to that. Reaction to *meal size* is not reaction to
+   *ratio error*.
+2. **Regressing total insulin on carbs is close to circular.** The bolus is the
+   larger part (median ~73 % here) and the pump computes it as carbs divided by
+   the programmed ratio. In this export the fitted slope of total insulin came
+   out at essentially the programmed ratio itself. A high R² from such a model
+   recovers the pump's own arithmetic; it is not an independent finding about
+   physiology.
+
+### Slot level versus single meal
+
+The report aggregates per slot, and this dataset shows why that matters. Taken
+slot by slot, extra basal and the four-hour glucose change pointed the same way
+and the extra basal sat well outside the meal-free spread — a coherent picture.
+Taken meal by meal, the same quantities barely move together:
+
+| level | correlation of extra basal with Δ4h |
+|---|---|
+| all meals pooled | +0.26 |
+| two of the four slots | +0.27 / +0.33 |
+| the other two slots | −0.02 / +0.01 |
+
+So the signal in this export is a property of the **median over many meals**, not
+of the individual meal — in two slots the per-meal relation was absent
+altogether. This retrospectively supports aggregating by median, and it argues
+that the number of meals needed is higher than the current gates require. It
+also warns against reading a single meal row as evidence of anything.
+
+A caveat that applies to the whole subsection: extra basal and Δ4h are both
+derived from the same glucose curve. If glucose stays high, Δ4h rises *and* the
+loop adds insulin. Part of any agreement between them is therefore built in, and
+agreement alone is not confirmation.
+
+### The rest indicator on this export
+
+`loop_rest()` — the meal-free context flag the report now shows — was run on the
+same data: 131 usable meal-free stretches, about 499 hours in total, median
+deviation from the fasting reference **38 %**, and in **91 %** of those minutes
+the rate was at least 20 % away from it. The indicator reports this export as
+`active`.
+
+That is consistent with the window statistics above and is the point of showing
+it: a reader of such a report can see that the loop was rarely idle, and can
+weigh the carb-ratio table accordingly, instead of that condition living only in
+a validation document.
+
+### What this changes
+
+The honest formulation is not "the basal response is too weak" but **"the basal
+response exists and is not attributable to the ratio error"**. That distinction
+matters: it says why no cleverer filtering helps. The obstacle is
+identifiability, not signal-to-noise — without an independent reference for the
+insulin a meal actually needed, the loop's reaction to a wrong ratio cannot be
+separated from its reaction to the meal itself.
+
+For the tool this supports what the report already says and sharpens it: the
+figures are a **description** of what happened (this much extra insulin was
+delivered, this is how glucose ran) and a starting point for a conversation with
+the care team. They are not a measurement of the carb ratio. On real CamAPS data
+that claim is neither demonstrable nor refutable with this dataset.
+
