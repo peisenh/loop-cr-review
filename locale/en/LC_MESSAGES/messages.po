@@ -88,12 +88,6 @@ msgid ""
 "throttled (contradictory signal) → possibly an outlier/small sample size "
 "rather than a CR problem; check individual meals before tightening"
 msgstr ""
-"BG clearly elevated at the end of the window, but the loop rather "
-"throttled (contradictory signal) → possibly an outlier/small sample size "
-"rather than a CR problem; check individual meals before tighteningBG "
-"clearly elevated at the end of the window, but the loop rather throttled "
-"(contradictory signal) → possibly an outlier/small sample size rather "
-"than a CR problem; check individual meals before tightening"
 
 #: loop_cr_review.py:941 loop_cr_review.py:994
 msgid "Dose"

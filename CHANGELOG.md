@@ -9,6 +9,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- de: restore the contradictory-signal caution; it had been overwritten
+  with unformatted How-much-does-it-take placeholders.
+
 ### Added
 - Noisy blind slice: #002/#010 lunch+dinner 0 % is 10/10 ok; ±20/±30 %
   is 0/40 hit. Phase B gate for this slice fails.
