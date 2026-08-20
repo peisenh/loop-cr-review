@@ -322,3 +322,21 @@ stays under the verdict rule (~0.11). σ=1 is threshold jitter, not a
 detection curve. σ=5 shrinks E. Both effects explain the 0/40 slice.
 
 `blind_eval --sigmas 0,1,5` prints E and D. Seeds are SHA-256.
+
+## Robustness exit — simulation frozen
+
+`python3 -m sim.robust_check`. Criteria in [PHASE_B_ROBUST.md](../PHASE_B_ROBUST.md).
+
+1. Same seed, two processes: **PASS** (identical stdout).
+2. Seeds 1001/1002/1003, #002 +20 %, lunch+dinner: σ=0 always L≈0.55 and
+   miss; σ=1 miss on these seeds; σ=5 extra gone. Reading unchanged.
+3. Boundary, 1 rep, lunch+dinner:
+
+| | 0 % σ=0/1/5 | +20 % | +30 % σ=0 | +30 % σ=5 |
+|--|--|--|--|--|
+| #002 | ok / ok / ok | miss / hit / miss | hit | miss |
+| #010 | ok / ok / ok | miss / miss / miss | hit | miss |
+
+**Exit:** E vs D is stable; the verdict at 20 % is not. 0 % stays quiet.
++30 % shows the signal only while noise is small. Do not retune the
+analyzer. No further B factorial. Not CamAPS.

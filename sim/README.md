@@ -4,7 +4,7 @@ Implements [SIMULATION-SPEC.md](../SIMULATION-SPEC.md). Not part of the
 analysis tool: no imports from `loop_cr_review` except A.2 reading
 `LOOP_RATIO`. Dependency only in `requirements-sim.txt`.
 
-**Phase A is closed.** Findings: [UPTAKE.md](UPTAKE.md).
+**Phase A is closed. Phase B exit done — simulation frozen.** Findings: [UPTAKE.md](UPTAKE.md).
 
 ```bash
 pip install -r requirements-sim.txt
@@ -45,3 +45,9 @@ PYTHONPATH=. python3 -m sim.blind_eval --days 5 --errors=0 --reps 5 --noise 5 --
 ```
 
 Findings: [UPTAKE.md](UPTAKE.md) (section Blind runs).
+
+Exit check:
+
+```bash
+PYTHONPATH=. python3 -m sim.robust_check --repro
+```

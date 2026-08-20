@@ -10,6 +10,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Phase B exit: [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md). Same seed
+  reproduces; 0 % quiet; +20 % verdict jitters; simulation frozen.
+- `sim/robust_check.py` / [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md):
+  exit reproducibility check, not a new factorial.
 - #002 +20 % noise sweep: 0/5 at σ=0, 2/5 at σ=1, 0/5 at σ=5.
 - Stable SHA-256 seeds; `blind_eval --sigmas` prints E and D per slot.
 - Noisy blind slice: #002/#010 lunch+dinner 0 % is 10/10 ok; ±20/±30 %

@@ -6,7 +6,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 # Specification: an independent simulator to test the loop-CR method hypothesis
 
 Status: **code for steps 1–3 exists** under `sim/`. Formal Phase A adult grid is specified in `sim/phase_a.py` and summarised
-in [sim/UPTAKE.md](sim/UPTAKE.md). Phase B design: [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md). Large B runner not started.
+in [sim/UPTAKE.md](sim/UPTAKE.md). Phase B first slice + exit check: [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md), [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md). Simulation frozen.
 Companion to [VALIDATION.md](VALIDATION.md).
 
 ---
