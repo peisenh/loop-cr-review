@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import random
 import csv
 import tempfile
 from collections import defaultdict
@@ -21,10 +22,20 @@ from loop_cr_review import generate_report
 GAINS = {"weak": WEAK, "mid": MID, "strong": STRONG}
 
 
-def run_one(patient, cr_true, err, days, gains, tmp, rep):
+def run_seed(base: int, patient: str, err: float, days: int, gains_name: str, rep: int) -> int:
+    return abs(hash((base, patient, round(err, 6), days, gains_name, rep))) % (2**31)
+
+
+def run_one(patient, cr_true, err, days, gains, tmp, rep,
+            noise_sigma=0.0, seed=1):
     cr_set = cr_true * (1.0 + err)
     out = tmp / f"{patient}_{gains.name}_{err:+.2f}_{days}d_r{rep}"
-    write_export(run_days(patient, days=days, cr_set=cr_set, gains=gains), out)
+    rng = random.Random(run_seed(seed, patient, err, days, gains.name, rep))
+    write_export(
+        run_days(patient, days=days, cr_set=cr_set, gains=gains,
+                 noise_sigma=noise_sigma, rng=rng),
+        out,
+    )
     _html, ctx = generate_report(out, lang="en")
     slots = []
     for s in ctx["slots"]:
@@ -55,13 +66,16 @@ def main(argv=None) -> int:
     p.add_argument("--out", type=Path, default=None)
     p.add_argument("--slots", default="breakfast,lunch,dinner",
                    help="which slots to score, e.g. lunch,dinner")
+    p.add_argument("--noise", type=float, default=0.0,
+                   help="CGM noise sigma in mg/dl (0 = deterministic)")
+    p.add_argument("--seed", type=int, default=1)
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args(argv)
     days, errors = _ints(args.days), _floats(args.errors)
     gain_list = [GAINS[x.strip()] for x in args.gains.split(",") if x.strip()]
     patients = tuple(x.strip() for x in args.patient.split(",") if x.strip())
     slot_names = tuple(x.strip() for x in args.slots.split(",") if x.strip())
-    print(f"blind  patients={patients}  slots={slot_names}  reps={args.reps}")
+    print(f"blind  patients={patients}  slots={slot_names}  reps={args.reps}  noise={args.noise}  seed={args.seed}")
     refs = {name: measure(name) for name in patients}
     print(f"{'d':>3} {'gain':6} {'err':>7} {'rep':>3}  result  slots")
     rows = []
@@ -73,7 +87,8 @@ def main(argv=None) -> int:
             for g in gain_list:
                 for err in errors:
                     for rep in range(1, args.reps + 1):
-                        r = run_one(name, ref.cr_d4, err, d, g, tmp, rep)
+                        r = run_one(name, ref.cr_d4, err, d, g, tmp, rep,
+                                    noise_sigma=args.noise, seed=args.seed)
                         r["patient"] = name
                         r["result"] = score(err, r["slots"], slot_names)
                         bits = " ".join(

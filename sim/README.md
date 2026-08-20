@@ -41,6 +41,7 @@ Blind (analyzer does not see CR_true). Leading minus needs `=` :
 ```bash
 PYTHONPATH=. python3 -m sim.blind_eval --days 5 --errors=0 --patient adult#001,adult#002,adult#007,adult#010 -v
 PYTHONPATH=. python3 -m sim.blind_eval --days 5 --errors=-0.20,0.20 --slots lunch,dinner -v
+PYTHONPATH=. python3 -m sim.blind_eval --days 5 --errors=0 --reps 5 --noise 5 --seed 1 --slots lunch,dinner
 ```
 
 Findings: [UPTAKE.md](UPTAKE.md) (section Blind runs).

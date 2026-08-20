@@ -10,6 +10,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Noisy blind slice: #002/#010 lunch+dinner 0 % is 10/10 ok; ±20/±30 %
+  is 0/40 hit. Phase B gate for this slice fails.
+- Seeded CGM noise in `sim.export.run_days`; `blind_eval --noise` / `--seed`.
 - [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md): pre-registered blind Phase B
   (0 % FPR first, lunch/dinner, no CamAPS replica).
 - Blind runs on four adults: 0 % and ±20 %, documented in

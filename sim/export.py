@@ -20,6 +20,7 @@ from pathlib import Path
 from simglucose.patient.t1dpatient import Action, T1DPatient
 
 from sim.controller import CGMOnlyPID, Gains, MID
+from sim.noise import cgm_noise
 from sim.physiology import MEAL_EAT_RATE_G_PER_MIN, basal_u_per_hour
 
 PUMP = "CamAPS mylife YpsoPump"
@@ -43,8 +44,14 @@ class DayRun:
 def run_days(patient_name: str = "adult#001", days: int = 14,
              cr_set: float = 10.0, gains: Gains = MID,
              meals: tuple = DEFAULT_MEALS,
-             start: datetime | None = None) -> DayRun:
-    """Simulate ``days`` days of closed loop with three announced meals a day."""
+             start: datetime | None = None,
+             noise_sigma: float = 0.0,
+             rng=None) -> DayRun:
+    """Simulate ``days`` days of closed loop with three announced meals a day.
+
+    ``noise_sigma`` is CGM noise in mg/dl, seen by the PID and written to
+    the export. Pass a seeded ``random.Random`` so replicates differ.
+    """
     patient = T1DPatient.withName(patient_name)
     profile_u_h = basal_u_per_hour(patient)
     target = float(patient.observation.Gsub)
@@ -59,7 +66,7 @@ def run_days(patient_name: str = "adult#001", days: int = 14,
 
     for minute in range(days * 24 * 60):
         now = start + timedelta(minutes=minute)
-        glucose = float(patient.observation.Gsub)
+        glucose = cgm_noise(float(patient.observation.Gsub), rng, noise_sigma)
         basal_uh = pid.policy(glucose, sample_min=1.0)
 
         cho = 0.0
@@ -77,7 +84,7 @@ def run_days(patient_name: str = "adult#001", days: int = 14,
         patient.step(Action(CHO=cho, insulin=insulin))
 
         if minute % CGM_STEP_MIN == 0:
-            cgm.append((now, float(patient.observation.Gsub)))
+            cgm.append((now, glucose))
         seg_sum += basal_uh
         seg_n += 1
         if seg_n == BASAL_STEP_MIN:

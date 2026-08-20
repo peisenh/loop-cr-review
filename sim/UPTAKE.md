@@ -294,3 +294,15 @@ Breakfast extra on #001 is 1.21 / 1.20 / 1.34 U at −20 / 0 / +20 % — almost 
 ### Reading
 
 On quiet slots the analyzer does not see a 20 % CR error. Where it fires, the 0 % run was often already unquiet. Not a CamAPS result. Analyzer unchanged.
+
+### Noisy 0 % and ±20/±30 % (Phase B first slice)
+
+`--noise 5 --seed 1 --reps 5 --slots lunch,dinner --days 5`, mid.
+
+| | #002 | #010 |
+|--|--|--|
+| 0 % | 5/5 ok | 5/5 ok |
+| −30, −20, +20, +30 % | 0/20 hit | 0/20 hit |
+
+40/40 miss. Extra/bolus typically 0.02–0.06. FPR is 0; detection does not
+beat it. This slice **fails** the pre-registered Phase B gate.
