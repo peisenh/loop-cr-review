@@ -64,6 +64,34 @@ a slot sitting exactly on the threshold is called "high" in roughly one run in
 five. A high stability is therefore evidence, not proof; it does not rule out
 that the slot is a coin flip.
 
+## Uptake interpretation from the independent simulator
+
+The independent simulator provides a mechanistic check of the additional
+loop-basal response.
+
+`D` = `CHO/CR_true − CHO/CR_set` (CR-induced insulin shortfall).
+
+`E` = 4-hour integral of `basal − profile` (additional basal insulin delivered
+by the closed loop).
+
+`L = E/D` = fraction of the shortfall supplied as additional loop basal.
+
+The patient/physiology model generates the physiological response to insulin;
+`E` itself is an insulin-delivery quantity, not a direct measurement of
+physiological absorption or insulin action.
+
+Phase A gives, for the gate-pass population:
+
+- `L̂ ≈ 0.29`
+- `R² ≈ 0.87`
+- cluster-bootstrap 95% interval `0.25–0.35`
+
+This is a measured response of the independent CGM-only PID simulation.
+CamAPS FX Auto Mode was not simulated, so `0.29` is not a CamAPS-specific
+uptake parameter.
+
+The sensitivity-generator `LOOP_SHARE` remains a separate generator
+assumption, and `LOOP_RATIO` remains unchanged.
 ## What this does *not* show
 
 The generator draws independent days with clean, well-behaved meals. Real

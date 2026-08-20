@@ -1,3 +1,37 @@
+## Uptake definition and interpretation
+
+`D` is the CR-induced insulin shortfall:
+`CHO/CR_true − CHO/CR_set`.
+
+`E` is the additional loop basal delivered over the 4-hour window:
+the integral of `basal − profile`.
+
+`L = E/D` is therefore the fraction of the CR-induced shortfall supplied as
+additional loop basal.
+
+The causal chain is:
+
+CR error → incorrect meal bolus → insulin deficit D → patient physiology →
+CGM-only closed-loop controller → additional loop basal E → L = E/D.
+
+`E` is an insulin-delivery quantity. Physiological insulin response is handled
+by the S2008 patient model. Thus `L ≈ 0.29` is a measured response of the
+simulated controller, not a generator parameter or a physiological absorption
+constant.
+
+CamAPS FX Auto Mode was not simulated. Therefore this result must not be
+described as "CamAPS has a 29% uptake".
+
+For the gate-pass population the measured result is:
+
+- through-origin `L̂ ≈ 0.29`
+- `R² ≈ 0.87`
+- cluster-bootstrap 95% interval `0.25–0.35`
+
+The defensible interpretation is: in the independent S2008/PID simulation,
+under neutral work-points, additional loop basal is approximately proportional
+to the CR-induced insulin shortfall, with a measured uptake fraction around
+`L = 0.29`.
 # Phase A — close and conclusion
 
 ## Preliminary result of the simulation
