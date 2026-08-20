@@ -9,11 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
-### Changed
-- de: restore the contradictory-signal caution; it had been overwritten
-  with unformatted How-much-does-it-take placeholders.
-
 ### Added
+- #002 +20 % noise sweep: 0/5 at σ=0, 2/5 at σ=1, 0/5 at σ=5.
+- Stable SHA-256 seeds; `blind_eval --sigmas` prints E and D per slot.
 - Noisy blind slice: #002/#010 lunch+dinner 0 % is 10/10 ok; ±20/±30 %
   is 0/40 hit. Phase B gate for this slice fails.
 - Seeded CGM noise in `sim.export.run_days`; `blind_eval --noise` / `--seed`.

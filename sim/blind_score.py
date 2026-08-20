@@ -50,3 +50,24 @@ def score(err: float, slots: list, names=None) -> str:
     if any(f != "ok" for f in flags):
         return "wrong"
     return "miss"
+
+import hashlib
+
+SLOT_CHO = {"breakfast": 45.0, "lunch": 60.0, "dinner": 50.0}
+
+
+def run_seed(base: int, patient: str, err: float, days: int, gains_name: str, rep: int) -> int:
+    raw = f"{base}|{patient}|{err:.6f}|{days}|{gains_name}|{rep}".encode()
+    return int(hashlib.sha256(raw).hexdigest()[:16], 16) % (2**31)
+
+
+def deficit_u(cr_true: float, err: float, key: str):
+    grams = None
+    k = (key or "").lower()
+    for name, g in SLOT_CHO.items():
+        if name in k:
+            grams = g
+            break
+    if grams is None or cr_true <= 0:
+        return None
+    return grams / cr_true - grams / (cr_true * (1.0 + err))

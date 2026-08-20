@@ -6,13 +6,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import random
 import csv
 import tempfile
 from collections import defaultdict
 from pathlib import Path
 
-from sim.blind_score import is_main, score, wanted_slots
+from sim.blind_score import deficit_u, is_main, run_seed, score, wanted_slots
 from sim.controller import MID, STRONG, WEAK
 from sim.cr_true import measure
 from sim.export import run_days, write_export
@@ -20,10 +21,6 @@ from sim.export import run_days, write_export
 from loop_cr_review import generate_report
 
 GAINS = {"weak": WEAK, "mid": MID, "strong": STRONG}
-
-
-def run_seed(base: int, patient: str, err: float, days: int, gains_name: str, rep: int) -> int:
-    return abs(hash((base, patient, round(err, 6), days, gains_name, rep))) % (2**31)
 
 
 def run_one(patient, cr_true, err, days, gains, tmp, rep,
@@ -42,9 +39,22 @@ def run_one(patient, cr_true, err, days, gains, tmp, rep,
         key = s.get("key") or str(s.get("label", "")).lower()
         slots.append({"key": key, "flag": s["flag"], "cls": s.get("cls"),
                            "cre": s.get("cre"), "exc": s.get("exc"),
-                           "bol": s.get("bol")})
+                           "bol": s.get("bol"),
+                           "D": deficit_u(cr_true, err, key)})
     return {"err": err, "days": days, "gains": gains.name, "cr_set": cr_set,
             "slots": slots, "rep": rep}
+
+
+def _num(v):
+    if v is None or v == "":
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).replace(",", ".").replace("+", "")
+    try:
+        return float(s.split()[0])
+    except ValueError:
+        return None
 
 
 def _floats(s):
@@ -69,6 +79,8 @@ def main(argv=None) -> int:
     p.add_argument("--noise", type=float, default=0.0,
                    help="CGM noise sigma in mg/dl (0 = deterministic)")
     p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--sigmas", default="",
+                   help="comma list of noise sigmas, e.g. 0,1,2,3,5")
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args(argv)
     days, errors = _ints(args.days), _floats(args.errors)
@@ -81,14 +93,17 @@ def main(argv=None) -> int:
     rows = []
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
+        sigmas = _floats(args.sigmas) if args.sigmas.strip() else (args.noise,)
         for name in patients:
           ref = refs[name]
           for d in days:
             for g in gain_list:
                 for err in errors:
-                    for rep in range(1, args.reps + 1):
+                    for sigma in sigmas:
+                      for rep in range(1, args.reps + 1):
                         r = run_one(name, ref.cr_d4, err, d, g, tmp, rep,
-                                    noise_sigma=args.noise, seed=args.seed)
+                                    noise_sigma=sigma, seed=args.seed)
+                        r["noise"] = sigma
                         r["patient"] = name
                         r["result"] = score(err, r["slots"], slot_names)
                         bits = " ".join(
@@ -96,20 +111,27 @@ def main(argv=None) -> int:
                         )
                         extra = ""
                         if args.verbose:
-                            extra = " " + " ".join(
-                                f"{s['key']} E/B={s.get('exc')}/{s.get('bol')}"
-                                for s in r["slots"] if is_main(s["key"])
-                            )
-                        print(f"{d:3} {g.name:6} {err*100:+6.1f}% {rep:3}  {r['result']:5}  {bits}{extra}")
+                            bits_ed = []
+                            for s in r["slots"]:
+                                if not is_main(s["key"]):
+                                    continue
+                                e, dd = _num(s.get("exc")), _num(s.get("D"))
+                                l = None if (e is None or not dd) else e / dd
+                                bits_ed.append(
+                                    f"{s['key']} E={e} D={None if dd is None else round(dd,2)}"
+                                    + (f" L={l:.2f}" if l is not None else "")
+                                )
+                            extra = " " + " ".join(bits_ed)
+                        print(f"{d:3} {g.name:6} σ={r.get('noise', args.noise):g} {err*100:+6.1f}% {rep:3}  {r['result']:5}  {bits}{extra}")
                         rows.append(r)
     bag = defaultdict(list)
     for r in rows:
-        bag[(r.get("patient"), r["days"], r["gains"], r["err"])].append(r["result"])
-    print(f"\n{'who':12} {'d':>3} {'gain':6} {'err':>7}  n  ok fp hit miss wrong")
-    for (who, d, g, err), xs in sorted(bag.items()):
+        bag[(r.get("patient"), r["days"], r["gains"], r.get("noise", args.noise), r["err"])].append(r["result"])
+    print(f"\n{'who':12} {'d':>3} {'gain':6} {'σ':>4} {'err':>7}  n  ok fp hit miss wrong")
+    for (who, d, g, sigma, err), xs in sorted(bag.items()):
         def c(n):
             return sum(1 for x in xs if x == n)
-        print(f"{who:12} {d:3} {g:6} {err*100:+6.1f}%  {len(xs)}  {c('ok')} {c('fp')} {c('hit')} {c('miss')} {c('wrong')}")
+        print(f"{who:12} {d:3} {g:6} {sigma:4g} {err*100:+6.1f}%  {len(xs)}  {c('ok')} {c('fp')} {c('hit')} {c('miss')} {c('wrong')}")
     if args.out:
         with args.out.open("w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=["patient", "days", "gains", "err", "rep", "result"])

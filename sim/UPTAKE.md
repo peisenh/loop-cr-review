@@ -306,3 +306,19 @@ On quiet slots the analyzer does not see a 20 % CR error. Where it fires, the 0 
 
 40/40 miss. Extra/bolus typically 0.02–0.06. FPR is 0; detection does not
 beat it. This slice **fails** the pre-registered Phase B gate.
+
+### Noise sweep (why 0/40)
+
+Same cell: `adult#002` mid, +20 %, 5 days, lunch+dinner, seed 1.
+
+| σ | n | hit | lunch E / D / L at rep 1 |
+|--:|--:|--:|--|
+| 0 | 5 | 0/5 | 0.72 / 1.31 / 0.55 |
+| 1 | 5 | 2/5 | 0.80 / 1.31 / 0.61 |
+| 5 | 5 | 0/5 | 0.16 / 1.31 / 0.12 |
+
+σ=0 is deterministic (five copies). E vs D is there (L≈0.55); extra/bolus
+stays under the verdict rule (~0.11). σ=1 is threshold jitter, not a
+detection curve. σ=5 shrinks E. Both effects explain the 0/40 slice.
+
+`blind_eval --sigmas 0,1,5` prints E and D. Seeds are SHA-256.
