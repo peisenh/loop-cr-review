@@ -153,7 +153,7 @@ and how large a carb-ratio error has to be before the rule notices it. The
 committed results and their limits are in [VALIDATION.md](VALIDATION.md). The
 next, not yet implemented step — an independent simulator to test the method's
 core premise rather than its statistics — is specified in
-[SIMULATION-SPEC.md](SIMULATION-SPEC.md). If you
+[sim/SIMULATION-SPEC.md](sim/SIMULATION-SPEC.md). If you
 change the gates, the bootstrap or the verdict rule, re-run it and update that
 document.
 

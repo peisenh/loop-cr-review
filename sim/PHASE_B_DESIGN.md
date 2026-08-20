@@ -7,7 +7,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 Status: **design only**. No large B runner yet. A first deterministic
 slice already exists (`sim/blind_eval.py`, results in
-[sim/UPTAKE.md](sim/UPTAKE.md) § Blind runs).
+[UPTAKE.md](UPTAKE.md) § Blind runs).
 
 Does not change `loop_cr_review.py`. Companion to
 [SIMULATION-SPEC.md](SIMULATION-SPEC.md) (M1–M4 still apply).

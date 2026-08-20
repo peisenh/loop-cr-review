@@ -1,10 +1,13 @@
 # sim/ — independent method-validation simulator
 
-Implements [SIMULATION-SPEC.md](../SIMULATION-SPEC.md). Not part of the
+Implements [SIMULATION-SPEC.md](SIMULATION-SPEC.md). Not part of the
 analysis tool: no imports from `loop_cr_review` except A.2 reading
 `LOOP_RATIO`. Dependency only in `requirements-sim.txt`.
 
-**Phase A is closed. Phase B exit done — simulation frozen.** Findings: [UPTAKE.md](UPTAKE.md).
+**Phase A is closed. Phase B exit done — simulation frozen.**
+
+Findings: [UPTAKE.md](UPTAKE.md) (incl. final conclusion).
+Specs: [SIMULATION-SPEC.md](SIMULATION-SPEC.md) · [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md) · [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md).
 
 ```bash
 pip install -r requirements-sim.txt

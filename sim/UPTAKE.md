@@ -325,7 +325,7 @@ detection curve. σ=5 shrinks E. Both effects explain the 0/40 slice.
 
 ## Robustness exit — simulation frozen
 
-`python3 -m sim.robust_check`. Criteria in [PHASE_B_ROBUST.md](../PHASE_B_ROBUST.md).
+`python3 -m sim.robust_check`. Criteria in [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md).
 
 1. Same seed, two processes: **PASS** (identical stdout).
 2. Seeds 1001/1002/1003, #002 +20 %, lunch+dinner: σ=0 always L≈0.55 and
@@ -340,3 +340,17 @@ detection curve. σ=5 shrinks E. Both effects explain the 0/40 slice.
 **Exit:** E vs D is stable; the verdict at 20 % is not. 0 % stays quiet.
 +30 % shows the signal only while noise is small. Do not retune the
 analyzer. No further B factorial. Not CamAPS.
+
+## Final conclusion
+
+Phase A (physiology, gate, E≈L·D) and Phase B (blind analyzer, noise,
+exit check) are closed. The simulation is **frozen**.
+
+| Layer | Finding |
+|--|--|
+| Mechanism | On quiet work-points, extra basal tracks a CR shortfall (L roughly 0.25–0.55). E is *delivered* pump insulin, not body uptake. |
+| Analyzer | On those same quiet slots the verdict often does not fire at ±20 % because extra/bolus stays under the fixed rule. |
+| Noise | σ=5 shrinks E; detection does not improve. |
+| Tool | `loop_cr_review` is discussion material. Extra basal is a CR cue only when the loop is already quiet without a meal. Not a CamAPS result. Do not retune the analyzer from this PID. |
+
+Specs: [SIMULATION-SPEC.md](SIMULATION-SPEC.md) · [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md) · [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md).

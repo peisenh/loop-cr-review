@@ -10,16 +10,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
-- Phase B exit: [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md). Same seed
+- Phase B exit: [sim/PHASE_B_ROBUST.md](sim/PHASE_B_ROBUST.md). Same seed
   reproduces; 0 % quiet; +20 % verdict jitters; simulation frozen.
-- `sim/robust_check.py` / [PHASE_B_ROBUST.md](PHASE_B_ROBUST.md):
+- `sim/robust_check.py` / [sim/PHASE_B_ROBUST.md](sim/PHASE_B_ROBUST.md):
   exit reproducibility check, not a new factorial.
 - #002 +20 % noise sweep: 0/5 at σ=0, 2/5 at σ=1, 0/5 at σ=5.
 - Stable SHA-256 seeds; `blind_eval --sigmas` prints E and D per slot.
 - Noisy blind slice: #002/#010 lunch+dinner 0 % is 10/10 ok; ±20/±30 %
   is 0/40 hit. Phase B gate for this slice fails.
 - Seeded CGM noise in `sim.export.run_days`; `blind_eval --noise` / `--seed`.
-- [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md): pre-registered blind Phase B
+- [sim/PHASE_B_DESIGN.md](sim/PHASE_B_DESIGN.md): pre-registered blind Phase B
   (0 % FPR first, lunch/dinner, no CamAPS replica).
 - Blind runs on four adults: 0 % and ±20 %, documented in
   [sim/UPTAKE.md](sim/UPTAKE.md). `--slots` / several `--patient`.
@@ -49,10 +49,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   fasting basal, slots). adult#001, 5 days: correct CR → no false alarm,
   CR_eff ~3 % from the measured reference; 25 % too-weak CR → CR_eff
   closes about 45 % of the gap, one slot in three flagged.
-- `SIMULATION-SPEC.md`: independent check of the method premise. simglucose
+- `sim/SIMULATION-SPEC.md`: independent check of the method premise. simglucose
   is MIT.
 
 ### Changed
+- Move `SIMULATION-SPEC.md`, `PHASE_B_DESIGN.md`, `PHASE_B_ROBUST.md`
+  under `sim/`; update links. Final conclusion in `sim/UPTAKE.md`.
 - `sim/phase_a2.py` imports `verdict_class` / `LOOP_RATIO` from the
   analysis instead of restating 0.12.
 - `sim/UPTAKE.md` reports L as median 0.33, quartiles 0.24–0.49, range

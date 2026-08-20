@@ -262,7 +262,11 @@ loop-cr-review/
 ├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
 ├── tools/                     # Validierungsskripte (nicht Teil der Auswertung)
 ├── VALIDATION.md              # gemessene Belastbarkeit von Streubereich/Stabilität
-├── SIMULATION-SPEC.md         # Spezifikation der offenen Methodenvalidierung
+├── sim/
+│   ├── SIMULATION-SPEC.md     # Spezifikation der Methodenvalidierung (Phase A/B, frozen)
+│   ├── PHASE_B_DESIGN.md
+│   ├── PHASE_B_ROBUST.md
+│   └── UPTAKE.md              # Ergebnisse und Schluss
 ├── README.md
 ├── CONTRIBUTING.md
 ├── LICENSE
