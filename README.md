@@ -67,7 +67,7 @@ Loop-Mehrbasal   = ∫ (Basalrate − Fasten-Basal) dt   über das Fenster nach 
 CR_eff           = CHO / (Mahlzeitbolus + Loop-Mehrbasal)
 ```
 
-Positives Extra-Basal heißt: der Loop hat nach der Mahlzeit mehr gegeben als das Fasten-Mittel. Das *kann* zu einer zu schwachen CR passen, ist bei CamAPS aber nicht der Nachweis. `CR_eff` rechnet diese Menge in eine beobachtete Größenordnung um — kein Zielwert, kein Beweis. Δ bestätigt höchstens die Richtung.
+Positives Loop-Mehrbasal kann zu einer zu schwachen CR passen, ist bei CamAPS aber nicht spezifisch dafür.
 
 ## Installation
 

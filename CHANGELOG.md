@@ -30,6 +30,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   signal-to-noise.
 
 ### Changed
+- README: extra basal may fit a weak CR, is not specific on CamAPS.
 - Drop “quiet loop → CR_eff closer to the right CR”.
 - Wording: extra basal is Auto Mode activity, not proof of a CR error.
 - Rest note is descriptive only (no quiet/active verdict).

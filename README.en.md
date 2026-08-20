@@ -67,7 +67,7 @@ loop extra basal = ∫ (basal rate − fasting basal) dt   over the window after
 CR_eff           = CHO / (meal bolus + loop extra basal)
 ```
 
-Positive extra basal means the loop gave more than the fasting mean after the meal. That *may* fit a too-weak CR; on CamAPS it is not proof. `CR_eff` turns that amount into a rough observed ratio — not a target, not a finding. Δ at most backs the direction.
+Positive loop extra basal may fit a too-weak CR, but on CamAPS it is not specific to that.
 
 ## Installation
 
