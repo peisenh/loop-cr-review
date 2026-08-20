@@ -17,7 +17,6 @@ def is_main(key: str) -> bool:
 
 
 def class_of(slot: dict) -> str:
-    """Prefer the machine class; map translated flags as a fallback."""
     cls = slot.get("cls")
     if cls in ("weak", "strong", "ok"):
         return cls
@@ -31,11 +30,19 @@ def class_of(slot: dict) -> str:
     return flag
 
 
-def score(err: float, slots: list) -> str:
+def wanted_slots(slots, names=None):
+    names = tuple(names) if names else MAIN
+    out = []
+    for s in slots:
+        k = (s.get("key") or "").lower()
+        if any(n in k for n in names):
+            out.append(s)
+    return out or list(slots)
+
+
+def score(err: float, slots: list, names=None) -> str:
     want = truth(err)
-    flags = [class_of(s) for s in slots if is_main(s.get("key", ""))]
-    if not flags:
-        flags = [class_of(s) for s in slots]
+    flags = [class_of(s) for s in wanted_slots(slots, names)]
     if want == "ok":
         return "ok" if flags and all(f == "ok" for f in flags) else "fp"
     if any(f == want for f in flags):

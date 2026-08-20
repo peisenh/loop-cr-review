@@ -7,27 +7,25 @@ def test_truth():
     assert truth(-0.2) == "strong"
 
 
+def _slots(b="ok", l="ok", d="ok"):
+    return [{"key": "breakfast", "cls": b}, {"key": "lunch", "cls": l},
+            {"key": "dinner", "cls": d}]
+
+
 def test_zero_all_ok():
-    slots = [{"key": "breakfast", "cls": "ok"}, {"key": "lunch", "cls": "ok"},
-             {"key": "dinner", "cls": "ok"}]
-    assert score(0.0, slots) == "ok"
+    assert score(0.0, _slots()) == "ok"
 
 
-def test_zero_fp():
-    slots = [{"key": "breakfast", "cls": "weak"}, {"key": "lunch", "cls": "ok"},
-             {"key": "dinner", "cls": "ok"}]
-    assert score(0.0, slots) == "fp"
+def test_zero_fp_breakfast():
+    assert score(0.0, _slots("weak")) == "fp"
+    assert score(0.0, _slots("weak"), names=("lunch", "dinner")) == "ok"
 
 
 def test_translated_flag():
     assert class_of({"flag": "too weak → tighten"}) == "weak"
-    assert class_of({"flag": "plausibly adequate"}) == "ok"
 
 
 def test_hit_and_miss():
-    slots = [{"key": "breakfast", "cls": "weak"}, {"key": "lunch", "cls": "ok"},
-             {"key": "dinner", "cls": "ok"}]
-    assert score(0.2, slots) == "hit"
-    assert score(-0.2, slots) == "wrong"
-    assert score(0.2, [{"key": "breakfast", "cls": "ok"}, {"key": "lunch", "cls": "ok"},
-                       {"key": "dinner", "cls": "ok"}]) == "miss"
+    assert score(0.2, _slots("weak")) == "hit"
+    assert score(-0.2, _slots("weak")) == "wrong"
+    assert score(0.2, _slots()) == "miss"

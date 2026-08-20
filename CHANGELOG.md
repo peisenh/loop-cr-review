@@ -10,6 +10,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Blind runs on four adults: 0 % and ±20 %, documented in
+  [sim/UPTAKE.md](sim/UPTAKE.md). `--slots` / several `--patient`.
+- `blind_eval --slots` and several `--patient` names; score lunch/dinner only.
 - Blind path: `sim/blind_eval.py` + `sim/blind_score.py` (hit/fp),
   `tests/test_blind_score.py`.
 - Phase A.8: E0 variance is 63 % gain, 18 % patient. `python3 -m sim.phase_a8`.

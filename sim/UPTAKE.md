@@ -266,25 +266,31 @@ Only adult#002 passes all three gains. Neutrality is mostly the PID
 working point, then who the S2008 adult is.
 
 
-## Blind start
+## Blind runs
 
-`python3 -m sim.blind_eval --days 5 --errors 0,-0.2,0.2 --reps 1`
+`python3 -m sim.blind_eval --patient adult#001,adult#002,adult#007,adult#010 --days 5 --errors=-0.20,0.20 --slots lunch,dinner -v`
 
-Score uses `cls`, not the translated flag. First runs, `adult#001` mid,
-one replicate:
+The analyzer does not see CR_true. `--reps` without noise is the same trajectory.
 
-| days | err | result | slots |
-|--:|--:|--|--|
-| 2 | 0 | ok | all ok, but few-clean warning |
-| 3 | 0 | fp | breakfast weak, lunch/dinner ok |
+### 0 % CR error, 5 days, mid
 
-Local 0 % run, adult#001 mid, reps=5 (deterministic — same trajectory):
+| Patient | all slots | lunch+dinner only | note |
+|--|--|--|--|
+| #001 | fp (breakfast weak, E/B 1.20/7.6) | ok | morning extra already at 0 % |
+| #002 | ok | ok | quiet |
+| #007 | fp (lunch strong, −0.59/2.4) | fp | small bolus (CR 1:25) |
+| #010 | ok | ok | quiet |
 
-| days | n | result |
-|--:|--:|--|
-| 5 | 5 | 5/5 fp, breakfast weak |
-| 7 | 5 | 5/5 fp |
-| 10 | 5 | 5/5 fp |
+#001 breakfast stays weak at 3, 5, 7 and 10 days.
 
-Lunch/dinner stay ok. More days do not remove the breakfast false alarm.
-`--reps` without noise is not independent.
+### ±20 %, 5 days, mid
+
+Lunch+dinner only: #002 and #010 **miss** both signs. #001 miss. #007 "hit" is the same lunch-strong as at 0 %, plus a dinner-weak at +20 %.
+
+All slots: #001 −20 % is **wrong** (breakfast still weak). +20 % "hits" on #001/#002 go through breakfast; on #001 that flag was already there at 0 %.
+
+Breakfast extra on #001 is 1.21 / 1.20 / 1.34 U at −20 / 0 / +20 % — almost independent of the CR error.
+
+### Reading
+
+On quiet slots the analyzer does not see a 20 % CR error. Where it fires, the 0 % run was often already unquiet. Not a CamAPS result. Analyzer unchanged.
