@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Rest note is descriptive only (no quiet/active verdict).
+
 ## [0.10.1] - 2026-08-20
 
 ### Added
