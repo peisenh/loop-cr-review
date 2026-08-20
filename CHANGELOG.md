@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-08-20
+
 ### Added
 - Meal-free rest flag (quiet / active / unclear) vs fasting basal.
   Context for the CR table, not a new estimate.
@@ -590,7 +592,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/peisenh/loop-cr-review/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/peisenh/loop-cr-review/compare/v0.8.3...v0.8.4
