@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- [PHASE_B_DESIGN.md](PHASE_B_DESIGN.md): pre-registered blind Phase B
+  (0 % FPR first, lunch/dinner, no CamAPS replica).
 - Blind runs on four adults: 0 % and ±20 %, documented in
   [sim/UPTAKE.md](sim/UPTAKE.md). `--slots` / several `--patient`.
 - `blind_eval --slots` and several `--patient` names; score lunch/dinner only.
