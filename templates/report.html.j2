@@ -38,6 +38,7 @@
 @media (prefers-color-scheme: dark) {
   .chart-wrap .chart-light { display: none }
   .chart-wrap .chart-dark { display: block }
+  .dailyrow:not(:has(.chart-dark)) .chart-light { display: block }
 }
 @media print {
   .card { break-inside: avoid }
@@ -342,7 +343,7 @@ img { width: 100%; border-radius: 8px }
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
     blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>
 {% for d in daily_days %}
-<div class="dailyrow chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ d.img }}"><img class="chart-dark" src="data:image/png;base64,{{ d.img_dark }}"></div>
+<div class="dailyrow chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ d.img }}">{% if d.img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ d.img_dark }}">{% endif %}</div>
 {% endfor %}
 {% endif %}
 

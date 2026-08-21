@@ -117,6 +117,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | --- | --- | --- |
 | `export_dir` | entpackter Glooko/CamAPS-Export | `.` |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
+| `--dark-charts` | zusätzlich dunkle Kopien der **Tagesgraphen** (AGP/Slots immer hell+dunkel) | aus |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
 | `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`) | eingebaute Slots |
 | `--lang` | Report-Sprache (`de` oder `en`) | `de` |

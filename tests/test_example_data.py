@@ -125,12 +125,14 @@ class TestGenerateReportExample(unittest.TestCase):
         self.assertGreaterEqual(len(self.ctx["meals"]), 30)
 
     def test_daily_overview_builds(self):
-        """Daily panels include light+dark images (regression for dual-chart helper)."""
+        """Daily panels: light by default; dark only when requested."""
         _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=True)
         self.assertGreaterEqual(len(ctx["daily_days"]), 1)
         for day in ctx["daily_days"]:
-            self.assertIn("img", day)
-            self.assertIn("img_dark", day)
+            self.assertTrue(day["img"])
+            self.assertFalse(day["img_dark"])
+        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=True, dark_charts=True)
+        for day in ctx["daily_days"]:
             self.assertTrue(day["img"])
             self.assertTrue(day["img_dark"])
 

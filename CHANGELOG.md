@@ -10,6 +10,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Dark-theme **daily** charts only with `--dark-charts` / UI checkbox; AGP and slot charts still always have both.
 - CGM window lookup by searchsorted (same mean/gap rule).
 
 ## [0.11.0] - 2026-08-21

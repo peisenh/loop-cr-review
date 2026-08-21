@@ -1519,16 +1519,18 @@ def _tir_bands(met):
 
 
 
-def _daily_days_dual(times, gluc, base, basal):
-    """Light + dark daily panels in one list for the single HTML report."""
+def _daily_days_dual(times, gluc, base, basal, dark_charts=False):
+    """Daily panels for the HTML report. Dark copies only if requested."""
     events = read_bolus_events(base)
     tdd = read_tdd(base)
     light = daily_charts(times, gluc, events, basal, tdd, dark=False)
+    if not dark_charts:
+        return [{"img": a["img"], "img_dark": ""} for a in light]
     dark = daily_charts(times, gluc, events, basal, tdd, dark=True)
     return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
 
 
-def build_context(base, window, wlab, daily=False, lang="de"):
+def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False):
     """Read all data, analyse, and assemble the template context."""
     times, gluc, name, sensor = read_cgm(base)
     meals, minors, pump = read_meals(base)
@@ -1562,7 +1564,7 @@ def build_context(base, window, wlab, daily=False, lang="de"):
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
         "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, dark=True),
         "selection": selection_effect(meals, by_slot, window, val_at),
-        "daily_days": _daily_days_dual(times, gluc, base, basal) if daily else [],
+        "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts) if daily else [],
         "curve_cap": curve_cap,
         "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
@@ -1605,6 +1607,8 @@ def parse_args():
                         help="folder containing report.html.j2 (default: ./templates next to this script)")
     parser.add_argument("-d", "--daily", action="store_true",
                         help="also output a daily overview (small day profiles per calendar day)")
+    parser.add_argument("--dark-charts", action="store_true",
+                        help="also render dark-theme copies of the daily overview (AGP/slot charts always have both)")
     parser.add_argument("--slots-file", default=None,
                         help="custom time-of-day slots from a JSON file instead of the built-in "
                         "breakfast/lunch/dinner/other (see example-data/slots.example.json)")
@@ -1614,7 +1618,7 @@ def parse_args():
 
 
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
-                    daily=False, slots=None, template_dir=None):
+                    daily=False, dark_charts=False, slots=None, template_dir=None):
     """Analyse an unpacked export and return (html, context).
 
     Reusable core shared by the CLI and other front-ends (e.g. a web
@@ -1634,7 +1638,8 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
             else f"{window_hours:g}h")
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
     with _slot_scope(slots):
-        context = build_context(Path(export_dir), window, wlab, daily, lang=lang)
+        context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
+                            dark_charts=dark_charts)
         return render(context, tpl_dir), context
 
 
@@ -1650,7 +1655,8 @@ def main():
         slots = load_slots_file(args.slots_file) if args.slots_file else None
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
-            daily=args.daily, slots=slots, template_dir=args.template_dir)
+            daily=args.daily, dark_charts=args.dark_charts, slots=slots,
+            template_dir=args.template_dir)
     except LoopCRError as exc:
         print(str(exc) or "error", file=sys.stderr)
         sys.exit(1)

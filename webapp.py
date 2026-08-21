@@ -80,7 +80,7 @@ def _find_export_base(root):
 
 
 def _read_options():
-    """Validate and return (lang, window_hours, daily) from the form."""
+    """Validate and return (lang, window_hours, daily, dark_charts) from the form."""
     lang = _ui_lang()
     try:
         window_hours = float(request.form.get("window_hours", "4"))
@@ -89,7 +89,8 @@ def _read_options():
     if not 0.5 <= window_hours <= 12:
         abort(400, "window must be between 0.5 and 12 hours")
     daily = request.form.get("daily") == "on"
-    return lang, window_hours, daily
+    dark_charts = request.form.get("dark_charts") == "on"
+    return lang, window_hours, daily, dark_charts
 
 
 def _slots_from_fields():
@@ -173,7 +174,7 @@ def report():
     upload = request.files.get("export")
     if upload is None or upload.filename == "":
         abort(400, "no export file uploaded")
-    lang, window_hours, daily = _read_options()
+    lang, window_hours, daily, dark_charts = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
@@ -189,7 +190,7 @@ def report():
 
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
-        html = _generate_or_400(base, lang, window_hours, daily, slots)
+        html = _generate_or_400(base, lang, window_hours, daily, dark_charts, slots)
 
     headers = {}
     if request.form.get("download") == "on":
@@ -206,7 +207,7 @@ def _load_slots_or_400(path):
     return None                          # pragma: no cover
 
 
-def _generate_or_400(base, lang, window_hours, daily, slots):
+def _generate_or_400(base, lang, window_hours, daily, dark_charts, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
     The analysis core signals input problems in several ways (LoopCRError,
@@ -216,7 +217,8 @@ def _generate_or_400(base, lang, window_hours, daily, slots):
     """
     try:
         html, _ctx = core.generate_report(
-            base, lang=lang, window_hours=window_hours, daily=daily, slots=slots)
+            base, lang=lang, window_hours=window_hours, daily=daily,
+            dark_charts=dark_charts, slots=slots)
         return html
     except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"could not build report: {exc}")
