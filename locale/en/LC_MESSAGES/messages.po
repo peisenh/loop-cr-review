@@ -1783,3 +1783,11 @@ msgstr ""
 
 msgid "Ambulatory Glucose Profile"
 msgstr "Ambulatory Glucose Profile"
+
+
+msgid "From"
+msgstr "From"
+msgid "To"
+msgstr "To"
+msgid "Choose a file to see the full range. Nothing is stored on the server."
+msgstr "Choose a file to see the full range. Nothing is stored on the server."

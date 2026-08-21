@@ -90,6 +90,18 @@
       </div>
     </div>
 
+    
+    <div class="row">
+      <div>
+        <label for="date_from">{% trans %}From{% endtrans %}</label>
+        <input id="date_from" type="date" name="date_from">
+      </div>
+      <div>
+        <label for="date_to">{% trans %}To{% endtrans %}</label>
+        <input id="date_to" type="date" name="date_to">
+        <div class="hint" id="span-hint">{% trans %}Choose a file to see the full range. Nothing is stored on the server.{% endtrans %}</div>
+      </div>
+    </div>
     <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Force CamAPS assessment (Part 2) for Nightscout / other sources{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark daily charts{% endtrans %}</label>
@@ -158,6 +170,27 @@
   function fillDefaults(){
     var b = document.getElementById("slot-rows"); b.innerHTML="";
     DEFAULTS.forEach(function(d){ b.appendChild(row(d[0],d[1],d[2])); });
+  }
+
+  var exportInput = document.getElementById("export");
+  if (exportInput) {
+    exportInput.addEventListener("change", function(){
+      var f = this.files && this.files[0];
+      var hint = document.getElementById("span-hint");
+      if (!f) return;
+      var fd = new FormData();
+      fd.append("export", f);
+      hint.textContent = "...";
+      fetch("{{ url_for('span') }}", {method:"POST", body:fd})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+        .then(function(x){
+          if (!x.ok) { hint.textContent = (x.j && x.j.error) || "error"; return; }
+          document.getElementById("date_from").value = x.j.from;
+          document.getElementById("date_to").value = x.j.to;
+          hint.textContent = x.j.source + ": " + x.j.days + " d";
+        })
+        .catch(function(){ hint.textContent = "error"; });
+    });
   }
   function slotMode(m){
     document.getElementById("slots-fields").classList.toggle("hidden", m!=="fields");

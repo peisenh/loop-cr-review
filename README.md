@@ -115,6 +115,8 @@ python3 loop_cr_review.py <export_ordner> --lang en  # Report auf Englisch (Defa
 python3 loop_cr_review.py <ns-ordner>                # Nightscout: entries.json + treatments.json → Lite
 python3 loop_cr_review.py <ns-ordner> --assume-camaps  # NS: CamAPS-Teil 2 einschalten
 python3 loop_cr_review.py <libreview-ordner>          # LibreView-CSV → immer Lite
+python3 loop_cr_review.py <export_ordner> --span      # nur Von–Bis ausgeben
+python3 loop_cr_review.py <export_ordner> --from 2026-08-01 --to 2026-08-14
 python3 loop_cr_review.py <export_ordner> -o report.html
 python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 ```
@@ -125,6 +127,8 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
 | `--dark-charts` | zusätzlich dunkle Kopien der **Tagesgraphen** (AGP/Slots immer hell+dunkel) | aus |
 | `--assume-camaps` | Teil 2 (CamAPS-CR) auch für Nightscout. LibreView bleibt Lite. Default aus | aus |
+| `--span` | nur CGM-Zeitraum ausgeben, kein Report | aus |
+| `--from` / `--to` | Kalendertage YYYY-MM-DD (einschließlich) | ganzer Export |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
 | `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`) | eingebaute Slots |
 | `--lang` | Report-Sprache (`de` oder `en`) | `de` |
@@ -139,12 +143,12 @@ siehe den Hinweis zum ersten Start unter [3 · Desktop-App](#3--desktop-app-dopp
 
 ### 2 · Web-Frontend (Homelab)
 
-Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP oder Nightscout-ZIP
-(`entries.json` + `treatments.json`) hochladen, Optionen wählen, Report zurückbekommen.
-Nightscout bleibt Lite, außer Häkchen „als CamAPS auswerten“. Gedacht für den **privaten
-Betrieb im Heimnetz, nicht für öffentliches Hosting** — Gesundheitsdaten werden
-nur in einem temporären Verzeichnis verarbeitet und sofort danach gelöscht
-(nichts wird gespeichert, nichts protokolliert).
+Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP, Nightscout-ZIP
+(`entries.json` + `treatments.json`) oder LibreView-CSV. Nach der Dateiauswahl kommt
+der volle Zeitraum (Von/Bis), danach der Report. Beides sind getrennte Requests;
+nichts bleibt auf dem Server. Nightscout bleibt Lite, außer Häkchen
+„CamAPS-Auswertung erzwingen“. Gedacht für den **privaten Betrieb im Heimnetz,
+nicht für öffentliches Hosting**.
 
 ```bash
 # mit Docker (empfohlen)

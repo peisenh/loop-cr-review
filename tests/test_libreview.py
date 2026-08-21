@@ -55,3 +55,25 @@ class TestLibreView(unittest.TestCase):
             self.assertEqual(core.glucose_unit(), "mg/dL")
             html_d, ctx_d = core.generate_report(tmp, lang="en", daily=True)
             self.assertTrue(ctx_d["daily_days"])
+
+    def test_span_and_clip(self):
+        body = "\n".join([
+            "Glukose-Werte,Erstellt am,21-08-2026 16:24 UTC,Erstellt von,Example",
+            HEADER,
+            _row("0", "20-08-2026 10:00", {4: "110"}),
+            _row("0", "21-08-2026 10:00", {4: "118"}),
+            _row("5", "21-08-2026 10:00", {9: "50"}),
+            _row("4", "21-08-2026 10:01", {7: "5.0"}),
+        ])
+        import tempfile
+        from pathlib import Path as P
+        from datetime import date
+        with tempfile.TemporaryDirectory() as tmp:
+            P(tmp, "export.csv").write_text(body, encoding="utf-8")
+            info = core.peek_span(tmp)
+            self.assertEqual(info["from"], "2026-08-20")
+            self.assertEqual(info["to"], "2026-08-21")
+            self.assertEqual(info["days"], 2)
+            _html, ctx = core.generate_report(tmp, lang="en",
+                date_from=date(2026, 8, 21), date_to=date(2026, 8, 21))
+            self.assertTrue(ctx["span"].startswith("21.08.2026"))

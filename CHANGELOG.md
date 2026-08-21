@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Date range: `--span` / `--from` / `--to`; web fills the full span after choosing a file (second request; nothing kept on the server).
+
 ## [0.12.0] - 2026-08-21
 
 ### Added

@@ -12,7 +12,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from flask import Flask, request, render_template, abort, Response
+from flask import Flask, request, render_template, abort, Response, jsonify
 from jinja2 import select_autoescape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -62,6 +62,28 @@ def _safe_extract(zf, dest):
     zf.extractall(dest)
 
 
+def _unpack_upload(tmpd, upload):
+    """Save the upload into tmpd/export and return that folder. No keep after tmpd dies."""
+    extract = tmpd / "export"
+    extract.mkdir()
+    raw = Path(upload.filename or "export").name
+    name = Path(raw).name
+    if name in ("", ".", "..") or "/" in name or "\\" in name:
+        abort(400, "invalid file name")
+    suffix = Path(name).suffix.lower()
+    saved = tmpd / name
+    upload.save(saved)
+    if suffix == ".csv":
+        saved.replace(extract / name)
+    else:
+        try:
+            with zipfile.ZipFile(saved) as zf:
+                _safe_extract(zf, extract)
+        except zipfile.BadZipFile:
+            abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView CSV")
+    return extract
+
+
 def _find_export_base(root):
     """Return the export base folder, or abort(400) if none is found.
 
@@ -101,7 +123,14 @@ def _read_options():
     daily = request.form.get("daily") == "on"
     dark_charts = request.form.get("dark_charts") == "on"
     assume_camaps = request.form.get("assume_camaps") == "on"
-    return lang, window_hours, daily, dark_charts, assume_camaps
+    date_from = request.form.get("date_from") or None
+    date_to = request.form.get("date_to") or None
+    try:
+        date_from = core.parse_day(date_from)
+        date_to = core.parse_day(date_to)
+    except LoopCRError as exc:
+        abort(400, str(exc))
+    return lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to
 
 
 def _slots_from_fields():
@@ -179,34 +208,38 @@ def index():
     )
 
 
+@app.route("/span", methods=["POST"])
+def span():
+    """Return CGM from/to/days for the upload, then drop the temp dir."""
+    upload = request.files.get("export")
+    if upload is None or upload.filename == "":
+        abort(400, "no export file uploaded")
+    with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
+        extract = _unpack_upload(Path(tmp), upload)
+        base = _find_export_base(extract)
+        try:
+            info = core.peek_span(base)
+        except (LoopCRError, FileNotFoundError) as exc:
+            return jsonify(error=str(exc) or "could not read span"), 400
+        return jsonify(info)
+
+
 @app.route("/report", methods=["POST"])
+
 def report():
     """Build the report from the uploaded export and return it as HTML."""
     upload = request.files.get("export")
     if upload is None or upload.filename == "":
         abort(400, "no export file uploaded")
-    lang, window_hours, daily, dark_charts, assume_camaps = _read_options()
+    lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
-        extract = tmpd / "export"
-        extract.mkdir()
-        name = Path(upload.filename or "export").name
-        suffix = Path(name).suffix.lower()
-        saved = tmpd / name
-        upload.save(saved)
-        if suffix == ".csv":
-            saved.replace(extract / name)
-        else:
-            try:
-                with zipfile.ZipFile(saved) as zf:
-                    _safe_extract(zf, extract)
-            except zipfile.BadZipFile:
-                abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView CSV")
-
+        extract = _unpack_upload(tmpd, upload)
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
-        html = _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps, slots)
+        html = _generate_or_400(base, lang, window_hours, daily, dark_charts,
+                                assume_camaps, date_from, date_to, slots)
 
     headers = {}
     if request.form.get("download") == "on":
@@ -223,7 +256,8 @@ def _load_slots_or_400(path):
     return None                          # pragma: no cover
 
 
-def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps, slots):
+def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps,
+                     date_from, date_to, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
     The analysis core signals input problems in several ways (LoopCRError,
@@ -234,7 +268,8 @@ def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps
     try:
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily,
-            dark_charts=dark_charts, assume_camaps=assume_camaps, slots=slots)
+            dark_charts=dark_charts, assume_camaps=assume_camaps,
+            date_from=date_from, date_to=date_to, slots=slots)
         return html
     except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"could not build report: {exc}")

@@ -731,6 +731,67 @@ def read_libreview(base):
     }
 
 
+
+def parse_day(value):
+    """YYYY-MM-DD -> date, or None if empty."""
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        return datetime.strptime(str(value).strip()[:10], "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise LoopCRError(f"invalid date {value!r} (use YYYY-MM-DD)") from exc
+
+
+def peek_span(base):
+    """Source + CGM calendar span without building a report.
+
+    Does not keep anything; caller owns the folder. Meals/basal are not required.
+    """
+    base = Path(base)
+    if is_nightscout(base):
+        data = read_nightscout(base)
+        times, source = data["times"], "nightscout"
+    elif is_libreview(base):
+        data = read_libreview(base)
+        times, source = data["times"], "libreview"
+    else:
+        times, _gluc, _n, _s = read_cgm(base)
+        source = "glooko"
+    if times is None or len(times) == 0:
+        raise LoopCRError("no CGM timestamps in this export")
+    d0, d1 = times[0].date(), times[-1].date()
+    days = (d1 - d0).days + 1
+    return {
+        "source": source,
+        "from": d0.isoformat(),
+        "to": d1.isoformat(),
+        "days": days,
+    }
+
+
+def clip_by_days(times, gluc, meals, minors, events, date_from, date_to, window_min):
+    """Keep meals on [from, to] inclusive; CGM until to + window (last-meal Δ)."""
+    if date_from is None and date_to is None:
+        return times, gluc, meals, minors, events
+    if times is None or len(times) == 0:
+        raise LoopCRError("no CGM data to clip")
+    d0 = date_from or times[0].date()
+    d1 = date_to or times[-1].date()
+    if d0 > d1:
+        raise LoopCRError("from date is after to date")
+    t_lo = datetime.combine(d0, datetime.min.time())
+    t_meal_hi = datetime.combine(d1, datetime.min.time()) + timedelta(days=1)
+    t_cgm_hi = t_meal_hi + timedelta(minutes=int(window_min))
+    mask = np.array([(t_lo <= ts < t_cgm_hi) for ts in times])
+    if not mask.any():
+        raise LoopCRError("no CGM samples in the chosen date range")
+    times, gluc = times[mask], gluc[mask]
+    def keep(items):
+        if not items:
+            return items
+        return [m for m in items if t_lo <= m["time"] < t_meal_hi]
+    return times, gluc, keep(meals), keep(minors), keep(events)
+
 def is_nightscout(base):
     """True if this folder (or a child) is a Nightscout entries+treatments dump."""
     return _nightscout_dir(base) is not None
@@ -1814,7 +1875,7 @@ def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, t
 
 
 def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
-                  assume_camaps=False):
+                  assume_camaps=False, date_from=None, date_to=None):
     """Read all data, analyse, and assemble the template context."""
     ns = None
     if is_nightscout(base):
@@ -1831,6 +1892,9 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         basal = read_basal_timeline(base)
     source = ns["source"] if ns else "glooko"
     lite = source == "libreview" or (source == "nightscout" and not assume_camaps)
+    events = ns["events"] if ns else None
+    times, gluc, meals, minors, events = clip_by_days(
+        times, gluc, meals, minors, events, date_from, date_to, window)
     val_at = make_glucose_lookup(times, gluc)
 
     met = consensus_metrics(times, gluc)
@@ -1882,7 +1946,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, dark=True),
         "selection": selection_effect(meals, by_slot, window, val_at),
         "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts,
-                                events=ns["events"] if ns else None,
+                                events=events,
                                 tdd=ns["tdd"] if ns else None) if daily else [],
         "curve_cap": curve_cap,
         "slots": [] if lite else _slots_context(by_slot, meals, window, val_at, stability, selected),
@@ -1934,11 +1998,18 @@ def parse_args():
                         help="report language (default: de)")
     parser.add_argument("--assume-camaps", action="store_true",
                         help="Nightscout: run the CamAPS CR assessment (off by default)")
+    parser.add_argument("--span", action="store_true",
+                        help="print CGM date range and exit (no report)")
+    parser.add_argument("--from", dest="date_from", default=None,
+                        help="first calendar day YYYY-MM-DD (inclusive)")
+    parser.add_argument("--to", dest="date_to", default=None,
+                        help="last calendar day YYYY-MM-DD (inclusive)")
     return parser.parse_args()
 
 
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
                     daily=False, dark_charts=False, assume_camaps=False,
+                    date_from=None, date_to=None,
                     slots=None, template_dir=None):
     """Analyse an unpacked export and return (html, context).
 
@@ -1960,7 +2031,8 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
     with _slot_scope(slots):
         context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
-                            dark_charts=dark_charts, assume_camaps=assume_camaps)
+                            dark_charts=dark_charts, assume_camaps=assume_camaps,
+                            date_from=date_from, date_to=date_to)
         return render(context, tpl_dir), context
 
 
@@ -1973,12 +2045,17 @@ def main():
             pass
     args = parse_args()
     try:
+        if args.span:
+            info = peek_span(args.export_dir)
+            print(f"{info['source']}  {info['from']} .. {info['to']}  ({info['days']} days)")
+            return
         slots = load_slots_file(args.slots_file) if args.slots_file else None
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
             daily=args.daily, dark_charts=args.dark_charts,
-            assume_camaps=args.assume_camaps, slots=slots,
-            template_dir=args.template_dir)
+            assume_camaps=args.assume_camaps,
+            date_from=parse_day(args.date_from), date_to=parse_day(args.date_to),
+            slots=slots, template_dir=args.template_dir)
     except LoopCRError as exc:
         print(str(exc) or "error", file=sys.stderr)
         sys.exit(1)

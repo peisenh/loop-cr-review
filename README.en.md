@@ -115,6 +115,8 @@ python3 loop_cr_review.py <export_folder> --lang en  # report in English (defaul
 python3 loop_cr_review.py <ns-folder>                # Nightscout: entries.json + treatments.json → lite
 python3 loop_cr_review.py <ns-folder> --assume-camaps  # NS: enable CamAPS Part 2
 python3 loop_cr_review.py <libreview-folder>          # LibreView CSV → always lite
+python3 loop_cr_review.py <export_folder> --span      # print from–to only
+python3 loop_cr_review.py <export_folder> --from 2026-08-01 --to 2026-08-14
 python3 loop_cr_review.py <export_folder> -o report.html
 python3 loop_cr_review.py <export_folder> -t <template_folder>
 ```
@@ -125,6 +127,8 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--dark-charts` | also render dark-theme **daily** charts (AGP/slot charts always have both) | off |
 | `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView stays lite. Default off | off |
+| `--span` | print the CGM date range, no report | off |
+| `--from` / `--to` | calendar days YYYY-MM-DD (inclusive) | full export |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |
 | `--slots-file` | custom time-of-day slots from a JSON file (see `example-data/slots.example.json`) | built-in slots |
 | `--lang` | report language (`de` or `en`) | `de` |
@@ -139,10 +143,11 @@ the first-start note under [3 · Desktop app](#3--desktop-app-double-click).
 
 ### 2 · Web front-end (homelab)
 
-A small Flask app offers the same analysis in the browser: upload the export
-ZIP, pick the options, get the report back. It is meant for **private LAN use in
-a homelab, not public hosting** — health data is processed in a temporary
-directory and deleted immediately (nothing is stored, nothing is logged).
+A small Flask app offers the same analysis in the browser: Glooko ZIP, Nightscout
+ZIP (`entries.json` + `treatments.json`), or LibreView CSV. After choosing the
+file the full date range is filled in, then the report. Those are separate
+requests; nothing is kept on the server. Nightscout stays lite unless you tick
+“force CamAPS assessment”. Meant for **private LAN use, not public hosting**.
 
 ```bash
 # with Docker (recommended)

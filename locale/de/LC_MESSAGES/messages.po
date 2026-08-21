@@ -1789,3 +1789,11 @@ msgstr ""
 
 msgid "Ambulatory Glucose Profile"
 msgstr "Ambulantes Glukoseprofil"
+
+
+msgid "From"
+msgstr "Von"
+msgid "To"
+msgstr "Bis"
+msgid "Choose a file to see the full range. Nothing is stored on the server."
+msgstr "Datei wählen, dann erscheint der volle Zeitraum. Der Server speichert nichts."
