@@ -47,6 +47,8 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 
 **Data flow:** CamAPS FX (Auto Mode) → Glooko → CSV export (ZIP) → `loop-cr-review` → HTML report. So "Glooko/CamAPS export" refers to the ZIP file with CamAPS data downloaded from Glooko.
 
+The same CamAPS stream can also sit in **Nightscout** (`entries` / `treatments`). That dump is recognised and stays in **lite** mode by default (Part 1 + meal table, no CR assessment). Part 2 only with `--assume-camaps` or the upload checkbox.
+
 ## ⚠️ Supported systems — CamAPS FX only
 
 > **This tool is developed and tested exclusively for CamAPS FX (Auto Mode).**
@@ -54,7 +56,8 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 The core method relies on CamAPS delivering auto-corrections as **modulated basal**. Extra basal in the meal window is additional Auto Mode activity; it *may* fit a too-weak/too-strong CR, but on real CamAPS it is not specific to that. Other systems work differently:
 
 - **Tandem Control-IQ, Omnipod 5, and others** deliver auto-corrections partly as **boluses**. These do not appear in the basal → the loop extra basal underestimates the compensation, and the verdict is distorted.
-- **AndroidAPS, Loop/Trio** have their own export/data structures (e.g. Nightscout instead of Glooko).
+- **Nightscout:** `entries.json` + `treatments.json` dump (API, no live fetch). CGM from `sgv`, meals from Meal/Correction Bolus, basal from `Temp Basal`. Times: UTC from the ISO string, local clock via the CGM `utcOffset` (treatment offset 0 is ignored). **Default is lite** — Part 2 only with `--assume-camaps`, and only if this really is CamAPS via NS. Do not treat AAPS/Loop Nightscout as CamAPS.
+- **LibreView:** one glucose CSV (record types 0/4/5). Always lite — no basal, no Part 2.
 
 Use with other loops is **conceivable with adaptations**, but untested — in particular, (1) the export columns would need to be mapped and (2) auto-correction **boluses** would need to be included in the "loop extra basal" term. Without these adaptations, the results are not valid for non-CamAPS systems.
 
@@ -109,15 +112,19 @@ front-end** (2), or the **desktop app** (3).
 python3 loop_cr_review.py <export_folder>            # default: 4-h window
 python3 loop_cr_review.py <export_folder> -w 3.5     # different window (hours)
 python3 loop_cr_review.py <export_folder> --lang en  # report in English (default: de)
+python3 loop_cr_review.py <ns-folder>                # Nightscout: entries.json + treatments.json → lite
+python3 loop_cr_review.py <ns-folder> --assume-camaps  # NS: enable CamAPS Part 2
+python3 loop_cr_review.py <libreview-folder>          # LibreView CSV → always lite
 python3 loop_cr_review.py <export_folder> -o report.html
 python3 loop_cr_review.py <export_folder> -t <template_folder>
 ```
 
 | Option | Meaning | Default |
 | --- | --- | --- |
-| `export_dir` | unpacked Glooko/CamAPS export | `.` |
+| `export_dir` | Glooko folder, Nightscout folder, or LibreView CSV | `.` |
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--dark-charts` | also render dark-theme **daily** charts (AGP/slot charts always have both) | off |
+| `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView stays lite. Default off | off |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |
 | `--slots-file` | custom time-of-day slots from a JSON file (see `example-data/slots.example.json`) | built-in slots |
 | `--lang` | report language (`de` or `en`) | `de` |
@@ -234,6 +241,15 @@ The common CamAPS export formats are detected automatically: date `dd.mm.yyyy`,
 `dd/mm/yyyy` or `yyyy-mm-dd`, decimal separator comma or dot. The glucose unit
 (**mg/dL** or **mmol/L**) is detected from the column header; the whole report
 (metrics, axes, target ranges) is then shown in the export's unit.
+
+**Nightscout** — folder or ZIP with:
+
+- `entries.json` — CGM (`sgv`, `dateString` / `date`, `utcOffset`)
+- `treatments.json` — `Meal Bolus` / `Correction Bolus` / `Temp Basal` (`created_at`, `carbs`, `insulin`, `rate`/`absolute`, `duration`)
+
+From your own site, e.g. `/api/v1/entries.json?count=100000` and `/api/v1/treatments.json?count=100000` (do not put the token in the tool). Lite unless you pass `--assume-camaps`.
+
+**LibreView** — a `*glucose*.csv` from libreview.com (German or English headers). Historic glucose (type 0) plus carbs/insulin (types 5/4). Always lite.
 
 ## Project structure
 

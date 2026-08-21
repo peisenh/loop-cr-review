@@ -70,9 +70,9 @@
   <p class="hint" style="margin:0 0 14px">{% trans %}Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). Other closed-loop systems: see README.{% endtrans %}</p>
 
   <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
-    <label class="first" for="export">{% trans %}CamAPS/Glooko export (ZIP){% endtrans %}</label>
-    <input id="export" type="file" name="export" accept=".zip" required>
-    <div class="hint">{% trans %}Processed in memory only and deleted immediately afterwards.{% endtrans %}</div>
+    <label class="first" for="export">{% trans %}Export (ZIP or LibreView CSV){% endtrans %}</label>
+    <input id="export" type="file" name="export" accept=".zip,.csv,application/zip,text/csv" required>
+    <div class="hint">{% trans %}Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a LibreView glucose CSV. Processed in memory only, then deleted.{% endtrans %}</div>
 
     <div class="row">
       <div>
@@ -90,8 +90,9 @@
       </div>
     </div>
 
+    <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Force CamAPS assessment (Part 2) for Nightscout / other sources{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
-    <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark-theme daily charts{% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark daily charts{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="download"> {% trans %}Download report as file (instead of displaying){% endtrans %}</label>
 
     <fieldset>

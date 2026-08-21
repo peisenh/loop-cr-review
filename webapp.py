@@ -70,9 +70,19 @@ def _find_export_base(root):
     candidate that has both; fall back to the first cgm_data parent so a
     CGM-only export still gets a clear downstream error rather than a 404.
     """
+    ns = [p.parent for p in Path(root).rglob("entries.json")
+          if (p.parent / "treatments.json").is_file()]
+    if ns:
+        return ns[0]
     candidates = [cgm.parent for cgm in Path(root).rglob("cgm_data_*.csv")]
+    lv = [p.parent for p in Path(root).rglob("*.csv")]
+    # LibreView: parent of a CSV with Record Type / Aufzeichnungstyp
+    from loop_cr_review import _libreview_csv
+    lv = _libreview_csv(root)
+    if lv:
+        return lv.parent
     if not candidates:
-        abort(400, "no cgm_data_*.csv found in the uploaded archive")
+        abort(400, "no cgm_data_*.csv, Nightscout dump or LibreView CSV found")
     for parent in candidates:
         if (parent / "Insulin data").is_dir():
             return parent
@@ -90,7 +100,8 @@ def _read_options():
         abort(400, "window must be between 0.5 and 12 hours")
     daily = request.form.get("daily") == "on"
     dark_charts = request.form.get("dark_charts") == "on"
-    return lang, window_hours, daily, dark_charts
+    assume_camaps = request.form.get("assume_camaps") == "on"
+    return lang, window_hours, daily, dark_charts, assume_camaps
 
 
 def _slots_from_fields():
@@ -174,23 +185,28 @@ def report():
     upload = request.files.get("export")
     if upload is None or upload.filename == "":
         abort(400, "no export file uploaded")
-    lang, window_hours, daily, dark_charts = _read_options()
+    lang, window_hours, daily, dark_charts, assume_camaps = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
-        zip_path = tmpd / "export.zip"
-        upload.save(zip_path)
         extract = tmpd / "export"
         extract.mkdir()
-        try:
-            with zipfile.ZipFile(zip_path) as zf:
-                _safe_extract(zf, extract)
-        except zipfile.BadZipFile:
-            abort(400, "the uploaded file is not a valid ZIP archive")
+        name = Path(upload.filename or "export").name
+        suffix = Path(name).suffix.lower()
+        saved = tmpd / name
+        upload.save(saved)
+        if suffix == ".csv":
+            saved.replace(extract / name)
+        else:
+            try:
+                with zipfile.ZipFile(saved) as zf:
+                    _safe_extract(zf, extract)
+            except zipfile.BadZipFile:
+                abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView CSV")
 
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
-        html = _generate_or_400(base, lang, window_hours, daily, dark_charts, slots)
+        html = _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps, slots)
 
     headers = {}
     if request.form.get("download") == "on":
@@ -207,7 +223,7 @@ def _load_slots_or_400(path):
     return None                          # pragma: no cover
 
 
-def _generate_or_400(base, lang, window_hours, daily, dark_charts, slots):
+def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
     The analysis core signals input problems in several ways (LoopCRError,
@@ -218,7 +234,7 @@ def _generate_or_400(base, lang, window_hours, daily, dark_charts, slots):
     try:
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily,
-            dark_charts=dark_charts, slots=slots)
+            dark_charts=dark_charts, assume_camaps=assume_camaps, slots=slots)
         return html
     except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)
         abort(400, f"could not build report: {exc}")

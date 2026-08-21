@@ -20,7 +20,7 @@ import subprocess
 import sys
 import warnings
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from contextlib import contextmanager
 import contextvars
@@ -302,6 +302,7 @@ def fmt_delta(value):
 
 TIME_FMTS = ("%d.%m.%Y %H:%M",    # de:    29.07.2026 09:02
              "%d/%m/%Y %H:%M",    # en/UK: 29/07/2026 09:02
+             "%d-%m-%Y %H:%M",    # LibreView: 21-08-2026 16:24
              "%Y-%m-%d %H:%M")    # en_US/ISO: 2026-07-29 09:02
 TOOL_NAME = "Loop-CR-Review"
 REPO_URL = "https://github.com/peisenh/loop-cr-review"
@@ -612,6 +613,282 @@ def read_basal_timeline(base):
     return rate, t0, minutes, fasting, fasting_lo, fasting_hi
 
 
+
+
+def _libreview_csv(base):
+    """First CSV that looks like a LibreView glucose export, or None."""
+    for path in sorted(Path(base).rglob("*.csv")):
+        try:
+            with open(path, encoding="utf-8-sig", newline="") as fh:
+                first = fh.readline()
+                second = fh.readline()
+        except (OSError, UnicodeDecodeError):
+            continue
+        blob = (first + " " + second).lower()
+        if "aufzeichnungstyp" in blob or "record type" in blob:
+            return path
+    return None
+
+
+def is_libreview(base):
+    return _libreview_csv(base) is not None
+
+
+def read_libreview(base):
+    """LibreView CSV → same dict as read_nightscout. Always lite (no basal).
+
+    Record types: 0 historic CGM, 1 scan (fallback), 4 rapid insulin, 5 carbs.
+    """
+    path = _libreview_csv(base)
+    if path is None:
+        raise LoopCRError("No LibreView CSV found.")
+    with open(path, encoding="utf-8-sig", newline="") as fh:
+        meta = next(fh)
+        reader = csv.reader(fh)
+        header = next(reader)
+        head = [h.strip().lower() for h in header]
+
+        def col(*names):
+            for name in names:
+                if name.lower() in head:
+                    return head.index(name.lower())
+            return None
+
+        i_dev = col("Gerät", "Device")
+        i_ts = col("Gerätezeitstempel", "Device Timestamp")
+        i_typ = col("Aufzeichnungstyp", "Record Type")
+        i_hist = col("Glukosewert-Verlauf mg/dL", "Historic Glucose mg/dL",
+                     "Glukosewert-Verlauf mmol/L", "Historic Glucose mmol/L")
+        i_scan = col("Glukose-Scan mg/dL", "Scan Glucose mg/dL",
+                     "Glukose-Scan mmol/L", "Scan Glucose mmol/L")
+        i_cho = col("Kohlenhydrate (Gramm)", "Carbohydrates (grams)")
+        i_ins = col("Schnellwirkendes Insulin (Einheiten)",
+                    "Rapid-Acting Insulin (units)")
+        i_meal_ins = col("Mahlzeiteninsulin (Einheiten)", "Meal Insulin (units)")
+        i_corr = col("Korrekturinsulin (Einheiten)", "Correction Insulin (units)")
+        if i_ts is None or i_typ is None:
+            raise LoopCRError("LibreView CSV is missing timestamp or record type.")
+        gluc_hdr = " ".join(
+            header[i] for i in (i_hist, i_scan) if i is not None).lower()
+        set_glucose_unit("mmol/L" if "mmol" in gluc_hdr else "mg/dL")
+        name = "LibreView"
+        for key in ("Erstellt von", "Created by"):
+            if key in meta:
+                # meta is a csv line: ...,Erstellt von,Name
+                parts = [x.strip() for x in meta.split(",")]
+                if key in parts:
+                    j = parts.index(key)
+                    if j + 1 < len(parts) and parts[j + 1]:
+                        name = parts[j + 1]
+        times, gluc, sensor = [], [], "LibreView"
+        raw = []
+        for row in reader:
+            if len(row) <= i_typ:
+                continue
+            typ = row[i_typ].strip()
+            try:
+                ts = parse_ts(row[i_ts])
+            except (ValueError, IndexError):
+                continue
+            if i_dev is not None and row[i_dev].strip():
+                sensor = row[i_dev].strip()
+            if typ == "0" and i_hist is not None and i_hist < len(row) and row[i_hist].strip():
+                times.append(ts)
+                gluc.append(num(row[i_hist]))
+            cho = num(row[i_cho]) if i_cho is not None and i_cho < len(row) else np.nan
+            ins = 0.0
+            for idx in (i_ins, i_meal_ins, i_corr):
+                if idx is not None and idx < len(row) and row[idx].strip():
+                    v = num(row[idx])
+                    if not np.isnan(v):
+                        ins += v
+            if (not np.isnan(cho) and cho > 0) or ins > 0:
+                raw.append({"time": ts, "cho": 0.0 if np.isnan(cho) else cho, "bg": np.nan,
+                            "bolus": ins})
+    if not times:
+        raise LoopCRError("LibreView CSV has no glucose rows.")
+    times = np.array(times)
+    gluc = np.array(gluc)
+    order = np.argsort(times, kind="stable")
+    times, gluc = times[order], gluc[order]
+    keep = np.concatenate(([True], times[1:] != times[:-1]))
+    times, gluc = times[keep], gluc[keep]
+    raw.sort(key=lambda m: m["time"])
+    merged = []
+    for meal in raw:
+        if merged and (meal["time"] - merged[-1]["time"]).total_seconds() <= MERGE_SEC:
+            merged[-1]["cho"] += meal["cho"]
+            merged[-1]["bolus"] += meal["bolus"]
+        else:
+            merged.append(dict(meal))
+    meals = [m for m in merged if m["cho"] >= MEAL_MIN_CHO and m["bolus"] > 0]
+    minors = [m for m in merged if m["cho"] < MEAL_MIN_CHO or m["bolus"] <= 0]
+    events = [{"time": m["time"], "cho": m["cho"], "bolus": m["bolus"]} for m in merged]
+    return {
+        "times": times, "gluc": gluc, "name": name, "sensor": sensor,
+        "meals": meals, "minors": minors, "pump": "LibreView",
+        "basal": None, "events": events, "tdd": {}, "source": "libreview",
+    }
+
+
+def is_nightscout(base):
+    """True if this folder (or a child) is a Nightscout entries+treatments dump."""
+    return _nightscout_dir(base) is not None
+
+
+def _nightscout_dir(base):
+    base = Path(base)
+    for cand in (base, *(p.parent for p in base.rglob("entries.json"))):
+        if (cand / "entries.json").is_file() and (cand / "treatments.json").is_file():
+            return cand
+    return None
+
+
+def _ns_parse_time(obj, offset_min):
+    """UTC instant from dateString/created_at/date, then naive local via offset_min."""
+    raw = obj.get("dateString") or obj.get("created_at")
+    if raw:
+        dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+    elif obj.get("date"):
+        dt = datetime.fromtimestamp(float(obj["date"]) / 1000.0, tz=timezone.utc)
+    else:
+        return None
+    off = int(offset_min or 0)
+    local = dt.astimezone(timezone(timedelta(minutes=off)))
+    return local.replace(tzinfo=None)
+
+
+def _ns_offset_minutes(entries):
+    """Display offset from CGM entries (Nightscout utcOffset is minutes)."""
+    offs = [int(x["utcOffset"]) for x in entries if x.get("utcOffset") not in (None, "")]
+    return offs[0] if offs else 0
+
+
+def _basal_from_segments(segs):
+    """Paint (start, duration_min, rate) segments -> same tuple as read_basal_timeline."""
+    if not segs:
+        raise LoopCRError("No basal rates found.")
+    segs = sorted(segs)
+    t0 = segs[0][0]
+    minutes = int((segs[-1][0] + timedelta(minutes=segs[-1][1]) - t0).total_seconds() // 60) + 1
+    minutes = max(minutes, 1)
+    rate = np.full(minutes, np.nan)
+    for start, dur, value in segs:
+        i0 = int((start - t0).total_seconds() // 60)
+        if i0 >= minutes or i0 + max(int(dur), 1) <= 0:
+            continue
+        a = max(0, i0)
+        b = min(minutes, i0 + max(int(dur), 1))
+        rate[a:b] = value
+    last = segs[0][2]
+    for i in range(minutes):
+        if np.isnan(rate[i]):
+            rate[i] = last
+        else:
+            last = rate[i]
+    fasting_idx = [i for i in range(minutes)
+                   if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS]
+    fasting = float(np.mean([rate[i] for i in fasting_idx])) if fasting_idx else float(np.mean(rate))
+    per_night = defaultdict(list)
+    for i in fasting_idx:
+        per_night[(t0 + timedelta(minutes=i)).date()].append(rate[i])
+    night_means = [float(np.mean(v)) for v in per_night.values() if v]
+    fb_lo = fb_hi = fasting
+    fb_spread = False
+    if night_means:
+        fb_lo, fb_hi = min(night_means), max(night_means)
+        fb_spread = (fb_hi - fb_lo) >= 0.3
+    return rate, t0, minutes, fasting, fb_lo, fb_hi, fb_spread
+
+
+def read_nightscout(base):
+    """Load a Nightscout dump (entries.json + treatments.json).
+
+    Times: ISO Z / epoch as UTC, then shifted to the CGM ``utcOffset`` so slot
+    clocks match the wearer. Treatment ``utcOffset: 0`` is ignored.
+    """
+    ns = _nightscout_dir(base)
+    if ns is None:
+        raise LoopCRError("No Nightscout entries.json + treatments.json found.")
+    entries = json.loads((ns / "entries.json").read_text(encoding="utf-8-sig"))
+    treatments = json.loads((ns / "treatments.json").read_text(encoding="utf-8-sig"))
+    if not isinstance(entries, list) or not isinstance(treatments, list):
+        raise LoopCRError("Nightscout JSON must be arrays.")
+    offset = _ns_offset_minutes(entries)
+    set_glucose_unit("mg/dL")
+    times, gluc = [], []
+    for row in entries:
+        if row.get("type") not in (None, "sgv"):
+            continue
+        sgv = row.get("sgv")
+        if sgv is None:
+            continue
+        ts = _ns_parse_time(row, offset)
+        if ts is None:
+            continue
+        times.append(ts)
+        gluc.append(float(sgv))
+    if not times:
+        raise LoopCRError("Nightscout entries.json has no sgv rows.")
+    times = np.array(times)
+    gluc = np.array(gluc)
+    order = np.argsort(times, kind="stable")
+    times, gluc = times[order], gluc[order]
+    keep = np.concatenate(([True], times[1:] != times[:-1]))
+    times, gluc = times[keep], gluc[keep]
+    raw = []
+    for row in treatments:
+        ts = _ns_parse_time(row, offset)
+        if ts is None:
+            continue
+        cho = float(row["carbs"]) if row.get("carbs") not in (None, "") else 0.0
+        ins = float(row["insulin"]) if row.get("insulin") not in (None, "") else 0.0
+        if cho > 0 or ins > 0:
+            raw.append({"time": ts, "cho": cho, "bg": np.nan, "bolus": ins})
+    raw.sort(key=lambda m: m["time"])
+    merged = []
+    for meal in raw:
+        if merged and (meal["time"] - merged[-1]["time"]).total_seconds() <= MERGE_SEC:
+            merged[-1]["cho"] += meal["cho"]
+            merged[-1]["bolus"] += meal["bolus"]
+        else:
+            merged.append(dict(meal))
+    meals = [m for m in merged if m["cho"] >= MEAL_MIN_CHO and m["bolus"] > 0]
+    minors = [m for m in merged if m["cho"] < MEAL_MIN_CHO or m["bolus"] <= 0]
+    segs = []
+    for row in treatments:
+        if row.get("eventType") not in ("Temp Basal", "Temporary Basal"):
+            continue
+        ts = _ns_parse_time(row, offset)
+        if ts is None:
+            continue
+        rate = row.get("rate")
+        if rate is None:
+            rate = row.get("absolute")
+        if rate is None:
+            continue
+        dur = row.get("duration") or 5
+        segs.append((ts, max(int(round(float(dur))), 1), float(rate)))
+    basal = _basal_from_segments(segs) if segs else None
+    events = []
+    for row in treatments:
+        ts = _ns_parse_time(row, offset)
+        if ts is None:
+            continue
+        cho = float(row["carbs"]) if row.get("carbs") not in (None, "") else 0.0
+        ins = float(row["insulin"]) if row.get("insulin") not in (None, "") else 0.0
+        if cho > 0 or ins > 0:
+            events.append({"time": ts, "cho": cho, "bolus": ins})
+    return {
+        "times": times, "gluc": gluc, "name": "Nightscout",
+        "sensor": "Nightscout", "meals": meals, "minors": minors,
+        "pump": "Nightscout", "basal": basal, "events": events, "tdd": {},
+        "source": "nightscout",
+    }
+
+
 def loop_rest(basal, meals):
     """Meal-free stretches vs fasting basal → quiet / active / unclear.
 
@@ -911,7 +1188,8 @@ def aggregate_slot(slot_rows):
     low_confidence = not used_clean_only     # verdict relies (also) on contaminated meals
 
     def med(key):
-        return float(np.nanmedian([r[key] for r in use if not np.isnan(r[key])]))
+        vals = [r[key] for r in use if not np.isnan(r[key])]
+        return float(np.nanmedian(vals)) if vals else np.nan
 
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     rescues = sum(1 for r in slot_rows if r.get("hypo_rescue"))
@@ -1310,9 +1588,12 @@ def _day_title(day, tdd):
 
 
 def daily_charts(times, gluc, events, basal, tdd, dark=False):
-    """One page-wide panel per day (CGM + bolus/carb + basal + TDD), oldest first."""
-    rate, t0, minutes = basal[:3]
-    gmax = float(np.nanmax(rate)) or 1.0
+    """One page-wide panel per day (CGM + bolus/carb + optional basal + TDD)."""
+    if basal is None:
+        rate, t0, minutes, gmax = None, None, 0, 1.0
+    else:
+        rate, t0, minutes = basal[:3]
+        gmax = float(np.nanmax(rate)) or 1.0
     cgm_by, ev_by = defaultdict(list), defaultdict(list)
     for time, value in zip(times, gluc):
         cgm_by[time.date()].append((time.hour + time.minute / 60, value))
@@ -1334,18 +1615,19 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False):
             axg.grid(axis="x", alpha=.15)
             title_color = "#e8ecf2" if dark else "#1a2233"
             axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color=title_color)
-            i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
-            bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
-            byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0
-                   for mnt in range(0, 24 * 60, 5)]
-            ax2 = axg.twinx()
-            ax2.fill_between(bxx, byy, step="pre", color=pal["basal"], alpha=.35, lw=0)
-            ax2.set_ylim(0, gmax * 2.2)
-            ax2.set_xlim(0, 24)
-            ax2.set_yticks([0, round(gmax, 1)])
-            spine = "#8bb4ff" if dark else "#3a63a8"
-            ax2.set_ylabel("U/h", fontsize=6, color=spine)
-            ax2.tick_params(labelsize=6, colors=spine)
+            if rate is not None:
+                i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
+                bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
+                byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0
+                       for mnt in range(0, 24 * 60, 5)]
+                ax2 = axg.twinx()
+                ax2.fill_between(bxx, byy, step="pre", color=pal["basal"], alpha=.35, lw=0)
+                ax2.set_ylim(0, gmax * 2.2)
+                ax2.set_xlim(0, 24)
+                ax2.set_yticks([0, round(gmax, 1)])
+                spine = "#8bb4ff" if dark else "#3a63a8"
+                ax2.set_ylabel("U/h", fontsize=6, color=spine)
+                ax2.tick_params(labelsize=6, colors=spine)
             _draw_day_events(axg, ev_by.get(day, []), pal)
             out.append({"img": fig_to_b64(fig)})
     return out
@@ -1450,7 +1732,7 @@ def _meals_context(rows):
         out.append({
             "time": f"{row['time']:%d.%m %H:%M}", "label": _slot_state()[2][row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
-            "exc": f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
+            "exc": "—" if np.isnan(row["exc"]) else f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
             "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
             "contam": row["contam"], "hypo_rescue": row.get("hypo_rescue", False),
             "cgm_gap": row.get("cgm_gap", False),
@@ -1520,10 +1802,10 @@ def _tir_bands(met):
 
 
 
-def _daily_days_dual(times, gluc, base, basal, dark_charts=False):
+def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, tdd=None):
     """Daily panels for the HTML report. Dark copies only if requested."""
-    events = read_bolus_events(base)
-    tdd = read_tdd(base)
+    events = read_bolus_events(base) if events is None else events
+    tdd = read_tdd(base) if tdd is None else tdd
     light = daily_charts(times, gluc, events, basal, tdd, dark=False)
     if not dark_charts:
         return [{"img": a["img"], "img_dark": ""} for a in light]
@@ -1531,30 +1813,64 @@ def _daily_days_dual(times, gluc, base, basal, dark_charts=False):
     return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
 
 
-def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False):
+def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
+                  assume_camaps=False):
     """Read all data, analyse, and assemble the template context."""
-    times, gluc, name, sensor = read_cgm(base)
-    meals, minors, pump = read_meals(base)
-    basal = read_basal_timeline(base)
+    ns = None
+    if is_nightscout(base):
+        ns = read_nightscout(base)
+    elif is_libreview(base):
+        ns = read_libreview(base)
+    if ns:
+        times, gluc, name, sensor = ns["times"], ns["gluc"], ns["name"], ns["sensor"]
+        meals, minors, pump = ns["meals"], ns["minors"], ns["pump"]
+        basal = ns["basal"]
+    else:
+        times, gluc, name, sensor = read_cgm(base)
+        meals, minors, pump = read_meals(base)
+        basal = read_basal_timeline(base)
+    source = ns["source"] if ns else "glooko"
+    lite = source == "libreview" or (source == "nightscout" and not assume_camaps)
     val_at = make_glucose_lookup(times, gluc)
 
     met = consensus_metrics(times, gluc)
-    rows = analyze_meals(meals, minors, basal, window, val_at, cgm_times=times)
+    if basal is None and not lite:
+        raise LoopCRError("No basal rates found.")
+    rows = [] if basal is None else analyze_meals(
+        meals, minors, basal, window, val_at, cgm_times=times)
+    seen = {r["time"] for r in rows}
+    for meal in meals:
+        if meal["time"] in seen:
+            continue
+        pre, post = val_at(meal["time"], 0), val_at(meal["time"], window)
+        rows.append({
+            "slot": slot_of(meal["time"].hour), "time": meal["time"],
+            "cho": meal["cho"], "bg": meal.get("bg"), "bolus": meal["bolus"],
+            "pre": pre, "cr": meal["cho"] / meal["bolus"] if meal["bolus"] else float("nan"),
+            "exc": float("nan"), "cr_eff": float("nan"),
+            "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
+            "contam": False, "hypo_rescue": False,
+            "cgm_gap": cgm_gap_in_window(meal["time"], window, times) if times is not None else False,
+        })
     by_slot = defaultdict(list)
     for row in rows:
         by_slot[row["slot"]].append(row)
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
-    selected = {slot: select_slot_rows(rows)[0] for slot, rows in by_slot.items()}
-    stability = {slot: decision_stability(rows) for slot, rows in selected.items()}
-    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
-                                                stability, selected)
+    if lite:
+        selected, stability, recs, cr_example = {}, {}, [], None
+    else:
+        selected = {slot: select_slot_rows(srows)[0] for slot, srows in by_slot.items()}
+        stability = {slot: decision_stability(srows) for slot, srows in selected.items()}
+        recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
+                                                    stability, selected)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
 
     return {
+        "source": source, "lite": lite,
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
         "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
         "version": tool_version(), "lang": lang,
-        "days": f"{met['days']:.0f}", "device": f"{device} · Auto Mode",
+        "days": f"{met['days']:.0f}", "device": device if lite else f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
@@ -1565,20 +1881,21 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False)
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
         "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, dark=True),
         "selection": selection_effect(meals, by_slot, window, val_at),
-        "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts) if daily else [],
+        "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts,
+                                events=ns["events"] if ns else None,
+                                tdd=ns["tdd"] if ns else None) if daily else [],
         "curve_cap": curve_cap,
-        "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
+        "slots": [] if lite else _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
-        "fb": f"{basal[3]:.2f}", "fb_lo": f"{basal[4]:.2f}", "fb_hi": f"{basal[5]:.2f}",
-        # strongly varying if the range of the nightly means is at least 30%
-        # of the overall mean. Absolute range (not factor hi/lo),
-        # so that nights with a mean of 0.00 (fully suspended) are also captured
-        # correctly -- a factor would be undefined there.
-        "fb_spread": (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False,
-        "rest": loop_rest(basal, meals),
+        "fb": "—" if basal is None else f"{basal[3]:.2f}",
+        "fb_lo": "—" if basal is None else f"{basal[4]:.2f}",
+        "fb_hi": "—" if basal is None else f"{basal[5]:.2f}",
+        "fb_spread": False if basal is None else (
+            (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False),
+        "rest": None if (lite or basal is None) else loop_rest(basal, meals),
         "wlab": wlab, "unit": glucose_unit(),
         "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
         "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),
@@ -1615,11 +1932,14 @@ def parse_args():
                         "breakfast/lunch/dinner/other (see example-data/slots.example.json)")
     parser.add_argument("--lang", default="de", choices=["de", "en"],
                         help="report language (default: de)")
+    parser.add_argument("--assume-camaps", action="store_true",
+                        help="Nightscout: run the CamAPS CR assessment (off by default)")
     return parser.parse_args()
 
 
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
-                    daily=False, dark_charts=False, slots=None, template_dir=None):
+                    daily=False, dark_charts=False, assume_camaps=False,
+                    slots=None, template_dir=None):
     """Analyse an unpacked export and return (html, context).
 
     Reusable core shared by the CLI and other front-ends (e.g. a web
@@ -1640,7 +1960,7 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
     with _slot_scope(slots):
         context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
-                            dark_charts=dark_charts)
+                            dark_charts=dark_charts, assume_camaps=assume_camaps)
         return render(context, tpl_dir), context
 
 
@@ -1656,7 +1976,8 @@ def main():
         slots = load_slots_file(args.slots_file) if args.slots_file else None
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
-            daily=args.daily, dark_charts=args.dark_charts, slots=slots,
+            daily=args.daily, dark_charts=args.dark_charts,
+            assume_camaps=args.assume_camaps, slots=slots,
             template_dir=args.template_dir)
     except LoopCRError as exc:
         print(str(exc) or "error", file=sys.stderr)
@@ -1669,7 +1990,8 @@ def main():
     out.write_text(html, encoding="utf-8")
     print(f"written: {out} | {len(html)} bytes")
     # Labels from the report context (slot scope already restored)
-    print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]))
+    if not context.get("lite"):
+        print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]))
 
 
 if __name__ == "__main__":

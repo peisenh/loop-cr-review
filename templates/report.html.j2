@@ -142,11 +142,14 @@ img { width: 100%; border-radius: 8px }
 <path transform="translate(5155,0)" d="M121 -6Q97 -6 84.0 8.5Q71 23 71 49V439Q71 465 84.0 479.0Q97 493 121 493Q145 493 158.5 479.0Q172 465 172 439V49Q172 23 159.0 8.5Q146 -6 121 -6ZM121 597Q91 597 74.5 612.0Q58 627 58 654Q58 682 74.5 696.5Q91 711 121 711Q151 711 167.5 696.5Q184 682 184 654Q184 627 167.5 612.0Q151 597 121 597Z"/>
 <path transform="translate(5398,0)" d="M300 -9Q220 -9 162.5 21.5Q105 52 73.5 108.5Q42 165 42 243Q42 319 73.0 376.0Q104 433 158.0 465.0Q212 497 281 497Q332 497 372.0 480.5Q412 464 440.5 432.5Q469 401 483.5 356.0Q498 311 498 255Q498 238 488.0 229.5Q478 221 458 221H122V283H430L413 269Q413 319 398.5 354.0Q384 389 355.5 407.5Q327 426 285 426Q238 426 205.5 404.0Q173 382 156.0 343.0Q139 304 139 252V246Q139 158 180.5 113.5Q222 69 301 69Q331 69 364.5 77.0Q398 85 428 104Q445 114 458.5 113.0Q472 112 480.5 104.0Q489 96 491.0 84.0Q493 72 487.0 59.5Q481 47 466 37Q432 14 387.0 2.5Q342 -9 300 -9Z"/>
 <path transform="translate(5935,0)" d="M249 -7Q228 -7 212.5 3.5Q197 14 188 37L41 426Q33 446 36.0 461.5Q39 477 51.5 486.0Q64 495 84 495Q102 495 113.5 486.5Q125 478 133 454L264 85H240L376 458Q383 477 395.0 486.0Q407 495 426 495Q445 495 457.5 486.0Q470 477 476 458L609 85H587L720 456Q728 479 740.5 487.0Q753 495 769 495Q789 495 799.5 485.0Q810 475 811.5 459.5Q813 444 806 426L659 37Q650 15 634.5 4.0Q619 -7 599 -7Q578 -7 562.5 4.0Q547 15 538 37L398 416H448L309 37Q301 15 285.5 4.0Q270 -7 249 -7Z"/></g></svg>
-<h1>{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}</h1>
+<h1>{% if lite %}{% trans %}Ambulatory Glucose Profile{% endtrans %}{% else %}{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}{% endif %}</h1>
 <div class="sub">{{ name }} · {{ span }} · {% trans %}{{ days }} days{% endtrans %} · {{ device }} · {% trans %}sensor wear{% endtrans %} {{ wear }}%</div>
 <div class="gen">{% trans %}Created with{% endtrans %} {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {% trans %}{{ wlab }} window{% endtrans %} ·
   <a href="{{ repo }}">{{ repo | replace('https://', '') }}</a></div>
 
+{% if source == 'nightscout' or source == 'libreview' %}
+<div class="note">{% if source == 'libreview' %}{% trans %}Source: LibreView. Glucose and meal courses only — no basal, no CR assessment.{% endtrans %}{% elif lite %}{% trans %}Source: Nightscout. Glucose and meal courses only — no CR assessment. CamAPS Part 2 is off unless you opt in.{% endtrans %}{% else %}{% trans %}Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace.{% endtrans %}{% endif %}</div>
+{% endif %}
 <div class="disclaimer">
   {% trans %}<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a statistical analysis of
   existing CGM/pump data. It does <b>not</b> provide a diagnosis and <b>no</b> treatment recommendation and
@@ -196,6 +199,7 @@ img { width: 100%; border-radius: 8px }
     minute 0 has no CGM sample.{% endtrans %}</div>
 </div>
 
+{% if not lite %}
 <div class="part"><h2>{% trans %}Part 2 — assessment and how to read it{% endtrans %}</h2>
   <div class="part-sub">{% trans %}Everything from here rests on the method described in this part.{% endtrans %}</div></div>
 
@@ -321,14 +325,16 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 
+{% endif %}
+{% if meals %}
 <div class="card">
   <h2>{% trans %}Per-meal detail{% endtrans %}</h2>
   <table>
     <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th>
-        <th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
+        {% if not lite %}<th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
     {% for m in meals %}
     <tr><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
-        <td>{{ m.bolus }}</td><td>{{ m.cr }}</td><td>{{ m.exc }}</td><td>{{ m.cre }}</td>
+        <td>{{ m.bolus }}</td><td>{{ m.cr }}</td>{% if not lite %}<td>{{ m.exc }}</td><td>{{ m.cre }}</td>{% endif %}
         <td>{% if m.low_d4 %}<b class="d4low">{{ m.d4 }}</b>{% else %}{{ m.d4 }}{% endif %}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% elif m.cgm_gap %}<span title="{% trans %}CGM gap in the window{% endtrans %}">⚠︎ G</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
@@ -337,7 +343,7 @@ img { width: 100%; border-radius: 8px }
     starting value. Rows are deliberately not colour-coded — a single meal carries far too
     little signal to be judged on its own.{% endtrans %}</div>
 </div>
-
+{% endif %}
 {% if daily_days %}
 <div class="part"><h2>{% trans %}Appendix — daily courses{% endtrans %}</h2>
   <div class="part-sub">{% trans %}Raw daily plots, unfiltered.{% endtrans %}</div></div>

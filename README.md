@@ -45,7 +45,9 @@ Wertet einen CamAPS/Glooko-Export aus und erzeugt einen eigenständigen HTML-Rep
 
 **Glooko** ist eine Diabetes-Datenplattform. CamAPS lädt CGM-, Bolus- und Basaldaten dorthin hoch; von dort exportiert man ein Daten-ZIP mit den CSV-Dateien, die dieses Tool einliest.
 
-**Datenfluss:** CamAPS FX (Auto Mode) → Glooko → CSV-Export (ZIP) → `loop-cr-review` → HTML-Report. Mit „Glooko/CamAPS-Export" ist also die aus Glooko heruntergeladene ZIP-Datei mit CamAPS-Daten gemeint.
+**Datenfluss:** CamAPS FX (Auto Mode) → Glooko → CSV-Export (ZIP) → `loop-cr-review` → HTML-Report. Mit „Glooko/CamAPS-Export" ist die aus Glooko heruntergeladene ZIP-Datei mit CamAPS-Daten gemeint.
+
+Dasselbe CamAPS kann zusätzlich in **Nightscout** landen (`entries` / `treatments`). Der Report erkennt so einen Dump und bleibt dort standardmäßig im **Lite-Modus** (Teil 1 + Mahlzeitentabelle, keine CR-Beurteilung). Teil 2 nur mit `--assume-camaps` bzw. dem Häkchen im Upload.
 
 ## ⚠️ Unterstützte Systeme — nur CamAPS FX
 
@@ -54,7 +56,8 @@ Wertet einen CamAPS/Glooko-Export aus und erzeugt einen eigenständigen HTML-Rep
 Die Kernmethode setzt darauf, dass CamAPS Auto-Korrekturen als **moduliertes Basal** liefert. Das Loop-Mehrbasal im Mahlzeitfenster beschreibt zusätzliche Auto-Mode-Aktivität; sie *kann* zu einer zu schwachen/starken CR passen, ist bei realem CamAPS aber nicht spezifisch dafür. Andere Systeme funktionieren anders:
 
 - **Tandem Control-IQ, Omnipod 5 u. a.** geben Auto-Korrekturen teils als **Boli** ab. Diese tauchen dann nicht im Basal auf → das Loop-Mehrbasal unterschätzt die Kompensation, der Befund wird verfälscht.
-- **AndroidAPS, Loop/Trio** haben eigene Export-/Datenstrukturen (z. B. Nightscout statt Glooko).
+- **Nightscout:** Dump `entries.json` + `treatments.json` (API, kein Live-Abruf). CGM aus `sgv`, Mahlzeiten aus Meal/Correction Bolus, Basal aus `Temp Basal`. Zeiten: UTC aus dem ISO-String, lokale Uhr über das CGM-`utcOffset` (Treatment-Offset 0 wird ignoriert). **Default ist Lite** — Teil 2 nur mit `--assume-camaps`, und nur wenn das wirklich CamAPS über NS ist. AAPS/Loop über Nightscout nicht als CamAPS behandeln.
+- **LibreView:** eine Glukose-CSV (Typen 0/4/5). Immer Lite — kein Basal, kein Teil 2.
 
 Für andere Loops ist eine Nutzung **mit Anpassungen denkbar**, aber nicht getestet — insbesondere müssten (1) die Export-Spalten gemappt und (2) Auto-Korrektur-**Boli** in den „Loop-Mehrbasal"-Term einbezogen werden. Ohne diese Anpassungen sind die Ergebnisse für Nicht-CamAPS-Systeme nicht gültig.
 
@@ -109,15 +112,19 @@ fürs Homelab** (2) oder die **Desktop-App** (3).
 python3 loop_cr_review.py <export_ordner>            # Default: 4-h-Fenster
 python3 loop_cr_review.py <export_ordner> -w 3.5     # anderes Fenster (Stunden)
 python3 loop_cr_review.py <export_ordner> --lang en  # Report auf Englisch (Default: de)
+python3 loop_cr_review.py <ns-ordner>                # Nightscout: entries.json + treatments.json → Lite
+python3 loop_cr_review.py <ns-ordner> --assume-camaps  # NS: CamAPS-Teil 2 einschalten
+python3 loop_cr_review.py <libreview-ordner>          # LibreView-CSV → immer Lite
 python3 loop_cr_review.py <export_ordner> -o report.html
 python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 ```
 
 | Option | Bedeutung | Default |
 | --- | --- | --- |
-| `export_dir` | entpackter Glooko/CamAPS-Export | `.` |
+| `export_dir` | Glooko-Ordner, Nightscout-Ordner oder LibreView-CSV | `.` |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
 | `--dark-charts` | zusätzlich dunkle Kopien der **Tagesgraphen** (AGP/Slots immer hell+dunkel) | aus |
+| `--assume-camaps` | Teil 2 (CamAPS-CR) auch für Nightscout. LibreView bleibt Lite. Default aus | aus |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
 | `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`) | eingebaute Slots |
 | `--lang` | Report-Sprache (`de` oder `en`) | `de` |
@@ -132,8 +139,9 @@ siehe den Hinweis zum ersten Start unter [3 · Desktop-App](#3--desktop-app-dopp
 
 ### 2 · Web-Frontend (Homelab)
 
-Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Export-ZIP
-hochladen, Optionen wählen, Report zurückbekommen. Gedacht für den **privaten
+Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP oder Nightscout-ZIP
+(`entries.json` + `treatments.json`) hochladen, Optionen wählen, Report zurückbekommen.
+Nightscout bleibt Lite, außer Häkchen „als CamAPS auswerten“. Gedacht für den **privaten
 Betrieb im Heimnetz, nicht für öffentliches Hosting** — Gesundheitsdaten werden
 nur in einem temporären Verzeichnis verarbeitet und sofort danach gelöscht
 (nichts wird gespeichert, nichts protokolliert).
@@ -229,7 +237,8 @@ python3 loop_cr_review.py data/mein-export
 
 ## Erwartete Eingabe
 
-Ein entpackter **Glooko-Export mit CamAPS-FX-Daten** (siehe „Kontext" oben) mit:
+**Glooko** — entpackter Export mit CamAPS-FX-Daten (siehe „Kontext" oben):
+
 
 - `cgm_data_*.csv` — CGM-Werte (`Zeitstempel, Glukose (mg/dl), Seriennummer`); Glooko splittet lange Zeiträume auf mehrere nummerierte Dateien (`cgm_data_1.csv`, `cgm_data_2.csv`, …) — alle werden eingelesen
 - `Insulin data/bolus_data_*.csv` — Boli inkl. `Kohlenhydrataufnahme (g)` und `Abgegebenes Insulin (E)`
@@ -239,6 +248,15 @@ Erkannt werden die gängigen CamAPS-Exportformate automatisch: Datum `dd.mm.yyyy
 `dd/mm/yyyy` oder `yyyy-mm-dd`, Dezimaltrenner Komma oder Punkt. Die Glukose-Einheit
 (**mg/dL** oder **mmol/L**) wird aus dem Spaltenkopf erkannt; der gesamte Report
 (Kennzahlen, Achsen, Zielbereiche) erscheint dann in der Einheit des Exports.
+
+**Nightscout** — Ordner oder ZIP mit:
+
+- `entries.json` — CGM (`sgv`, `dateString` / `date`, `utcOffset`)
+- `treatments.json` — `Meal Bolus` / `Correction Bolus` / `Temp Basal` (`created_at`, `carbs`, `insulin`, `rate`/`absolute`, `duration`)
+
+Beides von der eigenen Site, z. B. `/api/v1/entries.json?count=100000` und `/api/v1/treatments.json?count=100000` (Token nicht ins Tool). Lite ohne Extra-Schalter.
+
+**LibreView** — eine `*glucose*.csv` von libreview.com (deutsche oder englische Kopfzeile). Verlaufsglukose (Typ 0) plus KH/Insulin (Typen 5/4). Immer Lite.
 
 ## Projektstruktur
 

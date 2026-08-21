@@ -9,22 +9,24 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Nightscout `entries.json` + `treatments.json` import (UTC from dateString/created_at, local clock from CGM utcOffset; Temp Basal as basal). Default is lite (no CR assessment) unless `--assume-camaps` or the upload checkbox.
+- LibreView glucose CSV (historic CGM + carbs/insulin). Always lite; no basal, no Part 2.
+- Lite mode still shows the per-meal table (time, CHO, bolus, derived CR, Δ) without extra/CR_eff.
+- Daily charts without a basal ribbon (CGM + meal marks).
+
 ### Changed
-- The per-meal detail table no longer colours whole rows. Those colours mirrored
-  the slot table while following a different rule with different thresholds, and
-  they were explained nowhere — the same red meant "verdict: too strong" above and
-  "this meal ended low" below. A single meal also carries almost no signal (two of
-  four slots showed no per-meal relation at all in the real-data check), so a
-  per-meal verdict is not supportable. What remains is the Δ4h value itself set in
-  colour when the meal ended well below its starting value: a measurement with a
-  safety bearing, not an assessment. The footnote says so.
-- `.pylintrc` allows one more keyword argument on the front-end boundary, which
-  `dark_charts` had pushed past the limit, and the English catalog entry for that
-  option is filled in.
+- Upload form accepts a ZIP or a LibreView CSV. The CamAPS-assessment checkbox is source-agnostic. Dark-daily label is translated.
+
+### Fixed
+- Lite report title is AGP only (no “CR assessment”).
+- LibreView uses historic glucose (type 0) only — scans no longer inflate sensor wear above 100 %.
+- Nightscout/LibreView lite no longer prints or computes slot verdicts on the CLI.
+- Empty-slice warning when a slot has no numeric extra basal.
+- LibreView unit taken from the glucose columns, not the ketone mmol/L header (AGP was off-scale).
 
 ## [0.11.1] - 2026-08-21
 
-### Changed
 - Dark-theme **daily** charts only with `--dark-charts` / UI checkbox; AGP and slot charts still always have both.
 - CGM window lookup by searchsorted (same mean/gap rule).
 
@@ -36,7 +38,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   of the method part, so the effect of the selection is a number instead of an
   invitation to compare two charts.
 
-### Changed
 - The method part is down from seven blocks to three: the concept box, one block
   holding the CR table together with what follows from it (verdict chips, the
   meal selection and the derived levers), and one block with the explanations and
@@ -87,7 +88,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   measure. The conclusion is that the obstacle is identifiability, not
   signal-to-noise.
 
-### Changed
 - README: extra basal may fit a weak CR, is not specific on CamAPS.
 - Drop “quiet loop → CR_eff closer to the right CR”.
 - Wording: extra basal is Auto Mode activity, not proof of a CR error.
@@ -140,7 +140,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 - `sim/SIMULATION-SPEC.md`: independent check of the method premise. simglucose
   is MIT.
 
-### Changed
 - Move `SIMULATION-SPEC.md`, `PHASE_B_DESIGN.md`, `PHASE_B_ROBUST.md`
   under `sim/`; update links. Final conclusion in `sim/UPTAKE.md`.
 - `sim/phase_a2.py` imports `verdict_class` / `LOOP_RATIO` from the
@@ -187,7 +186,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 - A stray `#, fuzzy` marker in the German catalog made Babel skip one entry, so
   the report showed "loop" instead of "Loop".
 
-### Changed
 - Report UI denser (screen = print): one uncertainty legend; stability and day-spread
   on a single meta line in table and slot cards; shorter curve/CR_eff notes.
 
@@ -243,7 +241,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   and D4_HIGH. Verified by mutation: breaking the unit conversion, dropping
   the loop share from CR_eff or shifting the TIR cut-off each make them fail.
 
-### Changed
 - CONTRIBUTING documents the current checks: pylint over all three modules,
   `unittest discover` (so the command does not go stale when a test file is
   added), what each test module covers, the extra dependencies the web/GUI
@@ -278,7 +275,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   return HTTP 400 rather than 500. CI now discovers all test modules and
   installs Flask so the web suite runs on every push.
 
-### Changed
 - Upload form: Babel i18n (de/en), switchable via language field; default remains German.
 - CI: align checkout/setup-python with build-release (v7; Node 20 deprecation warning).
 - All internal error and status messages are now consistently English, matching
@@ -309,13 +305,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   It now uses the same msgid as the built-in slot and is translated normally.
 
 ## [0.8.3] - 2026-08-17
-### Changed
 - Windows desktop: slim WebView2 build (`loop-cr-review-gui-windows.exe`) plus full Qt
   build (`…-gui-windows-qt.exe`); Linux GUI stays Qt.
 
 
 ## [0.8.2] - 2026-08-17
-### Changed
 - Dark mode: upload UI and report follow `prefers-color-scheme`; report print stays light;
   charts embed light+dark PNGs in the same HTML file.
 - Clean-meal selection: exclude meals with a CGM gap > 25 min in the post-meal
@@ -329,7 +323,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 
 ## [0.8.1] - 2026-08-16
-### Changed
 - Report presentation: clearer CR column headers —
   ``CR (CHO/bolus)`` vs ``CR_eff (+loop)`` — and an explicit note that both are
   derived from the export, not the pump’s programmed ICR.
@@ -358,7 +351,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   (breakfast strong / lunch weak / dinner ok), English report, and ZIP
   extract ≡ folder analysis. Run with `python3 -m unittest tests.test_example_data -v`.
 
-### Changed
 - Analysis core raises :class:`LoopCRError` instead of calling ``sys.exit``
   for invalid slots, unreadable slot files and missing basal data; the CLI
   maps that to exit code 1 and the web front-end to HTTP 400.
@@ -397,7 +389,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   self-contained file); the version is now shown in both the report header and
   the web front-end, baked from `git describe` during the Docker build.
 
-### Changed
 - The daily graphs are now ordered oldest-first, matching the per-meal detail
   table, so the whole report reads chronologically top to bottom and a meal in the
   table lines up with its day in the graphs. Previously the daily graphs were
@@ -458,7 +449,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   mix (aggregate too weak, one meal went low) now reads as "a single hypo despite
   an on-average too-weak CR — mixed, check meals individually" instead.
 
-### Changed
 - Translated the last remaining German docstring (`_version.py`) to English.
 
 ## [0.6.1] - 2026-08-12
@@ -492,7 +482,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   English catalogs live under `locale/`. English source strings (msgids), German
   and English `.mo` files are bundled into the binaries. The report language is
   selected at runtime; the German output is unchanged from before.
-### Changed
 - All code comments and docstrings, the CLI help, the release footers and the
   release scripts are now in English; the changelog is kept in English going
   forward (entries up to 0.5.3 remain German).
