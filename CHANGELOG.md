@@ -16,6 +16,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   invitation to compare two charts.
 
 ### Changed
+- The method part is down from seven blocks to three: the concept box, one block
+  holding the CR table together with what follows from it (verdict chips, the
+  meal selection and the derived levers), and one block with the explanations and
+  limits. Nothing was dropped; stability had been explained twice in the same
+  block and is now stated once, and the duplicated heading is gone.
+- The fasting basal rate gets its own labelled line next to the time windows,
+  with the assumption it rests on, instead of being mentioned in passing inside a
+  paragraph and again as a bullet further down. It is the reference every "Loop"
+  figure is measured against, so it should not be the easiest thing to miss.
+- Screenshots in `docs/` regenerated for the new structure.
 - The report is split into two labelled parts and an appendix. **Part 1** shows
   what was recorded — key figures, time in ranges, AGP, the absolute and the
   normalised postprandial courses — with no selection and no assessment.
