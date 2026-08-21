@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-21
+
 ### Added
 - Nightscout `entries.json` + `treatments.json` import (UTC from dateString/created_at, local clock from CGM utcOffset; Temp Basal as basal). Default is lite (no CR assessment) unless `--assume-camaps` or the upload checkbox.
 - LibreView glucose CSV (historic CGM + carbs/insulin). Always lite; no basal, no Part 2.
@@ -665,7 +667,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...v0.10.2
