@@ -9,6 +9,19 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The normalised slot-curve chart now shows **all** meals of a slot, like the
+  absolute chart above it, instead of silently switching to the verdict's
+  clean-meal selection. The two charts had been drawn from different meal sets,
+  which was never stated next to the picture. The chart is now a depiction of
+  what happened; the selection is reported separately.
+
+### Added
+- `selection_effect()` and a line under that chart: how many meals per slot the
+  verdict actually uses and, more to the point, how far that selection would move
+  the curve shown. A small value means the neutral picture also describes what
+  the verdict rests on — instead of asking the reader to compare two charts.
+
 ## [0.10.2] - 2026-08-20
 
 ### Added

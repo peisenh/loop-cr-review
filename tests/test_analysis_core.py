@@ -423,3 +423,47 @@ class TestObservedRange(unittest.TestCase):
         out = core._fmt_range(self._rows([6.5, 8.7, 7.1, 7.9]))
         self.assertEqual(out["meals"], 4)
         self.assertIn("–", out["cre"])
+
+
+class TestSelectionEffect(unittest.TestCase):
+    """The number that tells the reader whether the neutral chart also holds
+    for the verdict."""
+
+    def test_reports_used_and_total_per_slot(self):
+        from pathlib import Path
+        import collections
+        base = Path(__file__).resolve().parents[1] / "example-data"
+        times, gluc, _n, _s = core.read_cgm(base)
+        meals, minors, _p = core.read_meals(base)
+        basal = core.read_basal_timeline(base)
+        val_at = core.make_glucose_lookup(times, gluc)
+        rows = core.analyze_meals(meals, minors, basal, 240, val_at, times)
+        by_slot = collections.defaultdict(list)
+        for row in rows:
+            by_slot[row["slot"]].append(row)
+        out = core.selection_effect(meals, by_slot, 240, val_at)
+        self.assertTrue(out)
+        for entry in out:
+            with self.subTest(slot=entry["label"]):
+                self.assertLessEqual(entry["used"], entry["total"])
+                self.assertTrue(entry["shift"])
+
+    def test_no_selection_means_no_shift(self):
+        """If every meal is clean, the curves coincide and the shift is zero."""
+        from pathlib import Path
+        import collections
+        base = Path(__file__).resolve().parents[1] / "example-data"
+        times, gluc, _n, _s = core.read_cgm(base)
+        meals, minors, _p = core.read_meals(base)
+        basal = core.read_basal_timeline(base)
+        val_at = core.make_glucose_lookup(times, gluc)
+        rows = core.analyze_meals(meals, minors, basal, 240, val_at, times)
+        by_slot = collections.defaultdict(list)
+        for row in rows:
+            row["contam"] = False
+            row["cgm_gap"] = False
+            by_slot[row["slot"]].append(row)
+        for entry in core.selection_effect(meals, by_slot, 240, val_at):
+            with self.subTest(slot=entry["label"]):
+                self.assertEqual(entry["used"], entry["total"])
+                self.assertIn(entry["shift"], ("0", "0.0", "—"))

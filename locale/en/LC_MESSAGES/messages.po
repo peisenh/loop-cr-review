@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-20 17:02+0000\n"
+"POT-Creation-Date: 2026-08-21 05:07+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -32,15 +32,15 @@ msgstr "Dinner"
 msgid "Other"
 msgstr "Other"
 
-#: loop_cr_review.py:903 templates/report.html.j2:302
+#: loop_cr_review.py:903 templates/report.html.j2:308
 msgid "too weak → tighten"
 msgstr "too weak → tighten"
 
-#: loop_cr_review.py:904 templates/report.html.j2:302
+#: loop_cr_review.py:904 templates/report.html.j2:308
 msgid "too strong → loosen"
 msgstr "too strong → loosen"
 
-#: loop_cr_review.py:905 templates/report.html.j2:302
+#: loop_cr_review.py:905 templates/report.html.j2:308
 msgid "plausibly adequate"
 msgstr "plausibly adequate"
 
@@ -88,6 +88,10 @@ msgid ""
 "throttled (contradictory signal) → possibly an outlier/small sample size "
 "rather than a CR problem; check individual meals before tightening"
 msgstr ""
+""
+"BG clearly elevated at the end of the window, but the loop rather "
+"throttled (contradictory signal) → possibly an outlier/small sample size "
+"rather than a CR problem; check individual meals before tightening"
 
 #: loop_cr_review.py:1000 loop_cr_review.py:1053
 msgid "Dose"
@@ -294,87 +298,87 @@ msgstr ""
 ". Clarification (programmed ratio vs. correction factor vs. timing) by "
 "the care team.<br>"
 
-#: loop_cr_review.py:1192 loop_cr_review.py:1219
+#: loop_cr_review.py:1192 loop_cr_review.py:1247
 msgid "Minutes after meal"
 msgstr "Minutes after meal"
 
-#: loop_cr_review.py:1220
+#: loop_cr_review.py:1248
 #, python-format
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s vs. meal start"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Monday"
 msgstr "Monday"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Tuesday"
 msgstr "Tuesday"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Wednesday"
 msgstr "Wednesday"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Thursday"
 msgstr "Thursday"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Friday"
 msgstr "Friday"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Saturday"
 msgstr "Saturday"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Sunday"
 msgstr "Sunday"
 
-#: loop_cr_review.py:1318
+#: loop_cr_review.py:1346
 #, python-format
 msgid "%(label)s = everything outside the other windows"
 msgstr "%(label)s = everything outside the other windows"
 
-#: loop_cr_review.py:1320
+#: loop_cr_review.py:1348
 #, python-format
 msgid "%(label)s = %(start)s–%(end)s"
 msgstr "%(label)s = %(start)s–%(end)s"
 
-#: loop_cr_review.py:1334
+#: loop_cr_review.py:1362
 msgid " ⚠︎ (hypo — secure first)"
 msgstr " ⚠︎ (hypo — secure first)"
 
-#: loop_cr_review.py:1425
+#: loop_cr_review.py:1453
 msgid "Too few meals per slot for a robust shape description."
 msgstr "Too few meals per slot for a robust shape description."
 
-#: loop_cr_review.py:1467
+#: loop_cr_review.py:1495
 #, python-format
 msgid "Very High &gt;%(v)s"
 msgstr "Very High &gt;%(v)s"
 
-#: loop_cr_review.py:1468
+#: loop_cr_review.py:1496
 #, python-format
 msgid "High %(lo)s–%(hi)s"
 msgstr "High %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1470
+#: loop_cr_review.py:1498
 #, python-format
 msgid "Target %(lo)s–%(hi)s"
 msgstr "Target %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1472
+#: loop_cr_review.py:1500
 #, python-format
 msgid "Low %(lo)s–%(hi)s"
 msgstr "Low %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1474
+#: loop_cr_review.py:1502
 #, python-format
 msgid "Very Low &lt;%(v)s"
 msgstr "Very Low &lt;%(v)s"
 
-#: loop_cr_review.py:1504
+#: loop_cr_review.py:1532
 msgid "device unknown"
 msgstr "device unknown"
 
@@ -534,14 +538,21 @@ msgid ""
 "overnight average. That is common under CamAPS — it does not say whether "
 "the carb ratio is wrong."
 msgstr ""
+""
+"Away from meals the basal was typically about %(pct)s %% off the "
+"overnight average. That is common under CamAPS — it does not say whether "
+"the carb ratio is wrong."
 
 #: templates/report.html.j2:201
 msgid ""
 "Too little time without a meal to compare the basal to overnight. The "
 "table below is still only discussion material."
 msgstr ""
+""
+"Too little time without a meal to compare the basal to overnight. The "
+"table below is still only discussion material."
 
-#: templates/report.html.j2:206 templates/report.html.j2:288
+#: templates/report.html.j2:206 templates/report.html.j2:294
 msgid "Slot"
 msgstr "Slot"
 
@@ -553,8 +564,8 @@ msgstr "n (clean)"
 msgid "Ø CHO"
 msgstr "Ø CHO"
 
-#: templates/report.html.j2:206 templates/report.html.j2:258
-#: templates/report.html.j2:288
+#: templates/report.html.j2:206 templates/report.html.j2:264
+#: templates/report.html.j2:294
 msgid "CR (CHO/bolus)"
 msgstr "CR (CHO/bolus)"
 
@@ -562,12 +573,12 @@ msgstr "CR (CHO/bolus)"
 msgid "Bolus"
 msgstr "Bolus"
 
-#: templates/report.html.j2:207 templates/report.html.j2:258
-#: templates/report.html.j2:289
+#: templates/report.html.j2:207 templates/report.html.j2:264
+#: templates/report.html.j2:295
 msgid "Loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:207 templates/report.html.j2:289
+#: templates/report.html.j2:207 templates/report.html.j2:295
 msgid "CR_eff (+loop)"
 msgstr "CR_eff (+loop)"
 
@@ -575,11 +586,11 @@ msgstr "CR_eff (+loop)"
 msgid "Verdict"
 msgstr "Verdict"
 
-#: templates/report.html.j2:210 templates/report.html.j2:255
+#: templates/report.html.j2:210 templates/report.html.j2:261
 msgid "low confidence"
 msgstr "low confidence"
 
-#: templates/report.html.j2:210 templates/report.html.j2:255
+#: templates/report.html.j2:210 templates/report.html.j2:261
 msgid "verdict not stable"
 msgstr "verdict not stable"
 
@@ -588,12 +599,12 @@ msgstr "verdict not stable"
 msgid "Stability %(pct)s"
 msgstr "Stability %(pct)s"
 
-#: templates/report.html.j2:212 templates/report.html.j2:259
+#: templates/report.html.j2:212 templates/report.html.j2:265
 msgid "calendar days"
 msgstr "days"
 
 #: templates/report.html.j2:212 templates/report.html.j2:236
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "(few)"
 msgstr "(few)"
 
@@ -747,57 +758,77 @@ msgid ""
 "typical\n"
 "    <b>net course</b>, aligned with the Δ%(w)s column. Ending negative → "
 "often below baseline\n"
-"    (overdosing); staying high → underdosing. Same clean-meal rule as the"
-" table (or all meals\n"
-"    if fewer than 3 clean); legend shows \"clean\" or \"all\". n can "
-"differ slightly when minute 0\n"
-"    has no CGM sample."
+"    (overdosing); staying high → underdosing. <b>All meals</b> of a slot "
+"are shown here, like the\n"
+"    absolute curve above: this is what happened, without any selection. n"
+" can differ slightly when\n"
+"    minute 0 has no CGM sample."
 msgstr ""
+""
 "Each meal is set to <b>0 at minute 0</b>, then the median is taken — the "
 "typical\n"
 "    <b>net course</b>, aligned with the Δ%(w)s column. Ending negative → "
 "often below baseline\n"
-"    (overdosing); staying high → underdosing. Same clean-meal rule as the"
-" table (or all meals\n"
-"    if fewer than 3 clean); legend shows \"clean\" or \"all\". n can "
-"differ slightly when minute 0\n"
-"    has no CGM sample."
+"    (overdosing); staying high → underdosing. <b>All meals</b> of a slot "
+"are shown here, like the\n"
+"    absolute curve above: this is what happened, without any selection. n"
+" can differ slightly when\n"
+"    minute 0 has no CGM sample."
+
+#: templates/report.html.j2:249
+msgid "Selection used for the verdict:"
+msgstr "Selection used for the verdict:"
 
 #: templates/report.html.j2:251
+msgid ""
+"The verdict uses only meals without another meal in the window and "
+"without a large CGM\n"
+"    gap. The value in brackets is how far that selection would move the "
+"curve above — a small number\n"
+"    means the picture shown also describes what the verdict rests on."
+msgstr ""
+""
+"The verdict uses only meals without another meal in the window and "
+"without a large CGM\n"
+"    gap. The value in brackets is how far that selection would move the "
+"curve above — a small number\n"
+"    means the picture shown also describes what the verdict rests on."
+
+#: templates/report.html.j2:257
 msgid "Derivations from the curve shape &amp; possible approaches"
 msgstr "Derivations from the curve shape &amp; possible approaches"
 
-#: templates/report.html.j2:256
+#: templates/report.html.j2:262
 msgid "Peak"
 msgstr "Peak"
 
-#: templates/report.html.j2:256
+#: templates/report.html.j2:262
 msgid "after"
 msgstr "after"
 
-#: templates/report.html.j2:257
+#: templates/report.html.j2:263
 msgid "nadir"
 msgstr "nadir"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "Spread"
 msgstr "Spread"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 #, python-format
 msgid "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 msgstr "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 #, python-format
 msgid "stability %(pct)s"
 msgstr "stability %(pct)s"
 
-#: templates/report.html.j2:265
+#: templates/report.html.j2:271
 msgid ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
@@ -805,11 +836,11 @@ msgstr ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
 
-#: templates/report.html.j2:270
+#: templates/report.html.j2:276
 msgid "What CR_eff means — and what it does not"
 msgstr "What CR_eff means — and what it does not"
 
-#: templates/report.html.j2:272
+#: templates/report.html.j2:278
 msgid ""
 "<b>CR_eff is an approach, not a target value.</b> It converts the basal "
 "the loop pushed in\n"
@@ -820,36 +851,36 @@ msgstr ""
 "the loop pushed in\n"
 "    into an \"effectively used\" ratio: <code>CR_eff = CHO / (bolus + "
 "loop extra basal)</code>."
-
-#: templates/report.html.j2:274
-#, python-format
-msgid ""
-"Example %(label)s: %(cho)s g on\n"
-"    (%(bol)s U bolus + %(loop)s U loop) ≈ <b>%(cre)s</b>\n"
-"    instead of the configured ratio."
-msgstr ""
-"Example %(label)s: %(cho)s g on\n"
-"    (%(bol)s U bolus + %(loop)s U loop) ≈ <b>%(cre)s</b>\n"
-"    instead of the configured ratio."
-
-#: templates/report.html.j2:276
-#, python-format
-msgid ""
-"And even then the BG at\n"
-"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
-"boosted amount\n"
-"    was not enough within the window. <b>CR_eff is a lower bound "
-"here</b>: the actually needed CR\n"
-"    is even tighter (roughly: an additional ~Δ/ISF units)."
-msgstr ""
-"And even then the BG at\n"
-"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
-"boosted amount\n"
-"    was not enough within the window. <b>CR_eff is a lower bound "
-"here</b>: the actually needed CR\n"
-"    is even tighter (roughly: an additional ~Δ/ISF units)."
 
 #: templates/report.html.j2:280
+#, python-format
+msgid ""
+"Example %(label)s: %(cho)s g on\n"
+"    (%(bol)s U bolus + %(loop)s U loop) ≈ <b>%(cre)s</b>\n"
+"    instead of the configured ratio."
+msgstr ""
+"Example %(label)s: %(cho)s g on\n"
+"    (%(bol)s U bolus + %(loop)s U loop) ≈ <b>%(cre)s</b>\n"
+"    instead of the configured ratio."
+
+#: templates/report.html.j2:282
+#, python-format
+msgid ""
+"And even then the BG at\n"
+"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
+"boosted amount\n"
+"    was not enough within the window. <b>CR_eff is a lower bound "
+"here</b>: the actually needed CR\n"
+"    is even tighter (roughly: an additional ~Δ/ISF units)."
+msgstr ""
+"And even then the BG at\n"
+"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
+"boosted amount\n"
+"    was not enough within the window. <b>CR_eff is a lower bound "
+"here</b>: the actually needed CR\n"
+"    is even tighter (roughly: an additional ~Δ/ISF units)."
+
+#: templates/report.html.j2:286
 msgid ""
 "<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact "
 "pump setting.\n"
@@ -863,27 +894,27 @@ msgstr ""
 "corrections/exercise/adaptation possible).\n"
 "    Small step with the team; re-check after ~1–2 weeks."
 
-#: templates/report.html.j2:286
+#: templates/report.html.j2:292
 msgid "Per-meal detail"
 msgstr "Per-meal detail"
 
-#: templates/report.html.j2:288
+#: templates/report.html.j2:294
 msgid "Time"
 msgstr "Time"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "hypo rescue in the window"
 msgstr "hypo rescue in the window"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "contaminated window"
 msgstr "contaminated window"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "CGM gap in the window"
 msgstr "CGM gap in the window"
 
-#: templates/report.html.j2:296
+#: templates/report.html.j2:302
 #, python-format
 msgid ""
 "⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a "
@@ -896,72 +927,72 @@ msgstr ""
 " over 25 min in the window (excluded from the clean median when enough "
 "other meals exist)."
 
-#: templates/report.html.j2:300
+#: templates/report.html.j2:306
 msgid "Interpretation &amp; limitations"
 msgstr "Interpretation &amp; limitations"
 
-#: templates/report.html.j2:303
-msgid ""
-"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
-" instruction."
-msgstr ""
-"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
-" instruction."
-
-#: templates/report.html.j2:305
-msgid ""
-"• Under CamAPS Auto Mode the loop compensates continuously; that is "
-"exactly why the loop extra\n"
-"      basal is the meaningful signal. The algorithm adapts over days and "
-"can partly smooth out\n"
-"      longer-standing misconfigurations."
-msgstr ""
-"• Under CamAPS Auto Mode the loop compensates continuously; that is "
-"exactly why the loop extra\n"
-"      basal is the meaningful signal. The algorithm adapts over days and "
-"can partly smooth out\n"
-"      longer-standing misconfigurations."
-
-#: templates/report.html.j2:308
-msgid ""
-"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
-"are dampened by medians,\n"
-"      not eliminated; slots with few \"clean\" meals"
-msgstr ""
-"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
-"are dampened by medians,\n"
-"      not eliminated; slots with few \"clean\" meals"
-
 #: templates/report.html.j2:309
-msgid "are less certain."
-msgstr "are less certain."
-
-#: templates/report.html.j2:310
 msgid ""
-"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
-"cannot be detected automatically.\n"
-"      If either mode is active somewhere in the post-meal window, loop "
-"extra basal and CR signals can be\n"
-"      distorted — interpret such windows with the care team; exclude them"
-" mentally from CR conclusions if known."
+"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
+" instruction."
 msgstr ""
-"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
-"cannot be detected automatically.\n"
-"      If either mode is active somewhere in the post-meal window, loop "
-"extra basal and CR signals can be\n"
-"      distorted — interpret such windows with the care team; exclude them"
-" mentally from CR conclusions if known."
+"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
+" instruction."
 
-#: templates/report.html.j2:313
+#: templates/report.html.j2:311
 msgid ""
-"• The fasting basal as a reference (mean of the nights) assumes meal"
-"-/correction-free nights 00:00–06:00."
+"• Under CamAPS Auto Mode the loop compensates continuously; that is "
+"exactly why the loop extra\n"
+"      basal is the meaningful signal. The algorithm adapts over days and "
+"can partly smooth out\n"
+"      longer-standing misconfigurations."
 msgstr ""
-"• The fasting basal as a reference (mean of the nights) assumes meal"
-"-/correction-free nights 00:00–06:00."
+"• Under CamAPS Auto Mode the loop compensates continuously; that is "
+"exactly why the loop extra\n"
+"      basal is the meaningful signal. The algorithm adapts over days and "
+"can partly smooth out\n"
+"      longer-standing misconfigurations."
 
 #: templates/report.html.j2:314
 msgid ""
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
+"are dampened by medians,\n"
+"      not eliminated; slots with few \"clean\" meals"
+msgstr ""
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
+"are dampened by medians,\n"
+"      not eliminated; slots with few \"clean\" meals"
+
+#: templates/report.html.j2:315
+msgid "are less certain."
+msgstr "are less certain."
+
+#: templates/report.html.j2:316
+msgid ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
+"cannot be detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop "
+"extra basal and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them"
+" mentally from CR conclusions if known."
+msgstr ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
+"cannot be detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop "
+"extra basal and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them"
+" mentally from CR conclusions if known."
+
+#: templates/report.html.j2:319
+msgid ""
+"• The fasting basal as a reference (mean of the nights) assumes meal"
+"-/correction-free nights 00:00–06:00."
+msgstr ""
+"• The fasting basal as a reference (mean of the nights) assumes meal"
+"-/correction-free nights 00:00–06:00."
+
+#: templates/report.html.j2:320
+msgid ""
 "• <b>Stability</b> (shown next to a verdict where enough meals on enough "
 "separate days\n"
 "      exist) resamples whole recorded days with replacement and re-runs "
@@ -986,11 +1017,11 @@ msgstr ""
 " become clinically right by\n"
 "      that alone. The thresholds for high/moderate/low are heuristic."
 
-#: templates/report.html.j2:324
+#: templates/report.html.j2:330
 msgid "Daily overview — CGM · bolus · basal"
 msgstr "Daily overview — CGM · bolus · basal"
 
-#: templates/report.html.j2:325
+#: templates/report.html.j2:331
 #, python-format
 msgid ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
@@ -1452,4 +1483,33 @@ msgstr ""
 
 #~ msgid "median |rate/fasting − 1| %(pct)s %%"
 #~ msgstr ""
+
+#~ msgid ""
+#~ "Each meal is set to <b>0 at "
+#~ "minute 0</b>, then the median is "
+#~ "taken — the typical\n"
+#~ "    <b>net course</b>, aligned with the"
+#~ " Δ%(w)s column. Ending negative → "
+#~ "often below baseline\n"
+#~ "    (overdosing); staying high → "
+#~ "underdosing. Same clean-meal rule as "
+#~ "the table (or all meals\n"
+#~ "    if fewer than 3 clean); legend"
+#~ " shows \"clean\" or \"all\". n can"
+#~ " differ slightly when minute 0\n"
+#~ "    has no CGM sample."
+#~ msgstr ""
+#~ "Each meal is set to <b>0 at "
+#~ "minute 0</b>, then the median is "
+#~ "taken — the typical\n"
+#~ "    <b>net course</b>, aligned with the"
+#~ " Δ%(w)s column. Ending negative → "
+#~ "often below baseline\n"
+#~ "    (overdosing); staying high → "
+#~ "underdosing. Same clean-meal rule as "
+#~ "the table (or all meals\n"
+#~ "    if fewer than 3 clean); legend"
+#~ " shows \"clean\" or \"all\". n can"
+#~ " differ slightly when minute 0\n"
+#~ "    has no CGM sample."
 

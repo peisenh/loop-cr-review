@@ -242,9 +242,15 @@ img { width: 100%; border-radius: 8px }
   <div class="note" style="margin-top: 8px">
     {% trans w=wlab %}Each meal is set to <b>0 at minute 0</b>, then the median is taken — the typical
     <b>net course</b>, aligned with the Δ{{ w }} column. Ending negative → often below baseline
-    (overdosing); staying high → underdosing. Same clean-meal rule as the table (or all meals
-    if fewer than 3 clean); legend shows "clean" or "all". n can differ slightly when minute 0
-    has no CGM sample.{% endtrans %}</div>
+    (overdosing); staying high → underdosing. <b>All meals</b> of a slot are shown here, like the
+    absolute curve above: this is what happened, without any selection. n can differ slightly when
+    minute 0 has no CGM sample.{% endtrans %}
+    {% if selection %}<br>
+    <b>{% trans %}Selection used for the verdict:{% endtrans %}</b>
+    {% for s in selection %}{{ s.label }} {{ s.used }}/{{ s.total }} ({{ s.shift }} {{ unit }}){% if not loop.last %} · {% endif %}{% endfor %}.
+    {% trans %}The verdict uses only meals without another meal in the window and without a large CGM
+    gap. The value in brackets is how far that selection would move the curve above — a small number
+    means the picture shown also describes what the verdict rests on.{% endtrans %}{% endif %}</div>
 </div>
 
 <div class="card">

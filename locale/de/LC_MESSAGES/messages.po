@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-20 17:02+0000\n"
+"POT-Creation-Date: 2026-08-21 05:07+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: de\n"
@@ -32,15 +32,15 @@ msgstr "Abend"
 msgid "Other"
 msgstr "Sonstige"
 
-#: loop_cr_review.py:903 templates/report.html.j2:302
+#: loop_cr_review.py:903 templates/report.html.j2:308
 msgid "too weak → tighten"
 msgstr "zu schwach → straffen"
 
-#: loop_cr_review.py:904 templates/report.html.j2:302
+#: loop_cr_review.py:904 templates/report.html.j2:308
 msgid "too strong → loosen"
 msgstr "zu stark → lockern"
 
-#: loop_cr_review.py:905 templates/report.html.j2:302
+#: loop_cr_review.py:905 templates/report.html.j2:308
 msgid "plausibly adequate"
 msgstr "plausibel passend"
 
@@ -298,87 +298,87 @@ msgstr ""
 ". Klärung (programmierte Ratio vs. Korrekturfaktor vs. Timing) durch das "
 "Team.<br>"
 
-#: loop_cr_review.py:1192 loop_cr_review.py:1219
+#: loop_cr_review.py:1192 loop_cr_review.py:1247
 msgid "Minutes after meal"
 msgstr "Minuten ab Mahlzeit"
 
-#: loop_cr_review.py:1220
+#: loop_cr_review.py:1248
 #, python-format
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s ggü. Mahlzeitbeginn"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Monday"
 msgstr "Montag"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Tuesday"
 msgstr "Dienstag"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Wednesday"
 msgstr "Mittwoch"
 
-#: loop_cr_review.py:1229
+#: loop_cr_review.py:1257
 msgid "Thursday"
 msgstr "Donnerstag"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Friday"
 msgstr "Freitag"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Saturday"
 msgstr "Samstag"
 
-#: loop_cr_review.py:1230
+#: loop_cr_review.py:1258
 msgid "Sunday"
 msgstr "Sonntag"
 
-#: loop_cr_review.py:1318
+#: loop_cr_review.py:1346
 #, python-format
 msgid "%(label)s = everything outside the other windows"
 msgstr "%(label)s = alles außerhalb der übrigen Fenster"
 
-#: loop_cr_review.py:1320
+#: loop_cr_review.py:1348
 #, python-format
 msgid "%(label)s = %(start)s–%(end)s"
 msgstr "%(label)s = %(start)s–%(end)s"
 
-#: loop_cr_review.py:1334
+#: loop_cr_review.py:1362
 msgid " ⚠︎ (hypo — secure first)"
 msgstr " ⚠︎ (Hypo — zuerst absichern)"
 
-#: loop_cr_review.py:1425
+#: loop_cr_review.py:1453
 msgid "Too few meals per slot for a robust shape description."
 msgstr "Zu wenige Mahlzeiten je Slot für eine belastbare Formbeschreibung."
 
-#: loop_cr_review.py:1467
+#: loop_cr_review.py:1495
 #, python-format
 msgid "Very High &gt;%(v)s"
 msgstr "Sehr hoch &gt;%(v)s"
 
-#: loop_cr_review.py:1468
+#: loop_cr_review.py:1496
 #, python-format
 msgid "High %(lo)s–%(hi)s"
 msgstr "Hoch %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1470
+#: loop_cr_review.py:1498
 #, python-format
 msgid "Target %(lo)s–%(hi)s"
 msgstr "Zielbereich %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1472
+#: loop_cr_review.py:1500
 #, python-format
 msgid "Low %(lo)s–%(hi)s"
 msgstr "Niedrig %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:1474
+#: loop_cr_review.py:1502
 #, python-format
 msgid "Very Low &lt;%(v)s"
 msgstr "Sehr niedrig &lt;%(v)s"
 
-#: loop_cr_review.py:1504
+#: loop_cr_review.py:1532
 msgid "device unknown"
 msgstr "Gerät unbekannt"
 
@@ -547,7 +547,7 @@ msgstr ""
 "Zu wenig Zeit ohne Mahlzeit, um das Basal mit der Nacht zu vergleichen. "
 "Die Tabelle darunter bleibt nur Gesprächsstoff."
 
-#: templates/report.html.j2:206 templates/report.html.j2:288
+#: templates/report.html.j2:206 templates/report.html.j2:294
 msgid "Slot"
 msgstr "Slot"
 
@@ -559,8 +559,8 @@ msgstr "n (clean)"
 msgid "Ø CHO"
 msgstr "Ø CHO"
 
-#: templates/report.html.j2:206 templates/report.html.j2:258
-#: templates/report.html.j2:288
+#: templates/report.html.j2:206 templates/report.html.j2:264
+#: templates/report.html.j2:294
 msgid "CR (CHO/bolus)"
 msgstr "CR (CHO/Bolus)"
 
@@ -568,12 +568,12 @@ msgstr "CR (CHO/Bolus)"
 msgid "Bolus"
 msgstr "Bolus"
 
-#: templates/report.html.j2:207 templates/report.html.j2:258
-#: templates/report.html.j2:289
+#: templates/report.html.j2:207 templates/report.html.j2:264
+#: templates/report.html.j2:295
 msgid "Loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:207 templates/report.html.j2:289
+#: templates/report.html.j2:207 templates/report.html.j2:295
 msgid "CR_eff (+loop)"
 msgstr "CR_eff (+Loop)"
 
@@ -581,11 +581,11 @@ msgstr "CR_eff (+Loop)"
 msgid "Verdict"
 msgstr "Befund"
 
-#: templates/report.html.j2:210 templates/report.html.j2:255
+#: templates/report.html.j2:210 templates/report.html.j2:261
 msgid "low confidence"
 msgstr "unsichere Datenlage"
 
-#: templates/report.html.j2:210 templates/report.html.j2:255
+#: templates/report.html.j2:210 templates/report.html.j2:261
 msgid "verdict not stable"
 msgstr "Bewertung nicht stabil"
 
@@ -594,12 +594,12 @@ msgstr "Bewertung nicht stabil"
 msgid "Stability %(pct)s"
 msgstr "Stabilität %(pct)s"
 
-#: templates/report.html.j2:212 templates/report.html.j2:259
+#: templates/report.html.j2:212 templates/report.html.j2:265
 msgid "calendar days"
 msgstr "Tage"
 
 #: templates/report.html.j2:212 templates/report.html.j2:236
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "(few)"
 msgstr "(wenige)"
 
@@ -753,54 +753,71 @@ msgid ""
 "typical\n"
 "    <b>net course</b>, aligned with the Δ%(w)s column. Ending negative → "
 "often below baseline\n"
-"    (overdosing); staying high → underdosing. Same clean-meal rule as the"
-" table (or all meals\n"
-"    if fewer than 3 clean); legend shows \"clean\" or \"all\". n can "
-"differ slightly when minute 0\n"
-"    has no CGM sample."
+"    (overdosing); staying high → underdosing. <b>All meals</b> of a slot "
+"are shown here, like the\n"
+"    absolute curve above: this is what happened, without any selection. n"
+" can differ slightly when\n"
+"    minute 0 has no CGM sample."
 msgstr ""
-"Jede Mahlzeit auf <b>0 bei Minute 0</b> gesetzt, dann Median — typischer "
-"<b>Nettoverlauf</b>, abgestimmt auf die Δ%(w)s-Spalte. Ende negativ → oft"
-" unter Baseline (Überdosierung); bleibt hoch → Unterdosierung. Gleiche "
-"clean-Regel wie die Tabelle (oder alle Mahlzeiten bei &lt;3 clean); "
-"Legende „clean“ oder „all“. n kann leicht abweichen ohne CGM bei Minute "
-"0."
+"Jede Mahlzeit wird auf <b>0 bei Minute 0</b> gesetzt, dann wird der Median "
+"gebildet — der typische <b>Nettoverlauf</b>, passend zur Δ%(w)s-Spalte. Endet er "
+"negativ → oft unter der Ausgangslage (Überdeckung); bleibt er hoch → "
+"Unterdeckung. Gezeigt sind <b>alle Mahlzeiten</b> eines Slots, wie in der "
+"absoluten Kurve darüber: das ist der tatsächliche Verlauf, ohne Auswahl. n kann "
+"leicht abweichen, wenn bei Minute 0 kein CGM-Wert vorliegt."
+
+#: templates/report.html.j2:249
+msgid "Selection used for the verdict:"
+msgstr "Auswahl fürs Urteil:"
 
 #: templates/report.html.j2:251
+msgid ""
+"The verdict uses only meals without another meal in the window and "
+"without a large CGM\n"
+"    gap. The value in brackets is how far that selection would move the "
+"curve above — a small number\n"
+"    means the picture shown also describes what the verdict rests on."
+msgstr ""
+"Für das Urteil werden nur Mahlzeiten ohne weitere Mahlzeit im Fenster und ohne "
+"große CGM-Lücke verwendet. Der Klammerwert gibt an, um wie viel diese Auswahl "
+"die Kurve oben verschieben würde — ein kleiner Wert heißt, dass das gezeigte "
+"Bild auch das beschreibt, worauf das Urteil beruht."
+
+#: templates/report.html.j2:257
 msgid "Derivations from the curve shape &amp; possible approaches"
 msgstr "Ableitungen aus der Kurvenform &amp; mögliche Ansätze"
 
-#: templates/report.html.j2:256
+#: templates/report.html.j2:262
 msgid "Peak"
 msgstr "Peak"
 
-#: templates/report.html.j2:256
+#: templates/report.html.j2:262
 msgid "after"
 msgstr "nach"
 
-#: templates/report.html.j2:257
+#: templates/report.html.j2:263
 msgid "nadir"
 msgstr "Tief"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "Spread"
 msgstr "Streuung"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 msgid "loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 #, python-format
 msgid "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 msgstr "Beobachtete CR_eff %(cre)s (%(meals)s Mahlzeiten / %(days)s Tage)"
 
-#: templates/report.html.j2:259
+#: templates/report.html.j2:265
 #, python-format
 msgid "stability %(pct)s"
 msgstr "Stabilität %(pct)s"
 
-#: templates/report.html.j2:265
+#: templates/report.html.j2:271
 msgid ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
@@ -808,11 +825,11 @@ msgstr ""
 "Hypothesen/Kandidaten fürs Team-Gespräch, keine\n"
 "    Dosieranweisung. Unter Auto Mode prägt der Loop die Kurvenform mit."
 
-#: templates/report.html.j2:270
+#: templates/report.html.j2:276
 msgid "What CR_eff means — and what it does not"
 msgstr "Was bedeutet CR_eff — und was nicht"
 
-#: templates/report.html.j2:272
+#: templates/report.html.j2:278
 msgid ""
 "<b>CR_eff is an approach, not a target value.</b> It converts the basal "
 "the loop pushed in\n"
@@ -824,7 +841,7 @@ msgstr ""
 "    „effektiv gebrauchte\" Ratio um: <code>CR_eff = CHO / (Bolus + Loop-"
 "Mehrbasal)</code>."
 
-#: templates/report.html.j2:274
+#: templates/report.html.j2:280
 #, python-format
 msgid ""
 "Example %(label)s: %(cho)s g on\n"
@@ -835,7 +852,7 @@ msgstr ""
 "    (%(bol)s U Bolus + %(loop)s U Loop) ≈ <b>%(cre)s</b>\n"
 "    statt der angesetzten Ratio."
 
-#: templates/report.html.j2:276
+#: templates/report.html.j2:282
 #, python-format
 msgid ""
 "And even then the BG at\n"
@@ -852,7 +869,7 @@ msgstr ""
 "Untergrenze</b>: die tatsächlich nötige CR\n"
 "    liegt noch straffer (grob: zusätzlich ~Δ/ISF Einheiten)."
 
-#: templates/report.html.j2:280
+#: templates/report.html.j2:286
 msgid ""
 "<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact "
 "pump setting.\n"
@@ -865,27 +882,27 @@ msgstr ""
 "Korrekturen/Bewegung/Adaption möglich). Kleiner Schritt mit dem Team; "
 "Kontrolle nach ~1–2 Wochen."
 
-#: templates/report.html.j2:286
+#: templates/report.html.j2:292
 msgid "Per-meal detail"
 msgstr "Per-Mahlzeit-Detail"
 
-#: templates/report.html.j2:288
+#: templates/report.html.j2:294
 msgid "Time"
 msgstr "Zeit"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "hypo rescue in the window"
 msgstr "Hypo-Behandlung im Fenster"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "contaminated window"
 msgstr "kontaminiertes Fenster"
 
-#: templates/report.html.j2:293
+#: templates/report.html.j2:299
 msgid "CGM gap in the window"
 msgstr "CGM-Lücke im Fenster"
 
-#: templates/report.html.j2:296
+#: templates/report.html.j2:302
 #, python-format
 msgid ""
 "⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a "
@@ -898,11 +915,11 @@ msgstr ""
 "Lücke über 25 min im Fenster (bei genug anderen Mahlzeiten vom clean-"
 "Median ausgeschlossen)."
 
-#: templates/report.html.j2:300
+#: templates/report.html.j2:306
 msgid "Interpretation &amp; limitations"
 msgstr "Einordnung &amp; Grenzen"
 
-#: templates/report.html.j2:303
+#: templates/report.html.j2:309
 msgid ""
 "This is <b>decision evidence for the diabetes care team</b>, not a dosing"
 " instruction."
@@ -910,7 +927,7 @@ msgstr ""
 "Dies ist <b>Entscheidungs-Evidenz für das Diabetes-Team</b>, keine "
 "Dosieranweisung."
 
-#: templates/report.html.j2:305
+#: templates/report.html.j2:311
 msgid ""
 "• Under CamAPS Auto Mode the loop compensates continuously; that is "
 "exactly why the loop extra\n"
@@ -924,7 +941,7 @@ msgstr ""
 "kann länger bestehende\n"
 "      Fehleinstellungen teilweise glätten."
 
-#: templates/report.html.j2:308
+#: templates/report.html.j2:314
 msgid ""
 "• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
 "are dampened by medians,\n"
@@ -934,11 +951,11 @@ msgstr ""
 "Mahlzeiten) sind über Mediane\n"
 "      gedämpft, nicht eliminiert; Slots mit wenigen „clean\"-Mahlzeiten"
 
-#: templates/report.html.j2:309
+#: templates/report.html.j2:315
 msgid "are less certain."
 msgstr "sind unsicherer."
 
-#: templates/report.html.j2:310
+#: templates/report.html.j2:316
 msgid ""
 "• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
 "cannot be detected automatically.\n"
@@ -953,7 +970,7 @@ msgstr ""
 "verzerrt sein — solche Fenster mit dem Behandlungsteam einordnen; bei "
 "bekannter Nutzung mental von CR-Schlussfolgerungen ausnehmen."
 
-#: templates/report.html.j2:313
+#: templates/report.html.j2:319
 msgid ""
 "• The fasting basal as a reference (mean of the nights) assumes meal"
 "-/correction-free nights 00:00–06:00."
@@ -961,7 +978,7 @@ msgstr ""
 "• Fasten-Basal als Referenz (Mittel der Nächte) setzt "
 "mahlzeit-/korrekturfreie Nächte 00:00–06:00 Uhr voraus."
 
-#: templates/report.html.j2:314
+#: templates/report.html.j2:320
 msgid ""
 "• <b>Stability</b> (shown next to a verdict where enough meals on enough "
 "separate days\n"
@@ -986,11 +1003,11 @@ msgstr ""
 "nicht klinisch richtig. Die Schwellen für hoch/moderat/niedrig sind "
 "heuristisch."
 
-#: templates/report.html.j2:324
+#: templates/report.html.j2:330
 msgid "Daily overview — CGM · bolus · basal"
 msgstr "Tagesübersicht — CGM · Bolus · Basal"
 
-#: templates/report.html.j2:325
+#: templates/report.html.j2:331
 #, python-format
 msgid ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
@@ -1471,4 +1488,30 @@ msgstr ""
 
 #~ msgid "median |rate/fasting − 1| %(pct)s %%"
 #~ msgstr "Median |Rate/Fasten − 1| %(pct)s %%"
+
+#~ msgid ""
+#~ "Each meal is set to <b>0 at "
+#~ "minute 0</b>, then the median is "
+#~ "taken — the typical\n"
+#~ "    <b>net course</b>, aligned with the"
+#~ " Δ%(w)s column. Ending negative → "
+#~ "often below baseline\n"
+#~ "    (overdosing); staying high → "
+#~ "underdosing. Same clean-meal rule as "
+#~ "the table (or all meals\n"
+#~ "    if fewer than 3 clean); legend"
+#~ " shows \"clean\" or \"all\". n can"
+#~ " differ slightly when minute 0\n"
+#~ "    has no CGM sample."
+#~ msgstr ""
+#~ "Jede Mahlzeit auf <b>0 bei Minute "
+#~ "0</b> gesetzt, dann Median — typischer"
+#~ " <b>Nettoverlauf</b>, abgestimmt auf die "
+#~ "Δ%(w)s-Spalte. Ende negativ → oft unter"
+#~ " Baseline (Überdosierung); bleibt hoch →"
+#~ " Unterdosierung. Gleiche clean-Regel wie"
+#~ " die Tabelle (oder alle Mahlzeiten "
+#~ "bei &lt;3 clean); Legende „clean“ oder"
+#~ " „all“. n kann leicht abweichen ohne"
+#~ " CGM bei Minute 0."
 

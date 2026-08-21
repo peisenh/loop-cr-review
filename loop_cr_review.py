@@ -1198,23 +1198,51 @@ def slot_curves_chart(meals, window, val_at, dark=False):
 
 
 
-def slot_norm_curves_chart(meals, window, val_at, by_slot, dark=False):
-    """Baseline-normalised median curves per slot as base64 PNG (light or dark)."""
+def selection_effect(meals, by_slot, window, val_at):
+    """How much the verdict's meal selection would move the normalised curves.
+
+    The chart shows all meals; the verdict uses only uncontaminated ones. This
+    quantifies the gap instead of asking the reader to compare two pictures:
+    per slot, how many meals are clean and the largest deviation between the
+    all-meals curve and the clean-only curve. A small number means the neutral
+    chart also describes what the verdict rests on. -> list of dicts.
+    """
+    out = []
+    for slot in _slot_state()[1]:
+        rows = by_slot.get(slot, [])
+        if not rows:
+            continue
+        use, _n_clean, clean_only = select_slot_rows(rows)
+        clean_times = {r["time"] for r in use} if clean_only else None
+        curve_all, n_all = slot_norm_curve(meals, slot, window, val_at, None)
+        curve_sel, n_sel = slot_norm_curve(meals, slot, window, val_at, clean_times)
+        if curve_all is None or curve_sel is None:
+            continue
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            shift = float(np.nanmax(np.abs(np.array(curve_all) - np.array(curve_sel))))
+        out.append({"label": _slot_state()[2][slot], "used": n_sel, "total": n_all,
+                    "shift": "—" if np.isnan(shift) else fmt_delta(shift).lstrip("+")})
+    return out
+
+
+def slot_norm_curves_chart(meals, window, val_at, dark=False):
+    """Baseline-normalised median curves per slot as base64 PNG (light or dark).
+
+    Uses **all** meals of a slot, like the absolute curve chart does: this is a
+    depiction of what happened, not of what the verdict rests on. Which meals the
+    verdict actually uses, and how far that selection would move these curves, is
+    reported separately by :func:`selection_effect`.
+    """
     grid = np.arange(0, window + 1, 10)
     with _chart_theme(dark):
         fig, ax = plt.subplots(figsize=(10, 3.6))
         ax.axhline(0, color="#888", lw=.8)
         for slot in _slot_state()[1]:
-            clean_times = None
-            if by_slot is not None:
-                use, _n, only = select_slot_rows(by_slot.get(slot, []))
-                if only:
-                    clean_times = {r["time"] for r in use}
-            curve, n = slot_norm_curve(meals, slot, window, val_at, clean_times)
+            curve, n = slot_norm_curve(meals, slot, window, val_at, None)
             if curve is not None:
-                basis = "clean" if clean_times is not None else "alle"
                 ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
-                        label=f"{_slot_state()[2][slot]} (n={n}, {basis})")
+                        label=f"{_slot_state()[2][slot]} (n={n})")
         ax.set_xlim(0, window)
         ax.set_xlabel(_("Minutes after meal"))
         ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": glucose_unit()})
@@ -1515,8 +1543,9 @@ def build_context(base, window, wlab, daily=False, lang="de"):
         "agp_img": agp_chart(times, gluc), "agp_img_dark": agp_chart(times, gluc, dark=True),
         "slot_img": slot_curves_chart(meals, window, val_at),
         "slot_img_dark": slot_curves_chart(meals, window, val_at, dark=True),
-        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at, by_slot),
-        "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, by_slot, dark=True),
+        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
+        "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, dark=True),
+        "selection": selection_effect(meals, by_slot, window, val_at),
         "daily_days": _daily_days_dual(times, gluc, base, basal) if daily else [],
         "curve_cap": curve_cap,
         "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
