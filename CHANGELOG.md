@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- CGM window lookup by searchsorted (same mean/gap rule).
+
 ## [0.11.0] - 2026-08-21
 
 ### Added

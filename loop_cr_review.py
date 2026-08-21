@@ -692,11 +692,22 @@ def consensus_metrics(times, gluc):
 
 
 def make_glucose_lookup(times, gluc):
-    """Closure: median glucose ~minutes after ref (+-tol)."""
+    """Closure: mean glucose ~minutes after ref (+-tol). Same window as before.
+
+    ``times`` is sorted. Lookup is by binary search so long CGM traces stay
+    cheap; the value is still the arithmetic mean of every sample in [lo, hi].
+    """
+    t64 = np.asarray(times, dtype="datetime64[ns]")
+    g64 = np.asarray(gluc, dtype=float)
+
     def val_at(ref, minutes, tol=12):
-        lo, hi = ref + timedelta(minutes=minutes - tol), ref + timedelta(minutes=minutes + tol)
-        mask = (times >= lo) & (times <= hi)
-        return float(gluc[mask].mean()) if mask.any() else np.nan
+        lo = np.datetime64(ref + timedelta(minutes=minutes - tol), "ns")
+        hi = np.datetime64(ref + timedelta(minutes=minutes + tol), "ns")
+        i = int(np.searchsorted(t64, lo, side="left"))
+        j = int(np.searchsorted(t64, hi, side="right"))
+        if j <= i:
+            return np.nan
+        return float(np.mean(g64[i:j]))
     return val_at
 
 
@@ -711,14 +722,19 @@ def cgm_gap_in_window(start, window_min, times, max_gap_min=MAX_GAP_MIN):
     if times is None or len(times) == 0:
         return True
     end = start + timedelta(minutes=int(window_min))
-    in_win = [t for t in times if start <= t <= end]
-    if not in_win:
+    t64 = np.asarray(times, dtype="datetime64[ns]")
+    i = int(np.searchsorted(t64, np.datetime64(start, "ns"), side="left"))
+    j = int(np.searchsorted(t64, np.datetime64(end, "ns"), side="right"))
+    if j <= i:
         return True
-    points = [start, *in_win, end]
-    limit_sec = float(max_gap_min) * 60.0
-    for a, b in zip(points, points[1:]):
-        if (b - a).total_seconds() > limit_sec:
-            return True
+    limit = np.timedelta64(int(max_gap_min), "m")
+    win = t64[i:j]
+    if win[0] - np.datetime64(start, "ns") > limit:
+        return True
+    if np.datetime64(end, "ns") - win[-1] > limit:
+        return True
+    if win.size > 1 and np.any(np.diff(win) > limit):
+        return True
     return False
 
 
