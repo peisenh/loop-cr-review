@@ -1442,10 +1442,11 @@ def _slots_context(by_slot, meals, window, val_at, stability=None, selected=None
 def _meals_context(rows):
     out = []
     for row in sorted(rows, key=lambda r: r["time"]):
-        cls = ""
-        if not np.isnan(row["d4"]):
-            weak = (row["exc"] / row["bolus"] if row["bolus"] else 0) > LOOP_RATIO and row["d4"] > g(D4_WEAK)
-            cls = "strong" if row["d4"] < g(D4_STRONG) else "weak" if weak else ""
+        # No verdict class per meal: the row colours used to mirror the slot table
+        # while following a different rule, and a single meal carries almost no
+        # signal (see VALIDATION.md). Only a marked drop is flagged, on the Δ4h
+        # value itself — that is a measurement, not an assessment.
+        low_d4 = not np.isnan(row["d4"]) and row["d4"] < g(D4_STRONG)
         out.append({
             "time": f"{row['time']:%d.%m %H:%M}", "label": _slot_state()[2][row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
@@ -1453,7 +1454,7 @@ def _meals_context(rows):
             "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
             "contam": row["contam"], "hypo_rescue": row.get("hypo_rescue", False),
             "cgm_gap": row.get("cgm_gap", False),
-            "cls": cls,
+            "low_d4": low_d4,
         })
     return out
 

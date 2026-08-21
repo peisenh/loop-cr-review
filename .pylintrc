@@ -9,10 +9,11 @@ max-locals=26
 # single file past 1650.
 max-module-lines=1750
 # generate_report() mirrors the CLI options (lang/window/daily/slots/template)
-# as keyword arguments; six is the natural arity of that front-end boundary.
+# as keyword arguments (lang/window/daily/dark/slots/template); that is the
+# natural arity of the front-end boundary, not accidental growth.
 # The analysis/chart functions take the same number of data inputs.
-max-args=6
-max-positional-arguments=6
+max-args=7
+max-positional-arguments=7
 # N_ is the conventional gettext_noop marker for deferred translation.
 good-names=N_
 

@@ -9,6 +9,19 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The per-meal detail table no longer colours whole rows. Those colours mirrored
+  the slot table while following a different rule with different thresholds, and
+  they were explained nowhere — the same red meant "verdict: too strong" above and
+  "this meal ended low" below. A single meal also carries almost no signal (two of
+  four slots showed no per-meal relation at all in the real-data check), so a
+  per-meal verdict is not supportable. What remains is the Δ4h value itself set in
+  colour when the meal ended well below its starting value: a measurement with a
+  safety bearing, not an assessment. The footnote says so.
+- `.pylintrc` allows one more keyword argument on the front-end boundary, which
+  `dark_charts` had pushed past the limit, and the English catalog entry for that
+  option is filled in.
+
 ## [0.11.1] - 2026-08-21
 
 ### Changed
