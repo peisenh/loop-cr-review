@@ -9,18 +9,32 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- `selection_effect()`: per slot, how many meals the verdict actually uses and how
+  far that selection would move the normalised curves. Reported in its own section
+  of the method part, so the effect of the selection is a number instead of an
+  invitation to compare two charts.
+
 ### Changed
+- The report is split into two labelled parts and an appendix. **Part 1** shows
+  what was recorded — key figures, time in ranges, AGP, the absolute and the
+  normalised postprandial courses — with no selection and no assessment.
+  **Part 2** holds everything that depends on the method and opens with "How to
+  read this report", so the caveats come before the verdicts instead of after
+  them. The daily plots stay neutral and move to an **appendix**. Nothing is
+  computed differently; the change makes the boundary between measurement and
+  interpretation explicit instead of implicit.
 - The normalised slot-curve chart now shows **all** meals of a slot, like the
   absolute chart above it, instead of silently switching to the verdict's
-  clean-meal selection. The two charts had been drawn from different meal sets,
-  which was never stated next to the picture. The chart is now a depiction of
-  what happened; the selection is reported separately.
+  clean-meal selection. Both charts had been drawn from different meal sets
+  without that being stated next to the picture.
 
-### Added
-- `selection_effect()` and a line under that chart: how many meals per slot the
-  verdict actually uses and, more to the point, how far that selection would move
-  the curve shown. A small value means the neutral picture also describes what
-  the verdict rests on — instead of asking the reader to compare two charts.
+### Fixed
+- Captions that pointed at the wrong place after the reordering: the selection
+  note names the normalised curves in Part 1 rather than "the curve above", the
+  neutral caption no longer refers forward to a column that only exists in
+  Part 2, and the absolute-curve caption no longer claims the normalised curves
+  use a different meal selection.
 
 ## [0.10.2] - 2026-08-20
 

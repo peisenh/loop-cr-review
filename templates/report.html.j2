@@ -69,6 +69,10 @@ h1 { font-size: 20px; margin: 0 }
 .disclaimer { background: var(--disc-bg); border: 1px solid var(--disc-border); border-left: 4px solid #c0392b;
   border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: var(--disc-ink); line-height: 1.5 }
 .disclaimer b { color: var(--disc-b) }
+.part { margin: 22px 0 10px; padding: 0 2px }
+.part h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin: 0;
+  color: var(--muted); border-bottom: 2px solid var(--line); padding-bottom: 5px }
+.part-sub { font-size: 11.5px; color: var(--gen); margin-top: 5px; line-height: 1.45 }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px }
 h2 { font-size: 14px; margin: 0 0 10px }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px }
@@ -150,6 +154,49 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 
+
+<div class="part"><h2>{% trans %}Part 1 — what the data shows{% endtrans %}</h2>
+  <div class="part-sub">{% trans %}Measurements and courses as recorded. No selection, no assessment.{% endtrans %}</div></div>
+<div class="grid">
+  <div class="kpi"><div class="v">{{ mean }}</div><div class="l">{% trans unit=unit %}mean glucose {{ unit }}{% endtrans %}</div></div>
+  <div class="kpi"><div class="v">{{ gmi }}%</div><div class="l">GMI</div></div>
+  <div class="kpi"><div class="v">{{ cv }}%</div><div class="l">{% trans %}CV (target ≤36%){% endtrans %}</div></div>
+  <div class="kpi"><div class="v">{{ tir }}%</div><div class="l">Time in Range</div></div>
+</div>
+
+
+<div class="card">
+  <h2>Time in Ranges</h2>
+  {% for band in tir_bands %}
+  <div class="row"><span>{{ band.label | safe }}</span>
+    <div class="track"><div class="fill" style="width: {{ band.width }}%; background: {{ band.color }}"></div></div>
+    <b>{{ band.val }}%</b></div>
+  {% endfor %}
+  <div class="note" style="margin-top: 6px">
+    {% trans lo=bg70, vlo=bg54, hi=bg140, unit=unit %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%. TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
+</div>
+<div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}"><img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}"></div></div>
+
+<div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_img_dark }}"></div>
+  <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
+  <div class="note" style="margin-top: 6px">{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}</div></div>
+
+<div class="card">
+  <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
+  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}"></div>
+  <div class="note" style="margin-top: 8px">
+    {% trans w=wlab %}Each meal is set to <b>0 at minute 0</b>, then the median is taken — the typical
+    <b>net course</b>. Its value at the end is the Δ{{ w }} used later. Ending negative → often below baseline
+    (overdosing); staying high → underdosing. <b>All meals</b> of a slot are shown here, like the
+    absolute curve above: this is what happened, without any selection. n can differ slightly when
+    minute 0 has no CGM sample.{% endtrans %}</div>
+</div>
+
+<div class="part"><h2>{% trans %}Part 2 — assessment and how to read it{% endtrans %}</h2>
+  <div class="part-sub">{% trans %}Everything from here rests on the method described in this part.{% endtrans %}</div></div>
+
 <div class="methodbox">
   <b>{% trans %}How to read this report (CamAPS FX Auto Mode){% endtrans %}</b><br>
   {% trans %}• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects via
@@ -165,32 +212,29 @@ img { width: 100%; border-radius: 8px }
   {% trans %}• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing instruction.{% endtrans %}
 </div>
 
-<div class="grid">
-  <div class="kpi"><div class="v">{{ mean }}</div><div class="l">{% trans unit=unit %}mean glucose {{ unit }}{% endtrans %}</div></div>
-  <div class="kpi"><div class="v">{{ gmi }}%</div><div class="l">GMI</div></div>
-  <div class="kpi"><div class="v">{{ cv }}%</div><div class="l">{% trans %}CV (target ≤36%){% endtrans %}</div></div>
-  <div class="kpi"><div class="v">{{ tir }}%</div><div class="l">Time in Range</div></div>
-</div>
-
 <div class="card">
-  <h2>Time in Ranges</h2>
-  {% for band in tir_bands %}
-  <div class="row"><span>{{ band.label | safe }}</span>
-    <div class="track"><div class="fill" style="width: {{ band.width }}%; background: {{ band.color }}"></div></div>
-    <b>{{ band.val }}%</b></div>
-  {% endfor %}
-  <div class="note" style="margin-top: 6px">
-    {% trans lo=bg70, vlo=bg54, hi=bg140, unit=unit %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%. TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
+  <h2>{% trans %}Interpretation &amp; limitations{% endtrans %}</h2>
+  <div class="note">
+    <span class="tag ts">{% trans %}too strong → loosen{% endtrans %}</span><span class="tag tw">{% trans %}too weak → tighten{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br>
+    {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
+    {{ cr_note | safe }}
+    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
+      basal is the meaningful signal. The algorithm adapts over days and can partly smooth out
+      longer-standing misconfigurations.{% endtrans %}<br>
+    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
+      not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
+    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
+      If either mode is active somewhere in the post-meal window, loop extra basal and CR signals can be
+      distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br>
+    {% trans %}• The fasting basal as a reference (mean of the nights) assumes meal-/correction-free nights 00:00–06:00.{% endtrans %}<br>
+    {% trans %}• <b>Stability</b> (shown next to a verdict where enough meals on enough separate days
+      exist) resamples whole recorded days with replacement and re-runs the same rule. It states how
+      sensitive the verdict is to <b>which meals happened to be recorded</b> — not how likely the carb
+      ratio is correct, and not a confidence interval for a true value. A verdict that flips under
+      resampling rests on a few individual meals; one that holds does not become clinically right by
+      that alone. The thresholds for high/moderate/low are heuristic.{% endtrans %}
+  </div>
 </div>
-
-<div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}"><img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}"></div></div>
-
-<div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_img_dark }}"></div>
-  <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
-  <div class="note" style="margin-top: 6px">{% trans %}This absolute median uses <b>all meals</b> in each slot (including contaminated windows). The CR table and the baseline-normalised curves below prefer contamination-free meals (same rule: at least 3 clean, otherwise all) — so the count (n) and the shape can differ from those sections on purpose.{% endtrans %}</div></div>
-
 <div class="card">
   <h2>{% trans %}CR assessment per slot (loop-aware){% endtrans %}</h2>
   {% if rest %}
@@ -237,20 +281,14 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 <div class="card">
-  <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}"></div>
-  <div class="note" style="margin-top: 8px">
-    {% trans w=wlab %}Each meal is set to <b>0 at minute 0</b>, then the median is taken — the typical
-    <b>net course</b>, aligned with the Δ{{ w }} column. Ending negative → often below baseline
-    (overdosing); staying high → underdosing. <b>All meals</b> of a slot are shown here, like the
-    absolute curve above: this is what happened, without any selection. n can differ slightly when
-    minute 0 has no CGM sample.{% endtrans %}
-    {% if selection %}<br>
+  <h2>{% trans %}Which meals the verdict uses{% endtrans %}</h2>
+  <div class="note">{% if selection %}
     <b>{% trans %}Selection used for the verdict:{% endtrans %}</b>
     {% for s in selection %}{{ s.label }} {{ s.used }}/{{ s.total }} ({{ s.shift }} {{ unit }}){% if not loop.last %} · {% endif %}{% endfor %}.
     {% trans %}The verdict uses only meals without another meal in the window and without a large CGM
-    gap. The value in brackets is how far that selection would move the curve above — a small number
-    means the picture shown also describes what the verdict rests on.{% endtrans %}{% endif %}</div>
+    gap. The value in brackets is how far that selection would move the baseline-normalised curves
+    shown in Part 1 — a small number means those curves also describe what the verdict rests
+    on.{% endtrans %}{% endif %}</div>
 </div>
 
 <div class="card">
@@ -302,31 +340,10 @@ img { width: 100%; border-radius: 8px }
   <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window (excluded from the clean median when enough other meals exist).{% endtrans %}</div>
 </div>
 
-<div class="card">
-  <h2>{% trans %}Interpretation &amp; limitations{% endtrans %}</h2>
-  <div class="note">
-    <span class="tag ts">{% trans %}too strong → loosen{% endtrans %}</span><span class="tag tw">{% trans %}too weak → tighten{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br>
-    {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
-    {{ cr_note | safe }}
-    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
-      basal is the meaningful signal. The algorithm adapts over days and can partly smooth out
-      longer-standing misconfigurations.{% endtrans %}<br>
-    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
-      not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
-    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
-      If either mode is active somewhere in the post-meal window, loop extra basal and CR signals can be
-      distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br>
-    {% trans %}• The fasting basal as a reference (mean of the nights) assumes meal-/correction-free nights 00:00–06:00.{% endtrans %}<br>
-    {% trans %}• <b>Stability</b> (shown next to a verdict where enough meals on enough separate days
-      exist) resamples whole recorded days with replacement and re-runs the same rule. It states how
-      sensitive the verdict is to <b>which meals happened to be recorded</b> — not how likely the carb
-      ratio is correct, and not a confidence interval for a true value. A verdict that flips under
-      resampling rests on a few individual meals; one that holds does not become clinically right by
-      that alone. The thresholds for high/moderate/low are heuristic.{% endtrans %}
-  </div>
-</div>
-
 {% if daily_days %}
+<div class="part"><h2>{% trans %}Appendix — daily courses{% endtrans %}</h2>
+  <div class="part-sub">{% trans %}Raw daily plots, unfiltered.{% endtrans %}</div></div>
+
 <div class="card"><h2>{% trans %}Daily overview — CGM · bolus · basal{% endtrans %}</h2>
   <div class="note">{% trans lo=tir_lo, hi=tir_hi, unit=unit %}Green band = target range {{ lo }}–{{ hi }} {{ unit }} · <b style="color:#0b2e6b">units</b>
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
