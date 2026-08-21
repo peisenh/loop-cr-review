@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-08-21
+
 ### Changed
 - Dark-theme **daily** charts only with `--dark-charts` / UI checkbox; AGP and slot charts still always have both.
 - CGM window lookup by searchsorted (same mean/gap rule).
@@ -661,7 +663,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...v0.10.1
