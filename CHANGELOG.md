@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-08-21
+
 ### Added
 - Date range: `--span` / `--from` / `--to`; web fills the full span after choosing a file (second request; nothing kept on the server).
 
@@ -670,7 +672,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...v0.11.0
