@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-21
+
 ### Added
 - `selection_effect()`: per slot, how many meals the verdict actually uses and how
   far that selection would move the normalised curves. Reported in its own section
@@ -655,7 +657,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/peisenh/loop-cr-review/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/peisenh/loop-cr-review/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/peisenh/loop-cr-review/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/peisenh/loop-cr-review/compare/v0.9.0...v0.10.0
