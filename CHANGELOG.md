@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-22
+
 ### Changed
 - Baseline-normalised section: one panel per meal slot (2 per row) with median and 10–90 / 25–75 % bands.
 
@@ -679,7 +681,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/peisenh/loop-cr-review/compare/v0.11.0...v0.11.1
