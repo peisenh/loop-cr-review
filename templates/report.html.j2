@@ -189,14 +189,14 @@ img { width: 100%; border-radius: 8px }
   <div class="note" style="margin-top: 6px">{% if lite %}{% trans %}This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below.{% endtrans %}{% else %}{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}{% endif %}</div></div>
 
 <div class="card">
-  <h2>{% trans %}Course relative to meal start (baseline-normalised){% endtrans %}</h2>
+  <h2>{% trans %}Baseline-normalised courses by meal type{% endtrans %}</h2>
+  <div class="note" style="margin-bottom: 0">{% trans %}All values relative to each meal’s own pre-meal baseline (0 = baseline). No selection, no assessment.{% endtrans %}</div>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}"><img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}"></div>
-  <div class="note" style="margin-top: 8px">
-    {% trans w=wlab %}Each meal is set to <b>0 at minute 0</b>, then the median is taken — the typical
-    <b>net course</b>. Its value at the end is the Δ{{ w }} used later. Ending negative → often below baseline
-    (overdosing); staying high → underdosing. <b>All meals</b> of a slot are shown here, like the
-    absolute curve above: this is what happened, without any selection. n can differ slightly when
-    minute 0 has no CGM sample.{% endtrans %}</div>
+  <div class="note" style="margin-top: 6px">
+    {% trans %}The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below.{% endtrans %}
+    {% trans %}Baseline = glucose near meal start (individual). n = number of meals of this type with a usable start value.{% endtrans %}
+    {% if not lite %}{% trans w=wlab %}The value at the end of the median is related to the Δ{{ w }} used later in Part 2; that part may prefer a cleaner meal subset, so n can differ there.{% endtrans %}{% endif %}
+  </div>
 </div>
 
 {% if not lite %}

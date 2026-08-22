@@ -1292,6 +1292,22 @@ def slot_median_curve(meals, slot, window, val_at):
     return np.nanmedian(np.array(stacks), axis=0) if stacks else None
 
 
+def _slot_norm_rows(meals, slot, window, val_at, clean_times=None):
+    """Baseline-normalised per-meal rows for a slot. Empty list if none."""
+    grid = np.arange(0, window + 1, 10)
+    rows = []
+    for m in meals:
+        if slot_of(m["time"].hour) != slot:
+            continue
+        if clean_times is not None and m["time"] not in clean_times:
+            continue
+        row = np.array([val_at(m["time"], int(g), 6) for g in grid], dtype=float)
+        if np.isnan(row[0]):
+            continue
+        rows.append(row - row[0])
+    return rows, grid
+
+
 def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
     """Baseline-normalised median curve of a slot (start of each meal = 0).
 
@@ -1307,18 +1323,31 @@ def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
     cannot contradict it. Meals without a baseline value (no CGM at t=0)
     are additionally dropped. Returns: (curve or None, n meals used).
     """
-    grid = np.arange(0, window + 1, 10)
-    rows = []
-    for m in meals:
-        if slot_of(m["time"].hour) != slot:
-            continue
-        if clean_times is not None and m["time"] not in clean_times:
-            continue
-        row = np.array([val_at(m["time"], int(g), 6) for g in grid], dtype=float)
-        if np.isnan(row[0]):
-            continue
-        rows.append(row - row[0])
-    return (np.nanmedian(np.array(rows), axis=0) if rows else None), len(rows)
+    rows, _grid = _slot_norm_rows(meals, slot, window, val_at, clean_times)
+    if not rows:
+        return None, 0
+    return np.nanmedian(np.array(rows), axis=0), len(rows)
+
+
+def slot_norm_bands(meals, slot, window, val_at, clean_times=None):
+    """Median + percentile bands of baseline-normalised curves for one slot.
+
+    Returns None or dict with grid, n, p10, p25, p50, p75, p90.
+    """
+    rows, grid = _slot_norm_rows(meals, slot, window, val_at, clean_times)
+    if not rows:
+        return None
+    arr = np.array(rows, dtype=float)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        return {
+            "grid": grid, "n": len(rows),
+            "p10": np.nanpercentile(arr, 10, axis=0),
+            "p25": np.nanpercentile(arr, 25, axis=0),
+            "p50": np.nanpercentile(arr, 50, axis=0),
+            "p75": np.nanpercentile(arr, 75, axis=0),
+            "p90": np.nanpercentile(arr, 90, axis=0),
+        }
 
 
 def shape_description(curve):
@@ -1582,30 +1611,149 @@ def selection_effect(meals, by_slot, window, val_at):
 
 
 def slot_norm_curves_chart(meals, window, val_at, dark=False):
-    """Baseline-normalised median curves per slot as base64 PNG (light or dark).
+    """One figure: legend + one framed card per meal (title + plot inside).
 
-    Uses **all** meals of a slot, like the absolute curve chart does: this is a
-    depiction of what happened, not of what the verdict rests on. Which meals the
-    verdict actually uses, and how far that selection would move these curves, is
-    reported separately by :func:`selection_effect`.
+    Layout matches the design mock: nothing outside its box, no label clipping.
     """
-    grid = np.arange(0, window + 1, 10)
-    with _chart_theme(dark):
-        fig, ax = plt.subplots(figsize=(10, 3.6))
-        ax.axhline(0, color="#888", lw=.8)
-        for slot in _slot_state()[1]:
-            curve, n = slot_norm_curve(meals, slot, window, val_at, None)
-            if curve is not None:
-                ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
-                        label=f"{_slot_state()[2][slot]} (n={n})")
-        ax.set_xlim(0, window)
-        ax.set_xlabel(_("Minutes after meal"))
-        ax.set_ylabel(_("Δ %(u)s vs. meal start") % {"u": glucose_unit()})
-        if ax.get_legend_handles_labels()[1]:
-            ax.legend(fontsize=8)
-        ax.grid(alpha=.25)
-        return fig_to_b64(fig)
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch, FancyBboxPatch
 
+    bands = []
+    for slot in _slot_state()[1]:
+        b = slot_norm_bands(meals, slot, window, val_at, None)
+        if b is not None:
+            bands.append((slot, b))
+    if not bands:
+        with _chart_theme(dark):
+            fig, ax = plt.subplots(figsize=(10, 2))
+            ax.text(0.5, 0.5, "—", ha="center", va="center")
+            ax.axis("off")
+            return fig_to_b64(fig)
+
+    n = len(bands)
+    ncols = 2
+    nrows = (n + ncols - 1) // ncols
+    # Default range matches typical postprandial Δ; expand if data exceeds
+    y_lo, y_hi = -g(150), g(200)
+    for _s, b in bands:
+        for key in ("p10", "p90"):
+            lo = np.nanmin(b[key])
+            hi = np.nanmax(b[key])
+            if not np.isnan(lo):
+                y_lo = min(y_lo, float(lo))
+            if not np.isnan(hi):
+                y_hi = max(y_hi, float(hi))
+    step = g(25)
+    y_lo = np.floor(y_lo / step) * step
+    y_hi = np.ceil(y_hi / step) * step
+
+    pal = _chart_palette(dark)
+    band90 = "#bcd4ff" if not dark else "#2a4060"
+    band75 = "#5b8def" if not dark else "#3a6aaa"
+    med_c = pal["median"]
+    zero_c = "#888" if not dark else "#8a97a8"
+    title_c = "#1a2233" if not dark else "#e8ecf2"
+    edge = "#c5cdd9" if not dark else "#4a5568"
+    face = "#ffffff" if not dark else "#1c2330"
+    box_bg = face  # same white as plot; no grey fill around the chart
+    fig_bg = face
+
+    with _chart_theme(dark):
+        # Extra top row for the legend strip
+        fig = plt.figure(figsize=(10.2, 0.12 + 2.85 * nrows))
+        fig.patch.set_facecolor(fig_bg)
+        # gridspec: row 0 = legend, then meal rows
+        height_ratios = [0.09] + [2.5] * nrows
+        gs = fig.add_gridspec(
+            1 + nrows, ncols,
+            height_ratios=height_ratios,
+            hspace=0.16, wspace=0.04,
+            left=0.03, right=0.97, top=0.995, bottom=0.03,
+        )
+
+        # Legend centered across both columns
+        leg_ax = fig.add_subplot(gs[0, :])
+        leg_ax.set_axis_off()
+        leg_ax.set_xlim(0, 1)
+        leg_ax.set_ylim(0, 1)
+        handles = [
+            Line2D([0], [0], color=med_c, lw=2.2, label=_("Median")),
+            Patch(facecolor=band75, edgecolor="none", alpha=0.85, label=_("25–75 %")),
+            Patch(facecolor=band90, edgecolor="none", alpha=0.75, label=_("10–90 %")),
+        ]
+        leg = leg_ax.legend(
+            handles=handles, loc="center", ncol=3, frameon=False,
+            fontsize=7.5, handlelength=1.6, columnspacing=1.0,
+            borderaxespad=0.0, handletextpad=0.35, borderpad=0.0,
+        )
+        for text in leg.get_texts():
+            text.set_color(title_c)
+
+        for i, (slot, b) in enumerate(bands):
+            r, c = divmod(i, ncols)
+            outer = fig.add_subplot(gs[1 + r, c])
+            outer.set_xticks([])
+            outer.set_yticks([])
+            outer.set_xlim(0, 1)
+            outer.set_ylim(0, 1)
+            outer.set_facecolor(box_bg)
+            for spine in outer.spines.values():
+                spine.set_visible(True)
+                spine.set_color(edge)
+                spine.set_linewidth(1.5)
+
+            win = ""
+            for key, _lab, start, end in _slot_state()[0]:
+                if key != slot:
+                    continue
+                if start < 0:
+                    win = _("outside other windows")
+                else:
+                    win = f"{start:02d}:00–{end:02d}:00"
+                break
+            outer.text(
+                0.5, 0.97,
+                f"{_slot_state()[2][slot]} ({win})",
+                transform=outer.transAxes, ha="center", va="top",
+                fontsize=11, color=title_c, fontweight="bold",
+            )
+            outer.text(
+                0.5, 0.90,
+                f"n = {b['n']}",
+                transform=outer.transAxes, ha="center", va="top",
+                fontsize=9, color="#5a6577" if not dark else "#a0aab8",
+            )
+            # Leave clear margins so axis labels never touch the outer frame
+            ax = outer.inset_axes([0.15, 0.16, 0.76, 0.64])
+            grid = b["grid"]
+            ax.set_facecolor(face)
+            ax.fill_between(grid, b["p10"], b["p90"], color=band90, alpha=.55, lw=0)
+            ax.fill_between(grid, b["p25"], b["p75"], color=band75, alpha=.45, lw=0)
+            ax.plot(grid, b["p50"], color=med_c, lw=2)
+            ax.axhline(0, color=zero_c, lw=.8, ls="--")
+            ax.set_xlim(0, window)
+            ax.set_ylim(y_lo, y_hi)
+            ax.set_xlabel(_("Minutes after meal"), fontsize=7, labelpad=2)
+            ax.set_ylabel(
+                _("Δ %(u)s vs. meal start") % {"u": glucose_unit()},
+                fontsize=7, labelpad=2,
+            )
+            ax.tick_params(labelsize=6.5, pad=1)
+            ax.grid(alpha=.2)
+            for spine in ax.spines.values():
+                spine.set_color("#d8dee8" if not dark else "#3a4556")
+
+        for j in range(len(bands), nrows * ncols):
+            r, c = divmod(j, ncols)
+            blank = fig.add_subplot(gs[1 + r, c])
+            blank.axis("off")
+            blank.set_facecolor(fig_bg)
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=120, facecolor=fig.get_facecolor(),
+                    edgecolor="none", bbox_inches="tight", pad_inches=0.06)
+        plt.close(fig)
+        return base64.b64encode(buf.getvalue()).decode()
 
 
 # --- Context / Rendering ----------------------------------------------------

@@ -1806,3 +1806,28 @@ msgstr "Ambulantes Glukoseprofil &amp; Mahlzeitenfenster"
 
 msgid "Ambulatory Glucose Profile &amp; Meal Windows"
 msgstr "Ambulantes Glukoseprofil &amp; Mahlzeitenfenster"
+
+msgid "Baseline-normalised courses by meal type"
+msgstr "Baseline-normalisierte Verläufe nach Mahlzeittyp"
+
+msgid "All values relative to each meal’s own pre-meal baseline (0 = baseline). No selection, no assessment."
+msgstr "Alle Werte relativ zur individuellen Pre-Meal-Baseline (0 = Baseline). Keine Auswahl, keine Bewertung."
+
+
+msgid "Baseline = glucose near meal start (individual). n = number of meals of this type with a usable start value."
+msgstr "Baseline = Glukose nahe Mahlzeitbeginn (individuell). n = Anzahl der Mahlzeiten dieses Typs mit nutzbarem Startwert."
+
+msgid "The value at the end of the median is related to the Δ%(w)s used later in Part 2; that part may prefer a cleaner meal subset, so n can differ there."
+msgstr "Der Endwert des Medians hängt mit dem später in Teil 2 genutzten Δ%(w)s zusammen; dort kann eine sauberere Mahlzeitenauswahl bevorzugt werden, n kann deshalb abweichen."
+
+msgid "outside other windows"
+msgstr "außerhalb der übrigen Fenster"
+
+msgid "25–75 %"
+msgstr "25–75 %"
+
+msgid "10–90 %"
+msgstr "10–90 %"
+
+msgid "The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below."
+msgstr "Die Kurven zeigen den typischen Verlauf (Median) und die Streuung (25–75 und 10–90) der baseline-normalisierten Glukosewerte für jeden Mahlzeittyp. Positive Werte = über Baseline, negative Werte = unter Baseline."

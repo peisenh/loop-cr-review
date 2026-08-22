@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Baseline-normalised section: one panel per meal slot (2 per row) with median and 10–90 / 25–75 % bands.
+
 ### Fixed
 - Lite: curve note no longer refers to the Part 2 CR table.
 - Lite report title is “AGP & meal windows” (not CR assessment).
