@@ -1797,3 +1797,12 @@ msgid "To"
 msgstr "Bis"
 msgid "Choose a file to see the full range. Nothing is stored on the server."
 msgstr "Datei wählen, dann erscheint der volle Zeitraum. Der Server speichert nichts."
+
+msgid "This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below."
+msgstr "Dieser absolute Median nutzt <b>alle Mahlzeiten</b> je Slot — ebenso die baseline-normalisierten Kurven darunter."
+
+msgid "Ambulatory Glucose Profile & Meal Windows"
+msgstr "Ambulantes Glukoseprofil &amp; Mahlzeitenfenster"
+
+msgid "Ambulatory Glucose Profile &amp; Meal Windows"
+msgstr "Ambulantes Glukoseprofil &amp; Mahlzeitenfenster"

@@ -9,6 +9,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- Lite: curve note no longer refers to the Part 2 CR table.
+- Lite report title is “AGP & meal windows” (not CR assessment).
+
 ## [0.12.1] - 2026-08-21
 
 ### Added
