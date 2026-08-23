@@ -1633,19 +1633,8 @@ def slot_norm_curves_chart(meals, window, val_at, dark=False):
     n = len(bands)
     ncols = 2
     nrows = (n + ncols - 1) // ncols
-    # Default range matches typical postprandial Δ; expand if data exceeds
-    y_lo, y_hi = -g(150), g(200)
-    for _s, b in bands:
-        for key in ("p10", "p90"):
-            lo = np.nanmin(b[key])
-            hi = np.nanmax(b[key])
-            if not np.isnan(lo):
-                y_lo = min(y_lo, float(lo))
-            if not np.isnan(hi):
-                y_hi = max(y_hi, float(hi))
-    step = g(25)
-    y_lo = np.floor(y_lo / step) * step
-    y_hi = np.ceil(y_hi / step) * step
+    # Fixed Δ range; curves may clip outside −100…+150
+    y_lo, y_hi = -g(100), g(150)
 
     pal = _chart_palette(dark)
     band90 = "#bcd4ff" if not dark else "#2a4060"
@@ -1702,18 +1691,9 @@ def slot_norm_curves_chart(meals, window, val_at, dark=False):
                 spine.set_color(edge)
                 spine.set_linewidth(1.5)
 
-            win = ""
-            for key, _lab, start, end in _slot_state()[0]:
-                if key != slot:
-                    continue
-                if start < 0:
-                    win = _("outside other windows")
-                else:
-                    win = f"{start:02d}:00–{end:02d}:00"
-                break
             outer.text(
                 0.5, 0.97,
-                f"{_slot_state()[2][slot]} ({win})",
+                f"{_slot_state()[2][slot]}",
                 transform=outer.transAxes, ha="center", va="top",
                 fontsize=11, color=title_c, fontweight="bold",
             )

@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Baseline-norm panels: slot titles without clock windows; fixed Δ axis −100…+150 (may clip).
+
 ## [0.13.0] - 2026-08-22
 
 ### Changed
