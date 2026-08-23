@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-08-23
+
 ### Changed
 - Slot profiles: `default`, `extended` (05–11/11–15/15–22), `with_snacks` (09–11 and 15–17); CLI `--slots-profile`, web dropdown.
 - Baseline-norm panels: slot titles without clock windows; fixed Δ axis −100…+150 (may clip).
@@ -685,7 +687,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/peisenh/loop-cr-review/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/peisenh/loop-cr-review/compare/v0.11.1...v0.12.0
