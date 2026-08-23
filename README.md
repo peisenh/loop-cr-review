@@ -130,7 +130,8 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | `--span` | nur CGM-Zeitraum ausgeben, kein Report | aus |
 | `--from` / `--to` | Kalendertage YYYY-MM-DD (einschließlich) | ganzer Export |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
-| `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`) | eingebaute Slots |
+| `--slots-profile` | `default` · `extended` (05–11/11–15/15–22) · `with_snacks` (Snacks 09–11 und 15–17) | `default` |
+| `--slots-file` | Eigene Tageszeit-Slots aus JSON-Datei (siehe `example-data/slots.example.json`); hat Vorrang vor dem Profil | eingebaute Slots |
 | `--lang` | Report-Sprache (`de` oder `en`) | `de` |
 | `-o, --out` | Ausgabe-HTML | `<name>_loop-cr-review_<fenster>.html` |
 | `-t, --template-dir` | Ordner mit `report.html.j2` | `./templates` |

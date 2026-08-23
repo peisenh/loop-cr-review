@@ -1825,3 +1825,21 @@ msgstr "10–90 %"
 
 msgid "The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below."
 msgstr "The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below."
+
+msgid "Default (05–10 / 11–15 / 17–22)"
+msgstr "Default (05–10 / 11–15 / 17–22)"
+
+msgid "Extended (05–11 / 11–15 / 15–22)"
+msgstr "Extended (05–11 / 11–15 / 15–22)"
+
+msgid "With snacks (snacks 09–11 and 15–17)"
+msgstr "With snacks (snacks 09–11 and 15–17)"
+
+msgid "Profiles only set the time-of-day windows, not the CR calculation."
+msgstr "Profiles only set the time-of-day windows, not the CR calculation."
+
+msgid "Morning snack"
+msgstr "Morning snack"
+
+msgid "Afternoon snack"
+msgstr "Afternoon snack"

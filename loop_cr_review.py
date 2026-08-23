@@ -111,7 +111,34 @@ DEFAULT_SLOTS = (
     ("dinner", N_("Dinner"), 17, 22),
     ("other", N_("Other"), -1, -1),
 )
+# Named profiles for CLI --slots-profile and the web dropdown (default unchanged).
+# Each entry is a full slots tuple including exactly one catch-all (start=-1).
+SLOT_PROFILES = {
+    "default": DEFAULT_SLOTS,
+    "extended": (
+        ("breakfast", N_("Breakfast"), 5, 11),
+        ("lunch", N_("Lunch"), 11, 15),
+        ("dinner", N_("Dinner"), 15, 22),
+        ("other", N_("Other"), -1, -1),
+    ),
+    "with_snacks": (
+        ("breakfast", N_("Breakfast"), 5, 9),
+        ("snack_am", N_("Morning snack"), 9, 11),
+        ("lunch", N_("Lunch"), 11, 15),
+        ("snack_pm", N_("Afternoon snack"), 15, 17),
+        ("dinner", N_("Dinner"), 17, 22),
+        ("other", N_("Other"), -1, -1),
+    ),
+}
 _SLOT_PALETTE = ("#c0392b", "#e0913a", "#3a9b46", "#2c6fbb", "#8e44ad", "#16a085")
+
+
+def slots_from_profile(name):
+    """Return a copy of a built-in slot profile, or raise LoopCRError."""
+    if name not in SLOT_PROFILES:
+        known = ", ".join(sorted(SLOT_PROFILES))
+        raise LoopCRError(f"Unknown slots profile {name!r} (known: {known}).")
+    return list(SLOT_PROFILES[name])
 
 
 def _derive_slot_globals(slots):
@@ -2119,9 +2146,13 @@ def parse_args():
                         help="also output a daily overview (small day profiles per calendar day)")
     parser.add_argument("--dark-charts", action="store_true",
                         help="also render dark-theme copies of the daily overview (AGP/slot charts always have both)")
+    parser.add_argument("--slots-profile", default="default",
+                        choices=sorted(SLOT_PROFILES),
+                        help="built-in time-of-day profile: default, extended (5–11/11–15/15–22), "
+                        "with_snacks (adds 9–11 and 15–17); overridden by --slots-file")
     parser.add_argument("--slots-file", default=None,
-                        help="custom time-of-day slots from a JSON file instead of the built-in "
-                        "breakfast/lunch/dinner/other (see example-data/slots.example.json)")
+                        help="custom time-of-day slots from a JSON file instead of a built-in "
+                        "profile (see example-data/slots.example.json)")
     parser.add_argument("--lang", default="de", choices=["de", "en"],
                         help="report language (default: de)")
     parser.add_argument("--assume-camaps", action="store_true",
@@ -2177,7 +2208,12 @@ def main():
             info = peek_span(args.export_dir)
             print(f"{info['source']}  {info['from']} .. {info['to']}  ({info['days']} days)")
             return
-        slots = load_slots_file(args.slots_file) if args.slots_file else None
+        if args.slots_file:
+            slots = load_slots_file(args.slots_file)
+        elif getattr(args, "slots_profile", "default") != "default":
+            slots = slots_from_profile(args.slots_profile)
+        else:
+            slots = None
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
             daily=args.daily, dark_charts=args.dark_charts,

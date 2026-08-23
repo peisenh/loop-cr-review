@@ -164,7 +164,7 @@ def _slots_from_fields():
 
 
 def _read_slots(tmpd):
-    """Resolve the slots choice: default / field editor / uploaded JSON."""
+    """Resolve slots: built-in profile / field editor / uploaded JSON."""
     mode = request.form.get("slots_mode", "default")
     if mode == "fields":
         return _slots_from_fields()
@@ -174,6 +174,8 @@ def _read_slots(tmpd):
             slots_path = tmpd / "slots.json"
             slots_up.save(slots_path)
             return _load_slots_or_400(slots_path)
+    if mode in core.SLOT_PROFILES and mode != "default":
+        return core.slots_from_profile(mode)
     return None
 
 

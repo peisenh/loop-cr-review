@@ -130,7 +130,8 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `--span` | print the CGM date range, no report | off |
 | `--from` / `--to` | calendar days YYYY-MM-DD (inclusive) | full export |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |
-| `--slots-file` | custom time-of-day slots from a JSON file (see `example-data/slots.example.json`) | built-in slots |
+| `--slots-profile` | `default` · `extended` (05–11/11–15/15–22) · `with_snacks` (snacks 09–11 and 15–17) | `default` |
+| `--slots-file` | custom time-of-day slots from JSON (see `example-data/slots.example.json`); overrides the profile | — |
 | `--lang` | report language (`de` or `en`) | `de` |
 | `-o, --out` | output HTML | `<name>_loop-cr-review_<window>.html` |
 | `-t, --template-dir` | folder containing `report.html.j2` | `./templates` |
@@ -160,7 +161,7 @@ python3 webapp.py                                  # http://127.0.0.1:8000
 ```
 
 The form exposes the same options as the CLI — language, meal window, daily
-overview — plus a download switch and the time-of-day slots, which can be left
+overview — plus a download switch and the time-of-day slots (built-in profiles, custom fields, or JSON), which can be left
 at the built-in default, entered in an inline field editor, or uploaded as JSON.
 `docker-compose.example.yml` includes an optional, commented-out Traefik block
 for HTTPS + Basic-Auth if you want a reverse proxy in front; the real

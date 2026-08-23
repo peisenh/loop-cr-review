@@ -10,6 +10,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Slot profiles: `default`, `extended` (05–11/11–15/15–22), `with_snacks` (09–11 and 15–17); CLI `--slots-profile`, web dropdown.
 - Baseline-norm panels: slot titles without clock windows; fixed Δ axis −100…+150 (may clip).
 
 ## [0.13.0] - 2026-08-22
