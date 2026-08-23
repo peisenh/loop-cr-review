@@ -1127,6 +1127,8 @@ def analyze_meals(meals, minors, basal, window, val_at, cgm_times=None):
     """
     rate, t0, minutes, fasting = basal[:4]
     meal_times = [m["time"] for m in meals]
+    cgm_times64 = (np.asarray(cgm_times, dtype="datetime64[ns]")
+                   if cgm_times is not None else None)
     rows = []
     for meal in meals:
         start = meal["time"]
@@ -1137,7 +1139,7 @@ def analyze_meals(meals, minors, basal, window, val_at, cgm_times=None):
                      for o in meal_times if o != start)
         minor_contam, hypo_rescue = _scan_minors(start, window, minors, val_at)
         contam = contam or minor_contam
-        cgm_gap = cgm_gap_in_window(start, window, cgm_times) if cgm_times is not None else False
+        cgm_gap = cgm_gap_in_window(start, window, cgm_times64) if cgm_times64 is not None else False
         excess = float(np.sum(rate[i0:i0 + window] - fasting) / 60.0)
         pre, post = val_at(start, 0), val_at(start, window)
         total = meal["bolus"] + excess

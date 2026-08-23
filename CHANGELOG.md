@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- Cache the CGM timestamp array used for meal-window gap checks to avoid repeated conversion and substantially reduce report generation time for longer reports.
+
 ### Changed
 - `--dark-charts` / UI: dark PNGs for **all** charts only when requested (AGP, slot curves, baseline-norm, daily); default embeds light only (~faster).
 
