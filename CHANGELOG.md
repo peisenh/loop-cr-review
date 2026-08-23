@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-08-23
+
 ### Fixed
 - Cache the CGM timestamp array used for meal-window gap checks to avoid repeated conversion and substantially reduce report generation time for longer reports.
 - Vectorized the day-clustered bootstrap in `decision_stability()` while preserving the existing resampling and stability calculation for further time reduction.
@@ -694,7 +696,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.2...HEAD
+[0.13.2]: https://github.com/peisenh/loop-cr-review/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/peisenh/loop-cr-review/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/peisenh/loop-cr-review/compare/v0.12.0...v0.12.1
