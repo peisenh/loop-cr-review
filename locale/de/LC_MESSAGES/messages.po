@@ -1849,3 +1849,6 @@ msgstr "Vormittagssnack"
 
 msgid "Afternoon snack"
 msgstr "Nachmittagssnack"
+
+msgid "Also render dark-theme charts (AGP, slots, daily)"
+msgstr "Auch dunkle Charts erzeugen (AGP, Slots, Tagesgraphen)"

@@ -2094,11 +2094,14 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in _tir_bands(met)],
-        "agp_img": agp_chart(times, gluc), "agp_img_dark": agp_chart(times, gluc, dark=True),
+        "agp_img": agp_chart(times, gluc),
+        "agp_img_dark": agp_chart(times, gluc, dark=True) if dark_charts else "",
         "slot_img": slot_curves_chart(meals, window, val_at),
-        "slot_img_dark": slot_curves_chart(meals, window, val_at, dark=True),
+        "slot_img_dark": (slot_curves_chart(meals, window, val_at, dark=True)
+                          if dark_charts else ""),
         "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
-        "slot_norm_img_dark": slot_norm_curves_chart(meals, window, val_at, dark=True),
+        "slot_norm_img_dark": (slot_norm_curves_chart(meals, window, val_at, dark=True)
+                               if dark_charts else ""),
         "selection": selection_effect(meals, by_slot, window, val_at),
         "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts,
                                 events=events,
@@ -2145,7 +2148,8 @@ def parse_args():
     parser.add_argument("-d", "--daily", action="store_true",
                         help="also output a daily overview (small day profiles per calendar day)")
     parser.add_argument("--dark-charts", action="store_true",
-                        help="also render dark-theme copies of the daily overview (AGP/slot charts always have both)")
+                        help="also render dark-theme chart PNGs (AGP, slot curves, baseline-norm, "
+                        "and daily if -d); without this, only light charts are embedded")
     parser.add_argument("--slots-profile", default="default",
                         choices=sorted(SLOT_PROFILES),
                         help="built-in time-of-day profile: default, extended (5–11/11–15/15–22), "

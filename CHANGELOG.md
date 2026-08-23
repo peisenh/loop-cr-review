@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- `--dark-charts` / UI: dark PNGs for **all** charts only when requested (AGP, slot curves, baseline-norm, daily); default embeds light only (~faster).
+
 ## [0.13.1] - 2026-08-23
 
 ### Changed

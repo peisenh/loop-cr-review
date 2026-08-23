@@ -1843,3 +1843,6 @@ msgstr "Morning snack"
 
 msgid "Afternoon snack"
 msgstr "Afternoon snack"
+
+msgid "Also render dark-theme charts (AGP, slots, daily)"
+msgstr "Also render dark-theme charts (AGP, slots, daily)"

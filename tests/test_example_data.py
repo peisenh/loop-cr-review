@@ -136,6 +136,18 @@ class TestGenerateReportExample(unittest.TestCase):
             self.assertTrue(day["img"])
             self.assertTrue(day["img_dark"])
 
+    def test_dark_charts_optional_for_all(self):
+        """AGP/slot/norm dark PNGs only with dark_charts (same flag as daily)."""
+        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False)
+        self.assertTrue(ctx["agp_img"])
+        self.assertFalse(ctx["agp_img_dark"])
+        self.assertFalse(ctx["slot_img_dark"])
+        self.assertFalse(ctx["slot_norm_img_dark"])
+        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False, dark_charts=True)
+        self.assertTrue(ctx["agp_img_dark"])
+        self.assertTrue(ctx["slot_img_dark"])
+        self.assertTrue(ctx["slot_norm_img_dark"])
+
     def test_english_report(self):
         html, ctx = core.generate_report(EXAMPLE, lang="en", window_hours=4.0)
         self.assertIn("Alex Beispiel", html)

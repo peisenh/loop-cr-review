@@ -125,7 +125,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | --- | --- | --- |
 | `export_dir` | Glooko-Ordner, Nightscout-Ordner oder LibreView-CSV | `.` |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
-| `--dark-charts` | zusätzlich dunkle Kopien der **Tagesgraphen** (AGP/Slots immer hell+dunkel) | aus |
+| `--dark-charts` | zusätzlich dunkle Chart-PNGs (AGP, Slot-Kurven, Baseline-Norm, und Tagesgraphen bei `-d`); ohne Option nur helle Charts | aus |
 | `--assume-camaps` | Teil 2 (CamAPS-CR) auch für Nightscout. LibreView bleibt Lite. Default aus | aus |
 | `--span` | nur CGM-Zeitraum ausgeben, kein Report | aus |
 | `--from` / `--to` | Kalendertage YYYY-MM-DD (einschließlich) | ganzer Export |
