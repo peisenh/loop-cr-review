@@ -2053,12 +2053,14 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
     times, gluc, meals, minors, events = clip_by_days(
         times, gluc, meals, minors, events, date_from, date_to, window)
     val_at = make_glucose_lookup(times, gluc)
+    cgm_times64 = (np.asarray(times, dtype="datetime64[ns]")
+                   if times is not None else None)
 
     met = consensus_metrics(times, gluc)
     if basal is None and not lite:
         raise LoopCRError("No basal rates found.")
     rows = [] if basal is None else analyze_meals(
-        meals, minors, basal, window, val_at, cgm_times=times)
+        meals, minors, basal, window, val_at, cgm_times=cgm_times64)
     seen = {r["time"] for r in rows}
     for meal in meals:
         if meal["time"] in seen:
@@ -2071,7 +2073,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
             "exc": float("nan"), "cr_eff": float("nan"),
             "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
             "contam": False, "hypo_rescue": False,
-            "cgm_gap": cgm_gap_in_window(meal["time"], window, times) if times is not None else False,
+            "cgm_gap": cgm_gap_in_window(meal["time"], window, cgm_times64) if cgm_times64 is not None else False,
         })
     by_slot = defaultdict(list)
     for row in rows:
