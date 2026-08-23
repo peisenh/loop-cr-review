@@ -1234,34 +1234,42 @@ def decision_stability(use_rows, n_boot=BOOTSTRAP_N, seed=BOOTSTRAP_SEED):
     if len(use_rows) < MIN_MEALS_FOR_STABILITY or len(days) < MIN_DAYS_FOR_STABILITY:
         return None
 
-    pos, day_index = 0, []
-    for rows in days:
-        day_index.append(np.arange(pos, pos + len(rows)))
-        pos += len(rows)
-    order = [r for rows in days for r in rows]          # array order == day order
-    exc = np.array([r["exc"] for r in order], dtype=float)
-    bol = np.array([r["bolus"] for r in order], dtype=float)
-    d4v = np.array([r["d4"] for r in order], dtype=float)
-    cre = np.array([r["cr_eff"] for r in order], dtype=float)
+    # Keep the exact day-clustered bootstrap, but do the resamples in NumPy.
+    # Padding each day with NaN means nanmedian over the day/meal axes is the
+    # same statistic as concatenating the selected day blocks.
+    max_per_day = max(len(rows) for rows in days)
+    def day_matrix(key):
+        out = np.full((len(days), max_per_day), np.nan, dtype=float)
+        for i, rows in enumerate(days):
+            out[i, :len(rows)] = [r[key] for r in rows]
+        return out
+
+    exc = day_matrix("exc")
+    bol = day_matrix("bolus")
+    d4v = day_matrix("d4")
+    cre = day_matrix("cr_eff")
 
     rng = np.random.default_rng(seed)                   # fixed: reports stay reproducible
-    counts = {"weak": 0, "ok": 0, "strong": 0}
-    cre_boot, ratio_boot = [], []
+    pick = rng.integers(0, len(days), size=(n_boot, len(days)))
     with warnings.catch_warnings():                     # all-NaN slices are expected
         warnings.simplefilter("ignore", RuntimeWarning)
-        for pick in rng.integers(0, len(days), size=(n_boot, len(days))):
-            idx = np.concatenate([day_index[i] for i in pick])
-            m_exc = float(np.nanmedian(exc[idx]))
-            m_bol = float(np.nanmedian(bol[idx]))
-            counts[verdict_class(m_exc, m_bol, float(np.nanmedian(d4v[idx])))] += 1
-            cre_boot.append(float(np.nanmedian(cre[idx])))
-            ratio_boot.append(m_exc / m_bol if m_bol else np.nan)
+        m_exc = np.nanmedian(exc[pick], axis=(1, 2))
+        m_bol = np.nanmedian(bol[pick], axis=(1, 2))
+        m_d4 = np.nanmedian(d4v[pick], axis=(1, 2))
+        m_cre = np.nanmedian(cre[pick], axis=(1, 2))
 
         cls = verdict_class(float(np.nanmedian(exc)), float(np.nanmedian(bol)),
                             float(np.nanmedian(d4v)))
-        spread = {key: tuple(np.nanpercentile(np.array(vals, dtype=float), [2.5, 97.5]))
-                  for key, vals in (("cre", cre_boot), ("ratio", ratio_boot))
-                  if not np.all(np.isnan(vals))}
+        classes = np.array([verdict_class(e, b, d) for e, b, d
+                            in zip(m_exc, m_bol, m_d4)])
+        counts = {name: int(np.count_nonzero(classes == name))
+                  for name in ("weak", "ok", "strong")}
+        ratio_boot = np.divide(m_exc, m_bol,
+                               out=np.full_like(m_exc, np.nan), where=m_bol != 0)
+        spread = {}
+        for key, vals in (("cre", m_cre), ("ratio", ratio_boot)):
+            if not np.all(np.isnan(vals)):
+                spread[key] = tuple(np.nanpercentile(vals, [2.5, 97.5]))
     pct = 100.0 * counts[cls] / n_boot
     band = ("high" if pct >= STABILITY_HIGH
             else "moderate" if pct >= STABILITY_MODERATE else "low")

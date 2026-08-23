@@ -11,6 +11,7 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ### Fixed
 - Cache the CGM timestamp array used for meal-window gap checks to avoid repeated conversion and substantially reduce report generation time for longer reports.
+- Vectorized the day-clustered bootstrap in `decision_stability()` while preserving the existing resampling and stability calculation for further time reduction.
 
 ### Changed
 - `--dark-charts` / UI: dark PNGs for **all** charts only when requested (AGP, slot curves, baseline-norm, daily); default embeds light only (~faster).
