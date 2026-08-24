@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-24
+
 ### Added
 - Added GRI (Glycemia Risk Index) with grid to report
 
@@ -699,7 +701,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.13.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/peisenh/loop-cr-review/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/peisenh/loop-cr-review/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/peisenh/loop-cr-review/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/peisenh/loop-cr-review/compare/v0.12.1...v0.13.0
