@@ -86,7 +86,7 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .row b { width: 52px; text-align: right }
 .clinical-two-col { display:grid; grid-template-columns:minmax(0, 2fr) minmax(0, 1fr); gap:12px; align-items:stretch }
 .clinical-two-col > .card { margin-bottom:14px; box-sizing:border-box }
-.gri-card { padding:10px 12px; display:flex; flex-direction:column }
+.gri-card { padding:10px 12px; display:block }
 .gri-card h2 { margin:0 0 1px }
 .gri-title-score { font: inherit; font-weight: inherit }
 .gri-main { display:grid; grid-template-columns:88px minmax(0,1fr); gap:2px; align-items:start; margin-top:-2px }
@@ -97,13 +97,26 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .gri-components { display:grid; grid-template-columns:1fr; gap:5px; margin-top:8px; padding-top:0; border-top:0; font-size:9px; color:var(--muted) }
 .gri-components b { display:block; color:var(--ink); font-size:8.7px; margin-bottom:1px }
 .gri-card .chart-wrap { width:min(100%, 128px); margin:0 auto }
-.gri-zones { margin-top:auto; padding-top:4px; border-top:1px solid var(--line); font-size:8.5px; line-height:1.25; color:var(--muted); text-align:center; white-space:nowrap }
+.gri-zones { margin-top:4px; padding-top:4px; border-top:1px solid var(--line); font-size:8.5px; line-height:1.25; color:var(--muted); text-align:center; white-space:normal }
 .gri-zones b { color:var(--ink) }
-.tir-card { display:flex; flex-direction:column }
-.tir-note { margin-top:auto; padding-top:5px; border-top:1px solid var(--line); font-size:10px; line-height:1.25; color:var(--muted) }
+.tir-card { display:block }
+.tir-note { margin-top:5px; padding-top:5px; border-top:1px solid var(--line); font-size:10px; line-height:1.25; color:var(--muted) }
 @media (max-width: 680px) {
   .clinical-two-col { grid-template-columns:1fr }
 }
+@media print {
+  .clinical-two-col { align-items: stretch !important; }
+  .gri-card { overflow: hidden !important; }
+  .gri-card .chart-wrap { width: min(100%, 112px) !important; }
+  .gri-components { gap: 2px !important; margin-top: 5px !important; }
+  .gri-zones {
+    margin-top: 3px !important;
+    padding-top: 3px !important;
+    font-size: 7.5px !important;
+    line-height: 1.1 !important;
+  }
+}
+
 .track { flex: 1; height: 12px; background: var(--track); border-radius: 6px; overflow: hidden }
 .fill { height: 100% }
 table { width: 100%; border-collapse: collapse; font-size: 12px }
@@ -200,7 +213,8 @@ img { width: 100%; border-radius: 8px }
       <b>{{ band.val }}%</b></div>
     {% endfor %}
     <div class="tir-note">
-      {% trans lo=bg70, vlo=bg54, hi=bg140, unit=unit %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%. TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
+      {% trans lo=bg70, vlo=bg54 %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%.{% endtrans %}<br>
+      {% trans lo=bg70, hi=bg140, unit=unit %}TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
   </div>
   <div class="card gri-card">
     <h2>{% trans %}Glycemia Risk Index (GRI){% endtrans %}<span class="gri-title-score"> – {{ "%.0f"|format(gri.score) }}</span></h2>

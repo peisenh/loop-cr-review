@@ -9,6 +9,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed TIR/GRI card layout and text overflow in PDF print output.
+- Fixed TIR target wrapping without changing the HTML layout.
+
 ## [0.14.0] - 2026-08-24
 
 ### Added
