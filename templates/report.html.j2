@@ -84,6 +84,26 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 13px }
 .row span { width: 150px }
 .row b { width: 52px; text-align: right }
+.clinical-two-col { display:grid; grid-template-columns:minmax(0, 2fr) minmax(0, 1fr); gap:12px; align-items:stretch }
+.clinical-two-col > .card { margin-bottom:14px; box-sizing:border-box }
+.gri-card { padding:10px 12px; display:flex; flex-direction:column }
+.gri-card h2 { margin:0 0 1px }
+.gri-title-score { font: inherit; font-weight: inherit }
+.gri-main { display:grid; grid-template-columns:88px minmax(0,1fr); gap:2px; align-items:start; margin-top:-2px }
+.gri-summary { padding-top:2px }
+.gri-score { font-size:24px; font-weight:700; line-height:1 }
+.gri-zone { font-size:10px; color:var(--ink); font-weight:600; margin-top:4px; line-height:1.2 }
+.gri-risk { font-size:9.5px; color:var(--muted); margin-top:2px; line-height:1.2 }
+.gri-components { display:grid; grid-template-columns:1fr; gap:5px; margin-top:8px; padding-top:0; border-top:0; font-size:9px; color:var(--muted) }
+.gri-components b { display:block; color:var(--ink); font-size:8.7px; margin-bottom:1px }
+.gri-card .chart-wrap { width:min(100%, 128px); margin:0 auto }
+.gri-zones { margin-top:auto; padding-top:4px; border-top:1px solid var(--line); font-size:8.5px; line-height:1.25; color:var(--muted); text-align:center; white-space:nowrap }
+.gri-zones b { color:var(--ink) }
+.tir-card { display:flex; flex-direction:column }
+.tir-note { margin-top:auto; padding-top:5px; border-top:1px solid var(--line); font-size:10px; line-height:1.25; color:var(--muted) }
+@media (max-width: 680px) {
+  .clinical-two-col { grid-template-columns:1fr }
+}
 .track { flex: 1; height: 12px; background: var(--track); border-radius: 6px; overflow: hidden }
 .fill { height: 100% }
 table { width: 100%; border-collapse: collapse; font-size: 12px }
@@ -171,15 +191,34 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 
-<div class="card">
-  <h2>Time in Ranges</h2>
-  {% for band in tir_bands %}
-  <div class="row"><span>{{ band.label | safe }}</span>
-    <div class="track"><div class="fill" style="width: {{ band.width }}%; background: {{ band.color }}"></div></div>
-    <b>{{ band.val }}%</b></div>
-  {% endfor %}
-  <div class="note" style="margin-top: 6px">
-    {% trans lo=bg70, vlo=bg54, hi=bg140, unit=unit %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%. TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
+<div class="clinical-two-col">
+  <div class="card tir-card">
+    <h2>Time in Ranges</h2>
+    {% for band in tir_bands %}
+    <div class="row"><span>{{ band.label | safe }}</span>
+      <div class="track"><div class="fill" style="width: {{ band.width }}%; background: {{ band.color }}"></div></div>
+      <b>{{ band.val }}%</b></div>
+    {% endfor %}
+    <div class="tir-note">
+      {% trans lo=bg70, vlo=bg54, hi=bg140, unit=unit %}Targets: TIR ≥70% · TBR&lt;{{ lo }} &lt;4% · TBR&lt;{{ vlo }} &lt;1% · CV ≤36%. TITR({{ lo }}–{{ hi }} {{ unit }}){% endtrans %} {{ titr }}%.</div>
+  </div>
+  <div class="card gri-card">
+    <h2>{% trans %}Glycemia Risk Index (GRI){% endtrans %}<span class="gri-title-score"> – {{ "%.0f"|format(gri.score) }}</span></h2>
+    <div class="gri-main">
+      <div class="gri-summary">
+        <div class="gri-zone">{% trans zone=gri.zone, rng=gri.range %}Zone {{ zone }} ({{ rng }}){% endtrans %}</div>
+        <div class="gri-risk">{{ gri.risk }}</div>
+        <div class="gri-components">
+          <div><b>{% trans %}Hypoglycemia component{% endtrans %}</b>{{ "%.1f"|format(gri.hypo) }}%</div>
+          <div><b>{% trans %}Hyperglycemia component{% endtrans %}</b>{{ "%.1f"|format(gri.hyper) }}%</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <img class="chart-light" src="data:image/png;base64,{{ gri.img }}">{% if gri.img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ gri.img_dark }}">{% endif %}
+      </div>
+    </div>
+    <div class="gri-zones"><b>A</b> {% trans %}very low{% endtrans %} · <b>B</b> {% trans %}low{% endtrans %} · <b>C</b> {% trans %}medium{% endtrans %} · <b>D</b> {% trans %}high{% endtrans %} · <b>E</b> {% trans %}very high{% endtrans %}</div>
+  </div>
 </div>
 <div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}">{% if agp_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}">{% endif %}</div></div>

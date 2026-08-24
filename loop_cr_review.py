@@ -1056,6 +1056,27 @@ def consensus_metrics(times, gluc):
     }
 
 
+def gri_metrics(met):
+    """Glycemia Risk Index (GRI) and its two actionable components."""
+    hypo = met["tbr2"] + 0.8 * met["tbr1"]
+    hyper = met["tar2"] + 0.5 * met["tar1"]
+    score = min(100.0, 3.0 * hypo + 1.6 * hyper)
+    if score <= 20:
+        zone, zrange, risk = "A", "0–20", _("Low risk")
+    elif score <= 40:
+        zone, zrange, risk = "B", "21–40", _("Low to moderate risk")
+    elif score <= 60:
+        zone, zrange, risk = "C", "41–60", _("Moderate risk")
+    elif score <= 80:
+        zone, zrange, risk = "D", "61–80", _("High risk")
+    else:
+        zone, zrange, risk = "E", "81–100", _("Very high risk")
+    return {
+        "score": score, "zone": zone, "range": zrange, "risk": risk,
+        "hypo": hypo, "hyper": hyper,
+    }
+
+
 def make_glucose_lookup(times, gluc):
     """Closure: mean glucose ~minutes after ref (+-tol). Same window as before.
 
@@ -1562,6 +1583,52 @@ def build_cr_note(rows, by_slot):
 
 
 # --- Charts -----------------------------------------------------------------
+def gri_grid_chart(gri, dark=False):
+    """Compact square GRI grid using the published diagonal risk zones."""
+    hypo = float(gri["hypo"])
+    hyper = float(gri["hyper"])
+    with _chart_theme(dark):
+        fig, ax = plt.subplots(figsize=(2.35, 2.35))
+        ax.set_facecolor("#ffffff" if not dark else "#1c2330")
+
+        # Compact report view: focus the grid on the clinically relevant
+        # component range around the observed point. The GRI calculation and
+        # zone boundaries remain unchanged; only the displayed axes are
+        # cropped so the high-risk Zone E does not dominate the small card.
+        xmax = max(15.0, min(20.0, float(np.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
+        ymax = max(30.0, min(40.0, float(np.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
+        x = np.linspace(0, xmax, 500)
+        y = np.linspace(0, ymax, 500)
+        X, Y = np.meshgrid(x, y)
+        score = 3.0 * X + 1.6 * Y
+
+        # Conventional GRI progression: A best/green → E worst/brown.
+        zone_colors = ["#69a84f", "#f4cf2e", "#ef8a0c", "#e43d3d", "#8f3434"]
+        levels = [0, 20, 40, 60, 80, 100]
+        # Use the published zone colours without separator lines. A slightly
+        # softer fill keeps Zone E from visually dominating the compact card.
+        ax.contourf(X, Y, np.clip(score, 0, 100), levels=levels,
+                    colors=zone_colors, alpha=0.88, antialiased=False)
+        # Zone names are given in the compact legend below the grid. Do not
+        # place A–E letters at arbitrary coordinates inside the cropped plot.
+
+        ax.scatter([hypo], [hyper], s=22,
+                   color="#17202d" if not dark else "#ffffff",
+                   edgecolor="#ffffff" if not dark else "#17202d",
+                   linewidth=0.7, zorder=5)
+
+        ax.set_xlim(0, xmax)
+        ax.set_ylim(0, ymax)
+        ax.set_xlabel(_("Hypoglycemia component (%)"), fontsize=6.2, labelpad=1)
+        ax.set_ylabel(_("Hyperglycemia component (%)"), fontsize=6.2, labelpad=1)
+        ax.tick_params(labelsize=5.2, pad=1)
+        ax.set_box_aspect(1)
+        ax.grid(alpha=0.08)
+        for spine in ax.spines.values():
+            spine.set_color("#d8dee8" if not dark else "#3a4556")
+        fig.tight_layout(pad=0.12)
+        return fig_to_b64(fig)
+
 def agp_chart(times, gluc, dark=False):
     """AGP percentile chart as base64 PNG (light or dark theme)."""
     minute = np.array([t.hour * 60 + t.minute for t in times])
@@ -2065,6 +2132,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
                    if times is not None else None)
 
     met = consensus_metrics(times, gluc)
+    gri = gri_metrics(met)
     if basal is None and not lite:
         raise LoopCRError("No basal rates found.")
     rows = [] if basal is None else analyze_meals(
@@ -2104,6 +2172,9 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "days": f"{met['days']:.0f}", "device": device if lite else f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
+        "gri": {**gri,
+                "img": gri_grid_chart(gri, dark=False),
+                "img_dark": gri_grid_chart(gri, dark=True) if dark_charts else ""},
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in _tir_bands(met)],
         "agp_img": agp_chart(times, gluc),

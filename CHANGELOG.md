@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Added GRI (Glycemia Risk Index) with grid to report
+
 ## [0.13.2] - 2026-08-23
 
 ### Fixed
