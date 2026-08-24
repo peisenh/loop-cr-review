@@ -223,8 +223,8 @@ img { width: 100%; border-radius: 8px }
         <div class="gri-zone">{% trans zone=gri.zone, rng=gri.range %}Zone {{ zone }} ({{ rng }}){% endtrans %}</div>
         <div class="gri-risk">{{ gri.risk }}</div>
         <div class="gri-components">
-          <div><b>{% trans %}Hypoglycemia component{% endtrans %}</b>{{ "%.1f"|format(gri.hypo) }}%</div>
           <div><b>{% trans %}Hyperglycemia component{% endtrans %}</b>{{ "%.1f"|format(gri.hyper) }}%</div>
+          <div><b>{% trans %}Hypoglycemia component{% endtrans %}</b>{{ "%.1f"|format(gri.hypo) }}%</div>
         </div>
       </div>
       <div class="chart-wrap">
