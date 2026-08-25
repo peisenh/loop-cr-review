@@ -14,8 +14,15 @@ cd "$(dirname "$0")/.."
 TARGET="${1:-cli}"
 SEP=":"; [[ "${OS:-}" == Windows_NT ]] && SEP=";"
 
-command -v pyinstaller >/dev/null || {
-  echo "pyinstaller not found — pip install pyinstaller" >&2; exit 1; }
+# Everything runs through "python3 -m PyInstaller" on purpose: a pyinstaller on
+# the PATH may belong to a different interpreter than the one whose packages get
+# bundled. Inside a venv without pyinstaller installed, the system one takes over
+# and quietly bundles the system packages — which is how a Qt GUI ends up without
+# its WebEngine helper.
+python3 -m PyInstaller --version >/dev/null 2>&1 || {
+  echo "PyInstaller is not installed for $(command -v python3)." >&2
+  echo "  pip install pyinstaller     — in the environment you build from" >&2
+  exit 1; }
 
 #echo "==> Compiling translation catalogs"
 #pybabel compile -d locale >/dev/null
@@ -34,7 +41,7 @@ trap restore_version EXIT INT TERM
 
 build_cli() {
   echo "==> Building CLI"
-  pyinstaller --onefile --name loop-cr-review \
+  python3 -m PyInstaller --onefile --name loop-cr-review \
     --add-data "templates/report.html.j2${SEP}templates" \
     --add-data "locale${SEP}locale" \
     loop_cr_review.py >/dev/null
@@ -56,15 +63,29 @@ build_gui() {   # Qt variant: the one built on every platform
   # --collect-all only warns when a package is missing and then builds happily,
   # so a machine without the qt extra produces a binary that dies on start with
   # "No module named 'qtpy'". Refuse before spending ten minutes on it.
-  python3 - <<'PY' || { echo "  Install them: pip install -r requirements-gui.txt" >&2; exit 1; }
+  python3 - <<'PY' || { echo "  pip install -r requirements-gui.txt   (in a venv, not the system python)" >&2; exit 1; }
 import importlib.util
+import pathlib
 import sys
+
 missing = [m for m in ("qtpy", "PyQt6") if not importlib.util.find_spec(m)]
 if missing:
     sys.exit(f"Qt GUI needs {', '.join(missing)} in the build environment.")
+
+# The pip wheel carries the whole Qt runtime inside the package
+# (PyQt6/Qt6/libexec/QtWebEngineProcess, resources, libs) and PyInstaller's hooks
+# expect exactly that. Distribution packages split it across system paths, so
+# --collect-all PyQt6 picks up the bindings without the WebEngine helper: the
+# binary then aborts on start with "base::CommandLine cannot be properly
+# initialized".
+spec = importlib.util.find_spec("PyQt6")
+root = pathlib.Path(spec.submodule_search_locations[0])
+if not (root / "Qt6" / "libexec" / "QtWebEngineProcess").exists():
+    sys.exit(f"PyQt6 at {root} has no bundled Qt runtime — this looks like a "
+             "distribution package. Build from a venv with the pip wheels instead.")
 PY
   echo "==> Building GUI (Qt)"
-  pyinstaller --onefile --windowed --name loop-cr-review-gui \
+  python3 -m PyInstaller --onefile --windowed --name loop-cr-review-gui \
     --add-data "templates${SEP}templates" \
     --add-data "static${SEP}static" \
     --add-data "locale${SEP}locale" \
@@ -75,7 +96,7 @@ PY
 
 build_gui_webview2() {   # slim Windows variant, no Qt bundled
   echo "==> Building GUI (WebView2 slim)"
-  pyinstaller --onefile --windowed --name loop-cr-review-gui-webview2 \
+  python3 -m PyInstaller --onefile --windowed --name loop-cr-review-gui-webview2 \
     --add-data "templates${SEP}templates" \
     --add-data "static${SEP}static" \
     --add-data "locale${SEP}locale" \

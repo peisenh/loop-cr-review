@@ -15,7 +15,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the qt extra yielded a binary that dies on start with "No module named 'qtpy'".
   The script now refuses before the build when `qtpy` or `PyQt6` are not importable,
   and the bundle check looks for Qt itself — it had only verified the templates and
-  catalogs, which are present either way.
+  catalogs, which are present either way. Two further traps are checked now: the
+  build runs through `python3 -m PyInstaller`, so a `pyinstaller` on the PATH
+  belonging to a different interpreter cannot silently bundle the wrong packages,
+  and PyQt6 has to be the pip wheel — a distribution package splits the Qt runtime
+  across system paths, and the resulting binary aborts on start with
+  "base::CommandLine cannot be properly initialized".
 
 ## [0.15.0] - 2026-08-25
 

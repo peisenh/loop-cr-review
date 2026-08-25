@@ -148,8 +148,30 @@ the same way and restores `_version.py` afterwards. Worth running before tagging
 a onefile binary can fail over a file that is not actually bundled or an import
 PyInstaller does not follow, and the test suite never sees either. The CLI is
 checked by generating a report from it; the GUI variants cannot be started
-without a display, so their archive is read instead to confirm the templates
-and catalogs are really inside.
+without a display, so their archive is read instead — for the templates, the
+catalogs and, for the Qt variant, Qt itself.
+
+Build the GUI from a virtual environment with the pip wheels:
+
+```bash
+python3 -m venv .venv-gui
+source .venv-gui/bin/activate
+pip install -r requirements-gui.txt pyinstaller
+./tools/build-binaries.sh gui
+```
+
+Two things bite here, and the script checks both before building. PyInstaller has
+to be installed *for the interpreter you build with* — a `pyinstaller` on the PATH
+may belong to the system python and then bundles the system packages, which is why
+everything runs through `python3 -m PyInstaller`. And the Qt runtime has to come
+from the pip wheel, which carries `PyQt6/Qt6/libexec/QtWebEngineProcess` inside the
+package; distribution packages split it across system paths, so `--collect-all
+PyQt6` collects the bindings without the WebEngine helper and the binary aborts on
+start with "base::CommandLine cannot be properly initialized".
+
+Warnings about unresolved `libQt63D*` and `libQt6Quick3D*` libraries during the
+build are expected — `--collect-all` also picks up QML plugins for modules that
+are not installed. The CI build shows the same ones.
 
 The screenshot script renders the report from `example-data` with whichever of
 chromium/google-chrome is installed and writes both pictures into `docs/`. Look
