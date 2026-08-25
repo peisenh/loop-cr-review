@@ -9,6 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- `tools/build-binaries.sh` produced a broken Qt GUI without saying so: PyInstaller's
+  `--collect-all` only warns when a package is missing, so a build environment without
+  the qt extra yielded a binary that dies on start with "No module named 'qtpy'".
+  The script now refuses before the build when `qtpy` or `PyQt6` are not importable,
+  and the bundle check looks for Qt itself — it had only verified the templates and
+  catalogs, which are present either way.
+
 ## [0.15.0] - 2026-08-25
 
 ### Added

@@ -53,6 +53,16 @@ build_cli() {
 }
 
 build_gui() {   # Qt variant: the one built on every platform
+  # --collect-all only warns when a package is missing and then builds happily,
+  # so a machine without the qt extra produces a binary that dies on start with
+  # "No module named 'qtpy'". Refuse before spending ten minutes on it.
+  python3 - <<'PY' || { echo "  Install them: pip install -r requirements-gui.txt" >&2; exit 1; }
+import importlib.util
+import sys
+missing = [m for m in ("qtpy", "PyQt6") if not importlib.util.find_spec(m)]
+if missing:
+    sys.exit(f"Qt GUI needs {', '.join(missing)} in the build environment.")
+PY
   echo "==> Building GUI (Qt)"
   pyinstaller --onefile --windowed --name loop-cr-review-gui \
     --add-data "templates${SEP}templates" \
@@ -60,7 +70,7 @@ build_gui() {   # Qt variant: the one built on every platform
     --add-data "locale${SEP}locale" \
     --collect-all webview --collect-all PyQt6 --collect-all qtpy \
     gui.py >/dev/null
-  check_gui dist/loop-cr-review-gui
+  check_gui dist/loop-cr-review-gui qt
 }
 
 build_gui_webview2() {   # slim Windows variant, no Qt bundled
@@ -79,8 +89,8 @@ check_gui() {  # check_gui <binary>
   # the bundle really carries the templates and the catalogs. A GUI that opens
   # an empty window is the failure mode here. Read the archive rather than
   # grepping the binary — bundled files are compressed and would not be found.
-  local bin="$1"
-  python3 - "$bin" <<'PY'
+  local bin="$1" flavour="${2:-}"
+  python3 - "$bin" "$flavour" <<'PY'
 import sys
 from PyInstaller.archive.readers import CArchiveReader
 entries = set(CArchiveReader(sys.argv[1]).toc)
@@ -90,6 +100,10 @@ missing = [n for n in ("templates/report.html.j2", "templates/upload.html.j2",
            if n not in entries]
 if missing:
     sys.exit(f"{sys.argv[1]} does not bundle: {', '.join(missing)}")
+# The data files being present says nothing about the GUI toolkit: a Qt build
+# without qtpy starts and dies on the first window.
+if sys.argv[2] == "qt" and not any(n.startswith(("qtpy", "PyQt6")) for n in entries):
+    sys.exit(f"{sys.argv[1]} bundles no Qt: it would fail on start with a missing qtpy")
 print(f"    bundle carries templates and catalogs ({len(entries)} entries)")
 PY
   echo "    $(du -h "$bin" | cut -f1) binary (not started here: needs a display)"
