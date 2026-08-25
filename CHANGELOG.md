@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-08-25
+
 ### Added
 - Dexcom Clarity as a data source (`lcr/readers/dexcom.py`). One CSV holding
   glucose, carbs and insulin as separate rows; carbs and insulin only exist when
@@ -796,7 +798,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/peisenh/loop-cr-review/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/peisenh/loop-cr-review/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/peisenh/loop-cr-review/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/peisenh/loop-cr-review/compare/v0.13.1...v0.13.2
