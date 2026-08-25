@@ -18,6 +18,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   one. `loop_cr_review.py` keeps the analysis and the rendering and re-exports
   everything, so `webapp`, `gui`, the tests and `sim/` import exactly as before:
   the split is internal, and the generated report is byte-identical.
+  The method itself now sits in `lcr/analysis.py`, apart from the rendering, so
+  a change to the report cannot quietly change a verdict. `loop_cr_review.py`
+  is down from 2300 to 447 lines: the CLI, the context assembly and the
+  re-exports.
 - Duplication that only became visible once the sources sat in separate modules:
   three copies of the carb-entry merging became one `merge_carb_entries()`, and
   the Glooko basal timeline now uses the same `_basal_from_segments()` as
