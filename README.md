@@ -113,6 +113,7 @@ fürs Homelab** (2) oder die **Desktop-App** (3).
 ```bash
 # Glooko-Export entpacken, dann:
 python3 loop_cr_review.py <export_ordner>            # Default: 4-h-Fenster
+python3 loop_cr_review.py .                          # Export liegt im aktuellen Ordner
 python3 loop_cr_review.py <export_ordner> -w 3.5     # anderes Fenster (Stunden)
 python3 loop_cr_review.py <export_ordner> --lang en  # Report auf Englisch (Default: de)
 python3 loop_cr_review.py <ns-ordner>                # Nightscout: entries.json + treatments.json → Lite
@@ -127,7 +128,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 
 | Option | Bedeutung | Default |
 | --- | --- | --- |
-| `export_dir` | Ordner mit Glooko-Export, Nightscout-Dump, LibreView- oder Clarity-CSV | `.` |
+| `export_dir` | Ordner mit Glooko-Export, Nightscout-Dump, LibreView- oder Clarity-CSV. **Pflichtangabe**; gesucht wird bis zwei Ebenen darunter | — |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
 | `--dark-charts` | zusätzlich dunkle Chart-PNGs (AGP, Slot-Kurven, Baseline-Norm, und Tagesgraphen bei `-d`); ohne Option nur helle Charts | aus |
 | `--assume-camaps` | Teil 2 (CamAPS-CR) auch für Nightscout. LibreView und Clarity bleiben Lite. Default aus | aus |

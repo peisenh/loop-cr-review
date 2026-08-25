@@ -18,6 +18,9 @@ from pathlib import Path
 import numpy as np
 
 __all__ = [
+    "MAX_SEARCH_DEPTH",
+    "find_below",
+    "single_match",
     "tool_version",
     "sorted_unique_series",
     "merge_carb_entries",
@@ -97,6 +100,38 @@ __all__ = [
     "slot_norm_curve",
     "slot_norm_bands",
 ]
+
+
+# How far below the given folder an export may sit. A Glooko export unpacks into
+# one directory with "Insulin data/" under it, so two levels covers every real
+# layout. Unbounded recursion would walk a whole home directory on a mistyped
+# path — slowly, and opening every CSV it meets on the way.
+MAX_SEARCH_DEPTH = 2
+
+
+def find_below(base, pattern, depth=MAX_SEARCH_DEPTH):
+    """Files matching *pattern* at most *depth* levels below *base*. -> sorted list."""
+    base = Path(base)
+    hits = []
+    for level in range(depth + 1):
+        hits.extend(base.glob("/".join(["*"] * level + [pattern])))
+    return sorted(set(hits))
+
+
+def single_match(hits, what, base):
+    """Exactly one of *hits*, or None. Refuses to guess between several.
+
+    Picking the first hit silently is the worse failure: with two exports under
+    one folder the report would be built from whichever sorted first, and nothing
+    in it would say which one.
+    """
+    hits = list(hits)
+    if len(hits) > 1:
+        listing = "\n  ".join(str(h) for h in hits[:6])
+        more = f"\n  ... and {len(hits) - 6} more" if len(hits) > 6 else ""
+        raise LoopCRError(
+            f"Several {what} below {base} - name the one to use:\n  {listing}{more}")
+    return hits[0] if hits else None
 
 
 def resource_dir():

@@ -9,6 +9,22 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- **`export_dir` is required now.** Without a folder the tool used to default to
+  the working directory and search it recursively — a call in the wrong place
+  walked the whole tree and opened every CSV it met to look at the header. It
+  prints the usage instead. If you used to run it from inside the export folder,
+  pass `.` explicitly.
+- **The search stops two levels below the given folder.** That covers every real
+  export layout (a Glooko export unpacks into one directory with `Insulin data/`
+  under it). An export buried deeper is no longer found.
+- **Several exports below one folder are refused.** The tool lists the candidates
+  and stops, rather than analysing whichever sorted first — nothing in the report
+  said which one it had used. Applies to Nightscout dumps, LibreView and Clarity
+  CSVs alike.
+
+The report itself is unchanged: same input, byte-identical output.
+
 ## [0.16.0] - 2026-08-25
 
 ### Added

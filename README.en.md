@@ -113,6 +113,7 @@ front-end** (2), or the **desktop app** (3).
 ```bash
 # unpack the Glooko export, then:
 python3 loop_cr_review.py <export_folder>            # default: 4-h window
+python3 loop_cr_review.py .                          # export sits in the current folder
 python3 loop_cr_review.py <export_folder> -w 3.5     # different window (hours)
 python3 loop_cr_review.py <export_folder> --lang en  # report in English (default: de)
 python3 loop_cr_review.py <ns-folder>                # Nightscout: entries.json + treatments.json → lite
@@ -127,7 +128,7 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 
 | Option | Meaning | Default |
 | --- | --- | --- |
-| `export_dir` | Folder with a Glooko export, Nightscout dump, LibreView or Clarity CSV | `.` |
+| `export_dir` | Folder with a Glooko export, Nightscout dump, LibreView or Clarity CSV. **Required**; searched up to two levels below | — |
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--dark-charts` | also render dark-theme chart PNGs (AGP, slot curves, baseline-norm, and daily with `-d`); without this, only light charts | off |
 | `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView and Clarity stay lite. Default off | off |

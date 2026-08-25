@@ -22,18 +22,19 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from lcr.common import (  # pylint: disable=unused-import
     BOOTSTRAP_N, BOOTSTRAP_SEED, CR_DEV_HIGH, CR_DEV_LOW, D4_HIGH, D4_STRONG, D4_WEAK,
     DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_MIN_GAP, DAILY_ROW, DEFAULT_SLOTS, FASTING_HOURS,
-    FEW_DAYS_HINT, HYPO_BG, LOOP_RATIO, LoopCRError, MAX_GAP_MIN, MEAL_MIN_CHO, MERGE_SEC,
-    MGDL_PER_MMOL, MIN_CLEAN_MEALS, MIN_DAYS_FOR_STABILITY, MIN_MEALS_FOR_STABILITY,
-    NADIR_LATE, NADIR_LOW, N_, PEAK_EARLY, PEAK_RISE_HIGH, PRE_BG_HIGH, REPO_URL,
-    REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS, REST_MIN_WINDOW_MIN,
-    REST_OFF_FRAC, REST_REL, SLOT_PROFILES, STABILITY_HIGH, STABILITY_MODERATE, TIME_FMTS,
-    TOOL_NAME, WEEKDAYS, _, _GLUCOSE_UNIT, _SLOTS_VAR, _SLOT_PALETTE, _TRANSLATION,
-    _basal_from_segments, _default_slot_state, _derive_slot_globals, _slot_norm_rows,
-    _slot_scope, _slot_state, build_slots, current_translation, fmt_cr, fmt_delta,
-    fmt_glucose, g, glucose_unit, is_mmol, load_slots_file, merge_carb_entries, num,
-    parse_ts, resource_dir, select_slot_rows, set_glucose_unit, setup_i18n,
-    slot_median_curve, slot_norm_bands, slot_norm_curve, slot_of, slots_from_profile,
-    sorted_unique_series, tool_version)
+    FEW_DAYS_HINT, HYPO_BG, LOOP_RATIO, LoopCRError, MAX_GAP_MIN, MAX_SEARCH_DEPTH,
+    MEAL_MIN_CHO, MERGE_SEC, MGDL_PER_MMOL, MIN_CLEAN_MEALS, MIN_DAYS_FOR_STABILITY,
+    MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW, N_, PEAK_EARLY, PEAK_RISE_HIGH,
+    PRE_BG_HIGH, REPO_URL, REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS,
+    REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL, SLOT_PROFILES, STABILITY_HIGH,
+    STABILITY_MODERATE, TIME_FMTS, TOOL_NAME, WEEKDAYS, _, _GLUCOSE_UNIT, _SLOTS_VAR,
+    _SLOT_PALETTE, _TRANSLATION, _basal_from_segments, _default_slot_state,
+    _derive_slot_globals, _slot_norm_rows, _slot_scope, _slot_state, build_slots,
+    current_translation, find_below, fmt_cr, fmt_delta, fmt_glucose, g, glucose_unit,
+    is_mmol, load_slots_file, merge_carb_entries, num, parse_ts, resource_dir,
+    select_slot_rows, set_glucose_unit, setup_i18n, single_match, slot_median_curve,
+    slot_norm_bands, slot_norm_curve, slot_of, slots_from_profile, sorted_unique_series,
+    tool_version)
 from lcr.readers import (  # pylint: disable=unused-import
     _nightscout_dir, _ns_offset_minutes, _ns_parse_time, clip_by_days, dexcom_csv,
     is_dexcom, is_libreview, is_nightscout, libreview_csv, numbered_csvs, parse_day,
@@ -346,7 +347,10 @@ def parse_args():
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="AGP + loop-aware CR report from a CamAPS/Glooko export")
-    parser.add_argument("export_dir", nargs="?", default=".",
+    # No default: without a folder the tool used to search the working directory
+    # recursively, which on a mistyped path meant walking a whole home directory
+    # and opening every CSV on the way.
+    parser.add_argument("export_dir",
                         help="unpacked export folder (numbered files are merged)")
     parser.add_argument("-o", "--out", default=None,
                         help="output HTML (default: ./<name>_loop-cr-review_<window>.html)")

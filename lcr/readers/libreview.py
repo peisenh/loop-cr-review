@@ -2,28 +2,27 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Reading a LibreView CSV export. Always lite: it carries no basal rate."""
 import csv
-from pathlib import Path
 
 import numpy as np
 
 from lcr.common import (
-    LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit, sorted_unique_series)
+    LoopCRError, find_below, merge_carb_entries, num, parse_ts, set_glucose_unit,
+    single_match, sorted_unique_series)
 
 
 
 def libreview_csv(base):
-    """First CSV that looks like a LibreView glucose export, or None."""
-    for path in sorted(Path(base).rglob("*.csv")):
+    """The CSV that looks like a LibreView glucose export, or None."""
+    hits = []
+    for path in find_below(base, "*.csv"):
         try:
             with open(path, encoding="utf-8-sig", newline="") as fh:
-                first = fh.readline()
-                second = fh.readline()
+                blob = (fh.readline() + " " + fh.readline()).lower()
         except (OSError, UnicodeDecodeError):
             continue
-        blob = (first + " " + second).lower()
         if "aufzeichnungstyp" in blob or "record type" in blob:
-            return path
-    return None
+            hits.append(path)
+    return single_match(hits, "LibreView CSVs", base)
 
 
 def is_libreview(base):

@@ -8,12 +8,12 @@ Carbs and insulin only appear when they were logged in the Dexcom app, so an
 export may well be glucose only — the report then shows what it can.
 """
 import csv
-from pathlib import Path
 
 import numpy as np
 
 from lcr.common import (
-    LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit, sorted_unique_series)
+    LoopCRError, find_below, merge_carb_entries, num, parse_ts, set_glucose_unit,
+    single_match, sorted_unique_series)
 
 # Rows before the data: FirstName/LastName/Device carry the patient and device,
 # Alert rows are threshold settings and of no interest here.
@@ -24,16 +24,17 @@ LIMIT_VALUES = {"low": 40.0, "high": 400.0}
 
 
 def dexcom_csv(base):
-    """First CSV that looks like a Dexcom Clarity export, or None."""
-    for path in sorted(Path(base).rglob("*.csv")):
+    """The CSV that looks like a Dexcom Clarity export, or None."""
+    hits = []
+    for path in find_below(base, "*.csv"):
         try:
             with open(path, encoding="utf-8-sig", newline="") as handle:
                 header = handle.readline().lower()
         except (OSError, UnicodeDecodeError):
             continue
         if "event type" in header and "transmitter time" in header:
-            return path
-    return None
+            hits.append(path)
+    return single_match(hits, "Dexcom Clarity CSVs", base)
 
 
 def is_dexcom(base):

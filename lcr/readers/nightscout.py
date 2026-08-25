@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 
 from lcr.common import (
-    LoopCRError, _basal_from_segments, merge_carb_entries, set_glucose_unit,
-    sorted_unique_series)
+    LoopCRError, _basal_from_segments, find_below, merge_carb_entries, set_glucose_unit,
+    single_match, sorted_unique_series)
 
 
 def is_nightscout(base):
@@ -18,11 +18,11 @@ def is_nightscout(base):
 
 
 def _nightscout_dir(base):
+    """The folder holding entries.json + treatments.json, or None."""
     base = Path(base)
-    for cand in (base, *(p.parent for p in base.rglob("entries.json"))):
-        if (cand / "entries.json").is_file() and (cand / "treatments.json").is_file():
-            return cand
-    return None
+    cands = [c for c in (base, *(p.parent for p in find_below(base, "entries.json")))
+             if (c / "entries.json").is_file() and (c / "treatments.json").is_file()]
+    return single_match(dict.fromkeys(cands), "Nightscout dumps", base)
 
 
 def _ns_parse_time(obj, offset_min):
