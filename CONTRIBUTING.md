@@ -136,6 +136,26 @@ By making a contribution to this project, I certify that:
 
 Full text: <https://developercertificate.org/>
 
+## Developer scripts
+
+```bash
+./tools/build-binaries.sh [cli|gui|webview2|all]   # PyInstaller build + checks
+./tools/make-screenshots.sh               # regenerate docs/screenshot*.png
+```
+
+The build script mirrors the flags of the release workflow, bakes the version in
+the same way and restores `_version.py` afterwards. Worth running before tagging:
+a onefile binary can fail over a file that is not actually bundled or an import
+PyInstaller does not follow, and the test suite never sees either. The CLI is
+checked by generating a report from it; the GUI variants cannot be started
+without a display, so their archive is read instead to confirm the templates
+and catalogs are really inside.
+
+The screenshot script renders the report from `example-data` with whichever of
+chromium/google-chrome is installed and writes both pictures into `docs/`. Look
+at them before committing — a report that has grown past the captured height is
+cut off without any error.
+
 ## Method validation
 
 The unit tests pin the arithmetic; they do not validate the statistics. For that

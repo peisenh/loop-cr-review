@@ -9,6 +9,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- `tools/build-binaries.sh` and `tools/make-screenshots.sh`. The first builds
+  the PyInstaller binaries with the release workflow's flags and checks the
+  generated report has content — a onefile build can fail over a file that is
+  not bundled or an import PyInstaller does not follow, and no unit test sees
+  that. It covers the CLI and both GUI variants; since a GUI cannot be started
+  without a display, its bundle is read from the archive instead. The second regenerates the README pictures from the example data with
+  whichever of chromium/google-chrome is installed, so they stop drifting behind
+  the layout.
+
 ### Changed
 - The 2300-line single module is split into a small package. `lcr/common.py`
   holds i18n, units, errors, method constants and the slot helpers,
