@@ -17,7 +17,7 @@ from jinja2 import select_autoescape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import loop_cr_review as core
-from loop_cr_review import LoopCRError
+from loop_cr_review import LoopCRError, libreview_csv
 
 REPO = "https://github.com/peisenh/loop-cr-review"
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024        # 64 MB cap for the (compressed) ZIP
@@ -99,8 +99,7 @@ def _find_export_base(root):
     candidates = [cgm.parent for cgm in Path(root).rglob("cgm_data_*.csv")]
     lv = [p.parent for p in Path(root).rglob("*.csv")]
     # LibreView: parent of a CSV with Record Type / Aufzeichnungstyp
-    from loop_cr_review import _libreview_csv
-    lv = _libreview_csv(root)
+    lv = libreview_csv(root)
     if lv:
         return lv.parent
     if not candidates:

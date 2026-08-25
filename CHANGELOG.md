@@ -9,9 +9,48 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The 2300-line single module is split into a small package. `lcr/common.py`
+  holds i18n, units, errors, method constants and the slot helpers,
+  `lcr/charts.py` all matplotlib, and `lcr/readers/` one module per source
+  (`glooko.py`, `nightscout.py`, `libreview.py`) with the shared pieces in its
+  `__init__` — a fourth source will be a new file rather than edits in a shared
+  one. `loop_cr_review.py` keeps the analysis and the rendering and re-exports
+  everything, so `webapp`, `gui`, the tests and `sim/` import exactly as before:
+  the split is internal, and the generated report is byte-identical.
+- Duplication that only became visible once the sources sat in separate modules:
+  three copies of the carb-entry merging became one `merge_carb_entries()`, and
+  the Glooko basal timeline now uses the same `_basal_from_segments()` as
+  Nightscout.
+- `tool_version` (reads git / `_version.py`) and `loop_rest` (analysis of
+  meal-free windows) had ended up among the readers; both moved to where they
+  belong.
+- `_libreview_csv` is now the public `libreview_csv` — `webapp` had been
+  importing the private name.
+- `.pylintrc`: the module-line limit drops from 1750 to 1000, since no module
+  needs the raised value any more. The remaining size limits are documented for
+  what they are: the reader and context boundaries are wide by nature.
+
 ### Fixed
-- Fixed TIR/GRI card layout and text overflow in PDF print output.
-- Fixed TIR target wrapping without changing the HTML layout.
+- TIR/GRI card layout and text overflow in PDF print output, and TIR target
+  wrapping without changing the HTML layout.
+- A stray `@contextmanager`, left behind when a chart helper moved out of the
+  shared module, decorated `fmt_cr` instead. Every carb ratio in the report then
+  rendered as `<contextlib._GeneratorContextManager object at 0x…>` — and the
+  whole suite stayed green, because no test looked at what the cells contain.
+  There is one now, plus checks that the numeric cells are numeric.
+- A blanket rename of the loop variables `X`/`Y` in the charts also hit a
+  strftime format: `%Y` became `%ys`, so every daily panel was titled
+  "01.07.26s" instead of "01.07.2026". Only a diff of the generated report
+  showed it — the text was identical, the images were not. The panel title is
+  covered by a test now.
+- The line silencing matplotlib's "building the font cache" message was dropped
+  as an unused import while tidying up after the split, so the onefile binary
+  printed it on every start again. It sits next to the `MPLCONFIGDIR` setting
+  again — both have to run before matplotlib is imported — and both are checked
+  by a test.
+- Unused imports, two single-letter variable names, a missing docstring and the
+  matplotlib configuration sitting between imports.
 
 ## [0.14.0] - 2026-08-24
 

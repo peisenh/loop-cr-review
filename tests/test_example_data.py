@@ -6,10 +6,12 @@ do not silently flip the demo report.
 """
 from __future__ import annotations
 
+import os
+import logging
 import tempfile
 import unittest
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import loop_cr_review as core
@@ -266,3 +268,73 @@ class TestCgmGap(unittest.TestCase):
         used, n_clean, only = core.select_slot_rows(rows)
         self.assertFalse(only)
         self.assertEqual(len(used), 2)
+
+
+class TestRenderedValues(unittest.TestCase):
+    """The report must contain formatted values, not repr() of objects.
+
+    Regression: a stray decorator left over from a refactor turned `fmt_cr`
+    into a context manager. Every carb ratio in the report then rendered as
+    "<contextlib._GeneratorContextManager object at 0x…>" — and the whole
+    suite stayed green, because nothing looked at what the cells contain.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html, cls.ctx = core.generate_report(str(EXAMPLE), lang="de")
+
+    def test_no_python_object_repr_in_output(self):
+        for pattern in (r"&lt;[\w.]+ object at 0x", r"&lt;function ", r"&lt;generator "):
+            with self.subTest(pattern=pattern):
+                self.assertNotRegex(self.html, pattern)
+
+    def test_carb_ratios_are_formatted(self):
+        """Every slot shows a ratio as 1:x.x (or the em dash for nan)."""
+        for slot in self.ctx["slots"]:
+            with self.subTest(slot=slot["label"]):
+                for key in ("cr", "cre"):
+                    self.assertRegex(slot[key], r"^(1:\d+\.\d|—)$")
+
+    def test_numeric_cells_look_numeric(self):
+        for slot in self.ctx["slots"]:
+            with self.subTest(slot=slot["label"]):
+                self.assertRegex(slot["exc"], r"^[+-]\d+\.\d\d$")
+                self.assertRegex(slot["cho"], r"^\d+$")
+
+class TestDayTitle(unittest.TestCase):
+    """Panel titles of the daily charts.
+
+    Regression: a blanket rename of the variables X/Y also hit the strftime
+    format, turning "%Y" into "%ys" — every daily panel then read
+    "01.07.26s" instead of "01.07.2026". The suite did not notice, because
+    chart content is only ever checked for being non-empty.
+    """
+
+    def test_date_is_a_four_digit_year(self):
+        core.setup_i18n("de")
+        title = core._day_title(date(2026, 7, 1), {})
+        self.assertIn("01.07.2026", title)
+        self.assertRegex(title, r"^\w+, \d{2}\.\d{2}\.\d{4}$")
+
+    def test_title_carries_tdd_when_known(self):
+        core.setup_i18n("de")
+        tdd = {date(2026, 7, 1): (16.6, 36.7, 20.1)}   # (bolus, total, basal)
+        self.assertIn("36.7", core._day_title(date(2026, 7, 1), tdd))
+
+
+class TestMatplotlibBootstrap(unittest.TestCase):
+    """The two lines that keep the binary quiet and fast on every start.
+
+    Regression: while tidying imports after the split, the `logging` line was
+    dropped as an unused import — the font cache message came back on every
+    run of the onefile binary. Both settings must be in place *before*
+    matplotlib is imported, so importing the tool is enough to check them.
+    """
+
+    def test_font_cache_has_a_fixed_location(self):
+        self.assertTrue(os.environ.get("MPLCONFIGDIR"),
+                        "MPLCONFIGDIR unset: the binary rebuilds the font cache every start")
+
+    def test_font_manager_is_silenced(self):
+        self.assertGreaterEqual(logging.getLogger("matplotlib.font_manager").level,
+                                logging.ERROR)
