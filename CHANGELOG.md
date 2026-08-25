@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-25
+
 ### Changed
 - **`export_dir` is required now.** Without a folder the tool used to default to
   the working directory and search it recursively — a call in the wrong place
@@ -814,7 +816,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/peisenh/loop-cr-review/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/peisenh/loop-cr-review/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/peisenh/loop-cr-review/compare/v0.13.2...v0.14.0
