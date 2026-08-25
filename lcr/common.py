@@ -403,7 +403,9 @@ def fmt_delta(value):
 TIME_FMTS = ("%d.%m.%Y %H:%M",    # de:    29.07.2026 09:02
              "%d/%m/%Y %H:%M",    # en/UK: 29/07/2026 09:02
              "%d-%m-%Y %H:%M",    # LibreView: 21-08-2026 16:24
-             "%Y-%m-%d %H:%M")    # en_US/ISO: 2026-07-29 09:02
+             "%Y-%m-%d %H:%M",    # en_US/ISO: 2026-07-29 09:02
+             "%Y-%m-%dT%H:%M:%S",  # Dexcom Clarity: 2026-07-29T09:02:31
+             "%Y-%m-%d %H:%M:%S")  # same, some exports use a space
 TOOL_NAME = "Loop-CR-Review"
 REPO_URL = "https://github.com/peisenh/loop-cr-review"
 

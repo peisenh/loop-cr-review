@@ -35,9 +35,10 @@ from lcr.common import (  # pylint: disable=unused-import
     slot_median_curve, slot_norm_bands, slot_norm_curve, slot_of, slots_from_profile,
     sorted_unique_series, tool_version)
 from lcr.readers import (  # pylint: disable=unused-import
-    _nightscout_dir, _ns_offset_minutes, _ns_parse_time, clip_by_days, is_libreview,
-    is_nightscout, libreview_csv, numbered_csvs, parse_day, peek_span, read_basal_timeline,
-    read_bolus_events, read_cgm, read_libreview, read_meals, read_nightscout, read_tdd)
+    _nightscout_dir, _ns_offset_minutes, _ns_parse_time, clip_by_days, dexcom_csv,
+    is_dexcom, is_libreview, is_nightscout, libreview_csv, numbered_csvs, parse_day,
+    peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
+    read_libreview, read_meals, read_nightscout, read_tdd)
 from lcr.charts import (  # pylint: disable=unused-import
     _chart_palette, _chart_theme, _day_title, _draw_day_events, agp_chart, daily_charts,
     fig_to_b64, gri_grid_chart, selection_effect, slot_curves_chart, slot_norm_curves_chart)
@@ -235,6 +236,8 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         ns = read_nightscout(base)
     elif is_libreview(base):
         ns = read_libreview(base)
+    elif is_dexcom(base):
+        ns = read_dexcom(base)
     if ns:
         times, gluc, name, sensor = ns["times"], ns["gluc"], ns["name"], ns["sensor"]
         meals, minors, pump = ns["meals"], ns["minors"], ns["pump"]
@@ -244,7 +247,9 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         meals, minors, pump = read_meals(base)
         basal = read_basal_timeline(base)
     source = ns["source"] if ns else "glooko"
-    lite = source == "libreview" or (source == "nightscout" and not assume_camaps)
+    # No basal in the export means no loop-aware part, whatever the source.
+    lite = source in ("libreview", "dexcom") or (source == "nightscout"
+                                                and not assume_camaps)
     events = ns["events"] if ns else None
     times, gluc, meals, minors, events = clip_by_days(
         times, gluc, meals, minors, events, date_from, date_to, window)

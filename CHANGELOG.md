@@ -9,6 +9,29 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Dexcom Clarity as a data source (`lcr/readers/dexcom.py`). One CSV holding
+  glucose, carbs and insulin as separate rows; carbs and insulin only exist when
+  they were logged in the Dexcom app, so a glucose-only export is read as such.
+  Always lite — Clarity carries no basal rate, so there is no loop-aware part.
+  Long-acting insulin is deliberately not counted as a meal bolus: on injections
+  it stands in for a basal rate and says nothing about a single meal. The device
+  and alert rows at the top of the file are skipped (their thresholds sit in the
+  glucose column), and "Low"/"High" become 40/400 rather than being dropped,
+  which would look like a sensor gap.
+- `parse_ts` accepts the ISO form with a `T` that Clarity writes.
+- The web form takes a Clarity CSV as well; its label and hint name the sources
+  instead of singling LibreView out.
+
+### Fixed
+- `babel.cfg` still only looked at `loop_cr_review.py` and the templates, so every
+  string that moved into `lcr/` during the package split was invisible to the
+  extraction — 155 of 223 msgids. Nothing broke while the catalogs were left
+  alone, but the next `pybabel update` would have dropped two thirds of the
+  translations. The config now covers `lcr/**.py` and `webapp.py`.
+- Untranslated German strings that surfaced once the extraction was complete
+  (TIR targets, TITR label), and a dead line in the web app's export detection.
+
 ### Fixed
 - `tools/build-binaries.sh` produced a broken Qt GUI without saying so: PyInstaller's
   `--collect-all` only warns when a package is missing, so a build environment without

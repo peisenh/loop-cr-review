@@ -58,6 +58,9 @@ The core method relies on CamAPS delivering auto-corrections as **modulated basa
 - **Tandem Control-IQ, Omnipod 5, and others** deliver auto-corrections partly as **boluses**. These do not appear in the basal → the loop extra basal underestimates the compensation, and the verdict is distorted.
 - **Nightscout:** `entries.json` + `treatments.json` dump (API, no live fetch). CGM from `sgv`, meals from Meal/Correction Bolus, basal from `Temp Basal`. Times: UTC from the ISO string, local clock via the CGM `utcOffset` (treatment offset 0 is ignored). **Default is lite** — Part 2 only with `--assume-camaps`, and only if this really is CamAPS via NS. Do not treat AAPS/Loop Nightscout as CamAPS.
 - **LibreView:** one glucose CSV (record types 0/4/5). Always lite — no basal, no Part 2.
+- **Dexcom Clarity:** the CSV from the Clarity export (`EGV`/`Carbs`/`Insulin` rows).
+  Carbs and insulin only as far as they were logged in the Dexcom app; long-acting
+  insulin does not count as a meal bolus. Always lite — no basal, no Part 2.
 
 Use with other loops is **conceivable with adaptations**, but untested — in particular, (1) the export columns would need to be mapped and (2) auto-correction **boluses** would need to be included in the "loop extra basal" term. Without these adaptations, the results are not valid for non-CamAPS systems.
 
@@ -115,6 +118,7 @@ python3 loop_cr_review.py <export_folder> --lang en  # report in English (defaul
 python3 loop_cr_review.py <ns-folder>                # Nightscout: entries.json + treatments.json → lite
 python3 loop_cr_review.py <ns-folder> --assume-camaps  # NS: enable CamAPS Part 2
 python3 loop_cr_review.py <libreview-folder>          # LibreView CSV → always lite
+python3 loop_cr_review.py <clarity-folder>            # Dexcom Clarity CSV → always lite
 python3 loop_cr_review.py <export_folder> --span      # print from–to only
 python3 loop_cr_review.py <export_folder> --from 2026-08-01 --to 2026-08-14
 python3 loop_cr_review.py <export_folder> -o report.html
@@ -123,10 +127,10 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 
 | Option | Meaning | Default |
 | --- | --- | --- |
-| `export_dir` | Glooko folder, Nightscout folder, or LibreView CSV | `.` |
+| `export_dir` | Folder with a Glooko export, Nightscout dump, LibreView or Clarity CSV | `.` |
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--dark-charts` | also render dark-theme chart PNGs (AGP, slot curves, baseline-norm, and daily with `-d`); without this, only light charts | off |
-| `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView stays lite. Default off | off |
+| `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView and Clarity stay lite. Default off | off |
 | `--span` | print the CGM date range, no report | off |
 | `--from` / `--to` | calendar days YYYY-MM-DD (inclusive) | full export |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |

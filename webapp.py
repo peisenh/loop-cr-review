@@ -17,7 +17,7 @@ from jinja2 import select_autoescape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import loop_cr_review as core
-from loop_cr_review import LoopCRError, libreview_csv
+from loop_cr_review import LoopCRError, dexcom_csv, libreview_csv
 
 REPO = "https://github.com/peisenh/loop-cr-review"
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024        # 64 MB cap for the (compressed) ZIP
@@ -80,7 +80,7 @@ def _unpack_upload(tmpd, upload):
             with zipfile.ZipFile(saved) as zf:
                 _safe_extract(zf, extract)
         except zipfile.BadZipFile:
-            abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView CSV")
+            abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
     return extract
 
 
@@ -97,13 +97,14 @@ def _find_export_base(root):
     if ns:
         return ns[0]
     candidates = [cgm.parent for cgm in Path(root).rglob("cgm_data_*.csv")]
-    lv = [p.parent for p in Path(root).rglob("*.csv")]
-    # LibreView: parent of a CSV with Record Type / Aufzeichnungstyp
-    lv = libreview_csv(root)
-    if lv:
-        return lv.parent
+    # LibreView: a CSV with Record Type / Aufzeichnungstyp.
+    # Dexcom Clarity: a CSV with Event Type / Transmitter Time.
+    for finder in (libreview_csv, dexcom_csv):
+        found = finder(root)
+        if found:
+            return found.parent
     if not candidates:
-        abort(400, "no cgm_data_*.csv, Nightscout dump or LibreView CSV found")
+        abort(400, "no cgm_data_*.csv, Nightscout dump, LibreView or Dexcom Clarity CSV found")
     for parent in candidates:
         if (parent / "Insulin data").is_dir():
             return parent

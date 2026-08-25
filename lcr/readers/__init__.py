@@ -10,6 +10,7 @@ produced the structures it gets.
     glooko.py      Glooko/CamAPS CSV export (the only source with basal)
     nightscout.py  Nightscout JSON dumps
     libreview.py   LibreView CSV (always lite: no basal)
+    dexcom.py      Dexcom Clarity CSV (always lite: no basal)
 """
 import csv
 import json
@@ -25,12 +26,16 @@ import numpy as np
 from lcr.readers.glooko import (
     numbered_csvs, read_basal_timeline, read_bolus_events, read_cgm, read_meals,
     read_tdd)
+from lcr.readers.dexcom import dexcom_csv, is_dexcom, read_dexcom
 from lcr.readers.libreview import is_libreview, libreview_csv, read_libreview
 from lcr.readers.nightscout import (
     _nightscout_dir, _ns_offset_minutes, _ns_parse_time, is_nightscout,
     read_nightscout)
 
 __all__ = [
+    "dexcom_csv",
+    "is_dexcom",
+    "read_dexcom",
     "_nightscout_dir",
     "_ns_offset_minutes",
     "_ns_parse_time",
