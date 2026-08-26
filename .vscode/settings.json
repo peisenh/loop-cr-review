@@ -13,11 +13,12 @@
         "${workspaceFolder}/tests"
     ],
 
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "off",
     "python.analysis.extraPaths": [
         "${workspaceFolder}"
     ],
 
+    "ruff.enable": false,
     "pylint.enabled": true,
 
     "files.exclude": {
