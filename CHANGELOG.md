@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-26
+
 ### Changed
 - Exports without a basal trace now get the full assessment, not just the curves.
   Everything the glucose alone can say applies to them as well: the return delta,
@@ -865,7 +867,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/peisenh/loop-cr-review/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/peisenh/loop-cr-review/compare/v0.14.0...v0.15.0
