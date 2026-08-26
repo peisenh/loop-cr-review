@@ -10,6 +10,7 @@ way, then silently analysing whichever export sorted first.
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -160,3 +161,39 @@ class TestReadsNothingUnrelated(unittest.TestCase):
         big = "x" * (core.HEAD_BYTES * 20)
         (self.root / "huge.csv").write_text(big, encoding="utf-8")
         self.assertIsNone(core.libreview_csv(self.root))
+
+
+class TestRealExportIsNotRefused(unittest.TestCase):
+    """The cap must not fire on a real export.
+
+    Regression: the limit was set to 12 while a Glooko export holds 18 CSVs
+    (cgm, bolus, basal, alarms, ...). The web upload refused them, because it
+    asked the content-sniffing readers before checking for Glooko's file names.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def test_cap_sits_above_a_glooko_export(self):
+        self.assertGreaterEqual(core.MAX_SNIFF_FILES, 20)
+
+    def test_eighteen_csvs_are_still_sniffed(self):
+        for name in ("cgm_data_1", "cgm_data_2", "cgm_data_3", "bolus_data_1",
+                     "basal_data_1", "bg_data_1", "alarms_data_1", "cgm_carbs_data_1",
+                     "insulin_data_1", "pump_data_1", "notes_data_1", "exercise_data_1",
+                     "carbs_data_1", "device_data_1", "settings_data_1", "food_data_1",
+                     "reminders_data_1", "summary_data_1"):
+            (self.root / f"{name}.csv").write_text("a;b\n1;2\n", encoding="utf-8")
+        self.assertEqual(len(core.sniff_candidates(self.root, "*.csv", "CSV files")), 18)
+
+    def test_web_upload_checks_glooko_before_reading_headers(self):
+        """A folder with cgm_data_*.csv is a Glooko export - no sniffing needed."""
+        import webapp   # noqa: PLC0415
+        (self.root / "cgm_data_1.csv").write_text("x\n", encoding="utf-8")
+        (self.root / "Insulin data").mkdir()
+        with unittest.mock.patch("webapp.libreview_csv") as sniffed:
+            base = webapp._find_export_base(str(self.root))
+        sniffed.assert_not_called()
+        self.assertEqual(Path(base), self.root)

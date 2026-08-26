@@ -119,8 +119,10 @@ MAX_SEARCH_DEPTH = 2
 SKIP_DIRS = {".git", ".hg", ".svn", "node_modules", "__pycache__", ".venv", "venv",
              ".tox", ".mypy_cache", ".pytest_cache", "site-packages", "dist", "build"}
 # Above this many candidates the folder is plainly not an export folder. Reading
-# them all to look for a header would be slow and nosy in equal measure.
-MAX_SNIFF_FILES = 12
+# them all to look for a header would be slow and nosy in equal measure. A Glooko
+# export holds 18 CSVs (cgm, bolus, basal, alarms, ...), so the limit has to sit
+# well above that - it is there to catch a home directory, not a real export.
+MAX_SNIFF_FILES = 40
 # Enough for any header row, and a cap for files that have no line breaks.
 HEAD_BYTES = 4096
 

@@ -9,6 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- A real Glooko export was refused on upload. The cap on how many CSVs may be
+  opened to look at their headers was set to 12, while a Glooko export holds 18
+  (cgm, bolus, basal, alarms, ...) — and the web upload asked the
+  content-sniffing readers before checking for Glooko's file names. The cap now
+  sits at 40, where it still catches a home directory but no export, and the web
+  upload checks Glooko first, as the command line already did.
+
 ### Changed
 - The readers no longer open files that are none of their business. Glooko and
   Nightscout are recognised by file name alone, so they are checked first: for a

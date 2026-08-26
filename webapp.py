@@ -108,13 +108,16 @@ def _find_export_base(root):
     if ns:
         return ns[0]
     candidates = [cgm.parent for cgm in Path(root).rglob("cgm_data_*.csv")]
-    # LibreView: a CSV with Record Type / Aufzeichnungstyp.
-    # Dexcom Clarity: a CSV with Event Type / Transmitter Time.
-    for finder in (libreview_csv, dexcom_csv):
-        found = finder(root)
-        if found:
-            return found.parent
+    # Glooko is recognised by file name, so it comes first: the readers below open
+    # files to look at their headers, and there is no reason to do that for an
+    # export we have already identified.
     if not candidates:
+        # LibreView: a CSV with Record Type / Aufzeichnungstyp.
+        # Dexcom Clarity: a CSV with Event Type / Transmitter Time.
+        for finder in (libreview_csv, dexcom_csv):
+            found = finder(root)
+            if found:
+                return found.parent
         abort(400, "no cgm_data_*.csv, Nightscout dump, LibreView or Dexcom Clarity CSV found")
     for parent in candidates:
         if (parent / "Insulin data").is_dir():
