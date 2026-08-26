@@ -21,6 +21,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   clear message instead of being read one by one: that is not an export folder.
 
 ### Added
+- Added live progress reporting to the asynchronous web analysis. The progress
+  now advances through the actual report-generation phases, including per-day
+  progress while the expensive daily charts are rendered. The same progress
+  UI is used by the web app and the Windows/Linux desktop GUI.
+- Localised all progress/status messages in the web upload UI through the
+  existing gettext/Babel catalogs (German and English).
 - Added VSCodium project configuration for the repository.
 
 ## [0.17.0] - 2026-08-25

@@ -55,12 +55,51 @@ class TestUploadForm(WebTestCase):
         body = res.data.decode()
         self.assertIn("Medizinprodukt", body)      # disclaimer must be visible
         self.assertIn("github.com/peisenh", body)  # AGPL source link
+        self.assertIn("/analyze", body)
+        self.assertIn("/progress/JOB", body)
 
     def test_form_language_switch(self):
         self.assertEqual(self.client.get("/?lang=en").status_code, 200)
         self.assertEqual(self.client.get("/?lang=de").status_code, 200)
         # unknown language falls back instead of erroring
         self.assertEqual(self.client.get("/?lang=zz").status_code, 200)
+
+
+class TestAsyncReport(WebTestCase):
+    """Asynchronous report endpoint used by the browser and desktop GUI."""
+
+    def test_async_report_reaches_done_and_result(self):
+        res = self.client.post("/analyze", data={
+            "lang": "de", "window_hours": "4",
+            "export": (io.BytesIO(self.example), "export.zip"),
+        }, content_type="multipart/form-data")
+        self.assertEqual(res.status_code, 200)
+        job_id = res.get_json()["job_id"]
+        self.assertRegex(job_id, r"^[0-9a-f]{32}$")
+
+        # The job is intentionally asynchronous; poll the shared status file.
+        import time
+        deadline = time.time() + 15
+        state = None
+        while time.time() < deadline:
+            status = self.client.get(f"/progress/{job_id}")
+            self.assertEqual(status.status_code, 200)
+            state = status.get_json()
+            if state["state"] in ("done", "error"):
+                break
+            time.sleep(0.05)
+
+        self.assertEqual(state["state"], "done", state)
+        result = self.client.get(f"/result/{job_id}")
+        self.assertEqual(result.status_code, 200)
+        self.assertIn(b"<!doctype html>", result.data[:40].lower())
+
+    def test_invalid_async_upload_is_rejected(self):
+        res = self.client.post("/analyze", data={
+            "lang": "de", "window_hours": "4",
+            "export": (io.BytesIO(b"not a zip"), "export.zip"),
+        }, content_type="multipart/form-data")
+        self.assertEqual(res.status_code, 400)
 
 
 class TestReportHappyPath(WebTestCase):

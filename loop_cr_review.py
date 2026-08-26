@@ -218,20 +218,40 @@ def _tir_bands(met):
             (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
 
 
-def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, tdd=None):
+def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, tdd=None, progress=None):
     """Daily panels for the HTML report. Dark copies only if requested."""
     events = read_bolus_events(base) if events is None else events
     tdd = read_tdd(base) if tdd is None else tdd
-    light = daily_charts(times, gluc, events, basal, tdd, dark=False)
+    # The daily charts are one of the dominant report-generation costs. Report
+    # progress once per completed day so the UI does not sit at one percentage
+    # while matplotlib renders a large multi-day report.
+    daily_progress = progress
+    light = daily_charts(times, gluc, events, basal, tdd, dark=False,
+                         progress=(lambda done, total: daily_progress("daily",
+                                                                       done, total, False))
+                                   if daily_progress else None)
     if not dark_charts:
         return [{"img": a["img"], "img_dark": ""} for a in light]
-    dark = daily_charts(times, gluc, events, basal, tdd, dark=True)
+    dark = daily_charts(times, gluc, events, basal, tdd, dark=True,
+                        progress=(lambda done, total: daily_progress("daily",
+                                                                       done, total, True))
+                                  if daily_progress else None)
     return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
 
 
 def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
-                  assume_camaps=False, date_from=None, date_to=None):
-    """Read all data, analyse, and assemble the template context."""
+                  assume_camaps=False, date_from=None, date_to=None, progress=None):
+    """Read all data, analyse, and assemble the template context.
+
+    ``progress`` is an optional callback receiving ``(stage, percent)``.
+    It is deliberately advisory: progress reporting must never change the
+    analysis result or make the core dependent on a particular UI.
+    """
+    def _progress(stage, percent):
+        if progress is not None:
+            progress(stage, percent)
+
+    _progress("read", 5)
     ns = None
     # Name-based sources first: Glooko and Nightscout are recognised by file names
     # alone. Only when neither is there do the remaining readers open files to look
@@ -255,6 +275,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         meals, minors, pump = read_meals(base)
         basal = read_basal_timeline(base)
     source = ns["source"] if ns else "glooko"
+    _progress("read", 25)
     # No basal in the export means no loop-aware part, whatever the source.
     lite = source in ("libreview", "dexcom") or (source == "nightscout"
                                                 and not assume_camaps)
@@ -271,6 +292,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         raise LoopCRError("No basal rates found.")
     rows = [] if basal is None else analyze_meals(
         meals, minors, basal, window, val_at, cgm_times=cgm_times64)
+    _progress("meals", 50)
     seen = {r["time"] for r in rows}
     for meal in meals:
         if meal["time"] in seen:
@@ -296,7 +318,52 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         stability = {slot: decision_stability(srows) for slot, srows in selected.items()}
         recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
                                                     stability, selected)
+    _progress("analysis", 70)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
+
+    # Chart rendering dominates report generation for larger exports. Keep the
+    # progress range reserved for the actual rendering work instead of jumping
+    # to 90% before matplotlib starts.
+    _progress("charts", 71)
+    chart_state = {"step": 0}
+
+    def _daily_progress(stage, done, total, dark):
+        # One completed daily panel is one real unit of work. Light and dark
+        # panels are separate rendering passes when dark charts are requested.
+        passes = 2 if dark_charts else 1
+        completed = done + (total if dark else 0)
+        chart_state["step"] = completed
+        total_steps = max(1, total * passes)
+        pct = 86 + int(11 * completed / total_steps)
+        suffix = f" {done}/{total}" if not dark else f" dark {done}/{total}"
+        _progress("daily" + suffix, min(pct, 97))
+
+    # Build the expensive charts in measured phases. The final report render is
+    # deliberately kept separate so 100% only means the HTML is ready.
+    gri_img = gri_grid_chart(gri, dark=False)
+    _progress("charts", 73)
+    gri_img_dark = gri_grid_chart(gri, dark=True) if dark_charts else ""
+    _progress("charts", 74)
+    agp_img = agp_chart(times, gluc)
+    _progress("charts", 76)
+    agp_img_dark = agp_chart(times, gluc, dark=True) if dark_charts else ""
+    _progress("charts", 77)
+    slot_img = slot_curves_chart(meals, window, val_at)
+    _progress("charts", 79)
+    slot_img_dark = (slot_curves_chart(meals, window, val_at, dark=True)
+                     if dark_charts else "")
+    _progress("charts", 80)
+    slot_norm_img = slot_norm_curves_chart(meals, window, val_at)
+    _progress("charts", 84)
+    slot_norm_img_dark = (slot_norm_curves_chart(meals, window, val_at, dark=True)
+                          if dark_charts else "")
+    _progress("charts", 86)
+    daily_days = (_daily_days_dual(times, gluc, base, basal, dark_charts,
+                                   events=events,
+                                   tdd=ns["tdd"] if ns else None,
+                                   progress=_daily_progress)
+                  if daily else [])
+    _progress("charts", 97)
 
     return {
         "source": source, "lite": lite,
@@ -307,22 +374,18 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
         "gri": {**gri,
-                "img": gri_grid_chart(gri, dark=False),
-                "img_dark": gri_grid_chart(gri, dark=True) if dark_charts else ""},
+                "img": gri_img,
+                "img_dark": gri_img_dark},
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in _tir_bands(met)],
-        "agp_img": agp_chart(times, gluc),
-        "agp_img_dark": agp_chart(times, gluc, dark=True) if dark_charts else "",
-        "slot_img": slot_curves_chart(meals, window, val_at),
-        "slot_img_dark": (slot_curves_chart(meals, window, val_at, dark=True)
-                          if dark_charts else ""),
-        "slot_norm_img": slot_norm_curves_chart(meals, window, val_at),
-        "slot_norm_img_dark": (slot_norm_curves_chart(meals, window, val_at, dark=True)
-                               if dark_charts else ""),
+        "agp_img": agp_img,
+        "agp_img_dark": agp_img_dark,
+        "slot_img": slot_img,
+        "slot_img_dark": slot_img_dark,
+        "slot_norm_img": slot_norm_img,
+        "slot_norm_img_dark": slot_norm_img_dark,
         "selection": selection_effect(meals, by_slot, window, val_at),
-        "daily_days": _daily_days_dual(times, gluc, base, basal, dark_charts,
-                                events=events,
-                                tdd=ns["tdd"] if ns else None) if daily else [],
+        "daily_days": daily_days,
         "curve_cap": curve_cap,
         "slots": [] if lite else _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
@@ -393,7 +456,7 @@ def parse_args():
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
                     daily=False, dark_charts=False, assume_camaps=False,
                     date_from=None, date_to=None,
-                    slots=None, template_dir=None):
+                    slots=None, template_dir=None, progress=None):
     """Analyse an unpacked export and return (html, context).
 
     Reusable core shared by the CLI and other front-ends (e.g. a web
@@ -415,8 +478,14 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     with _slot_scope(slots):
         context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
                             dark_charts=dark_charts, assume_camaps=assume_camaps,
-                            date_from=date_from, date_to=date_to)
-        return render(context, tpl_dir), context
+                            date_from=date_from, date_to=date_to, progress=progress)
+        if progress is not None:
+            progress("render", 98)
+        html = render(context, tpl_dir)
+        if progress is not None:
+            progress("render", 99)
+            progress("done", 100)
+        return html, context
 
 
 def main():

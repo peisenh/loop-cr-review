@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-25 13:15+0000\n"
+"POT-Creation-Date: 2026-08-26 17:21+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -16,50 +16,50 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: loop_cr_review.py:60
+#: loop_cr_review.py:61
 #, python-format
 msgid "%(label)s = everything outside the other windows"
 msgstr "%(label)s = everything outside the other windows"
 
-#: loop_cr_review.py:62
+#: loop_cr_review.py:63
 #, python-format
 msgid "%(label)s = %(start)s–%(end)s"
 msgstr "%(label)s = %(start)s–%(end)s"
 
-#: loop_cr_review.py:76
+#: loop_cr_review.py:77
 msgid " ⚠︎ (hypo — secure first)"
 msgstr " ⚠︎ (hypo — secure first)"
 
-#: loop_cr_review.py:168
+#: loop_cr_review.py:169
 msgid "Too few meals per slot for a robust shape description."
 msgstr "Too few meals per slot for a robust shape description."
 
-#: loop_cr_review.py:210
+#: loop_cr_review.py:211
 #, python-format
 msgid "Very High &gt;%(v)s"
 msgstr "Very High &gt;%(v)s"
 
-#: loop_cr_review.py:211
+#: loop_cr_review.py:212
 #, python-format
 msgid "High %(lo)s–%(hi)s"
 msgstr "High %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:213
+#: loop_cr_review.py:214
 #, python-format
 msgid "Target %(lo)s–%(hi)s"
 msgstr "Target %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:215
+#: loop_cr_review.py:216
 #, python-format
 msgid "Low %(lo)s–%(hi)s"
 msgstr "Low %(lo)s–%(hi)s"
 
-#: loop_cr_review.py:217
+#: loop_cr_review.py:218
 #, python-format
 msgid "Very Low &lt;%(v)s"
 msgstr "Very Low &lt;%(v)s"
 
-#: loop_cr_review.py:291
+#: loop_cr_review.py:322
 msgid "device unknown"
 msgstr "device unknown"
 
@@ -378,55 +378,55 @@ msgstr "10–90 %"
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s vs. meal start"
 
-#: lcr/common.py:182 lcr/common.py:192 lcr/common.py:198
+#: lcr/common.py:255 lcr/common.py:265 lcr/common.py:271
 msgid "Breakfast"
 msgstr "Breakfast"
 
-#: lcr/common.py:183 lcr/common.py:193 lcr/common.py:200
+#: lcr/common.py:256 lcr/common.py:266 lcr/common.py:273
 msgid "Lunch"
 msgstr "Lunch"
 
-#: lcr/common.py:184 lcr/common.py:194 lcr/common.py:202
+#: lcr/common.py:257 lcr/common.py:267 lcr/common.py:275
 msgid "Dinner"
 msgstr "Dinner"
 
-#: lcr/common.py:185 lcr/common.py:195 lcr/common.py:203
+#: lcr/common.py:258 lcr/common.py:268 lcr/common.py:276
 msgid "Other"
 msgstr "Other"
 
-#: lcr/common.py:199
+#: lcr/common.py:272
 msgid "Morning snack"
 msgstr "Morning snack"
 
-#: lcr/common.py:201
+#: lcr/common.py:274
 msgid "Afternoon snack"
 msgstr "Afternoon snack"
 
-#: lcr/common.py:468
+#: lcr/common.py:541
 msgid "Monday"
 msgstr "Monday"
 
-#: lcr/common.py:468
+#: lcr/common.py:541
 msgid "Tuesday"
 msgstr "Tuesday"
 
-#: lcr/common.py:468
+#: lcr/common.py:541
 msgid "Wednesday"
 msgstr "Wednesday"
 
-#: lcr/common.py:468
+#: lcr/common.py:541
 msgid "Thursday"
 msgstr "Thursday"
 
-#: lcr/common.py:469
+#: lcr/common.py:542
 msgid "Friday"
 msgstr "Friday"
 
-#: lcr/common.py:469
+#: lcr/common.py:542
 msgid "Saturday"
 msgstr "Saturday"
 
-#: lcr/common.py:469
+#: lcr/common.py:542
 msgid "Sunday"
 msgstr "Sunday"
 
@@ -461,7 +461,6 @@ msgid ""
 "Source: LibreView. Glucose and meal courses only — no basal, no CR "
 "assessment."
 msgstr ""
-""
 "Source: LibreView. Glucose and meal courses only — no basal, no CR "
 "assessment."
 
@@ -470,7 +469,6 @@ msgid ""
 "Source: Nightscout. Glucose and meal courses only — no CR assessment. "
 "CamAPS Part 2 is off unless you opt in."
 msgstr ""
-""
 "Source: Nightscout. Glucose and meal courses only — no CR assessment. "
 "CamAPS Part 2 is off unless you opt in."
 
@@ -479,7 +477,6 @@ msgid ""
 "Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the "
 "basal trace."
 msgstr ""
-""
 "Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the "
 "basal trace."
 
@@ -528,7 +525,6 @@ msgid ""
 "Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
 "≤36%%."
 msgstr ""
-""
 "Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
 "≤36%%."
 
@@ -1207,11 +1203,11 @@ msgstr ""
 "    blue area below = basal rate (U/h scale on the right, same for all "
 "days). One panel per day."
 
-#: templates/upload.html.j2:69
+#: templates/upload.html.j2:77
 msgid "Loop-aware Carb-Ratio Review · CR assessment from CamAPS FX data"
 msgstr "Loop-aware Carb-Ratio Review · CR assessment from CamAPS FX data"
 
-#: templates/upload.html.j2:70
+#: templates/upload.html.j2:78
 msgid ""
 "Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). "
 "Other closed-loop systems: see README."
@@ -1219,114 +1215,113 @@ msgstr ""
 "Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). "
 "Other closed-loop systems: see README."
 
-#: templates/upload.html.j2:73
+#: templates/upload.html.j2:81
 msgid "Export (ZIP or CSV)"
 msgstr "Export (ZIP or CSV)"
 
-#: templates/upload.html.j2:75
+#: templates/upload.html.j2:83
 msgid ""
 "Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a glucose"
 " CSV from LibreView or Dexcom Clarity. Processed in memory only, then "
 "deleted"
 msgstr ""
-""
 "Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a glucose"
 " CSV from LibreView or Dexcom Clarity. Processed in memory only, then "
 "deleted"
 
-#: templates/upload.html.j2:79
+#: templates/upload.html.j2:87
 msgid "Language"
 msgstr "Language"
 
-#: templates/upload.html.j2:84
+#: templates/upload.html.j2:92
 msgid "UI and report language (default German)."
 msgstr "UI and report language (default German)."
 
-#: templates/upload.html.j2:87
+#: templates/upload.html.j2:95
 msgid "Meal window (h)"
 msgstr "Time windows:"
 
-#: templates/upload.html.j2:89
+#: templates/upload.html.j2:97
 msgid "Postprandial window (default 4)."
 msgstr "Postprandial window (default 4)."
 
-#: templates/upload.html.j2:96
+#: templates/upload.html.j2:104
 msgid "From"
 msgstr "From"
 
-#: templates/upload.html.j2:100
+#: templates/upload.html.j2:108
 msgid "To"
 msgstr "To"
 
-#: templates/upload.html.j2:102
+#: templates/upload.html.j2:110
 msgid "Choose a file to see the full range. Nothing is stored on the server."
 msgstr "Choose a file to see the full range. Nothing is stored on the server."
 
-#: templates/upload.html.j2:105
+#: templates/upload.html.j2:113
 msgid "Force CamAPS assessment (Part 2) for Nightscout / other sources"
 msgstr "Force CamAPS assessment (Part 2) for Nightscout / other sources"
 
-#: templates/upload.html.j2:106
+#: templates/upload.html.j2:114
 msgid "Attach daily overview"
 msgstr "Attach daily overview"
 
-#: templates/upload.html.j2:107
+#: templates/upload.html.j2:115
 msgid "Also render dark-theme charts (AGP, slots, daily)"
 msgstr "Also render dark-theme charts (AGP, slots, daily)"
 
-#: templates/upload.html.j2:108
+#: templates/upload.html.j2:116
 msgid "Download report as file (instead of displaying)"
 msgstr "Download report as file (instead of displaying)"
 
-#: templates/upload.html.j2:111
+#: templates/upload.html.j2:119
 msgid "Slots (time-of-day windows)"
 msgstr "Time windows:"
 
-#: templates/upload.html.j2:112
+#: templates/upload.html.j2:120
 msgid "Source"
 msgstr "Source"
 
-#: templates/upload.html.j2:114
+#: templates/upload.html.j2:122
 msgid "Default (05–10 / 11–15 / 17–22)"
 msgstr "Default (05–10 / 11–15 / 17–22)"
 
-#: templates/upload.html.j2:115
+#: templates/upload.html.j2:123
 msgid "Extended (05–11 / 11–15 / 15–22)"
 msgstr "Extended (05–11 / 11–15 / 15–22)"
 
-#: templates/upload.html.j2:116
+#: templates/upload.html.j2:124
 msgid "With snacks (snacks 09–11 and 15–17)"
 msgstr "With snacks (snacks 09–11 and 15–17)"
 
-#: templates/upload.html.j2:117
+#: templates/upload.html.j2:125
 msgid "Custom fields"
 msgstr "Custom fields"
 
-#: templates/upload.html.j2:118
+#: templates/upload.html.j2:126
 msgid "JSON file"
 msgstr "JSON file"
 
-#: templates/upload.html.j2:120
+#: templates/upload.html.j2:128
 msgid "Profiles only set the time-of-day windows, not the CR calculation."
 msgstr "Profiles only set the time-of-day windows, not the CR calculation."
 
-#: templates/upload.html.j2:124
+#: templates/upload.html.j2:132
 msgid "Label"
 msgstr "Label"
 
-#: templates/upload.html.j2:124
+#: templates/upload.html.j2:132
 msgid "Start"
 msgstr "Start"
 
-#: templates/upload.html.j2:124
+#: templates/upload.html.j2:132
 msgid "End"
 msgstr "End"
 
-#: templates/upload.html.j2:127
+#: templates/upload.html.j2:135
 msgid "Row"
 msgstr "Row"
 
-#: templates/upload.html.j2:128
+#: templates/upload.html.j2:136
 msgid ""
 "Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is "
 "added automatically."
@@ -1334,41 +1329,45 @@ msgstr ""
 "Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is "
 "added automatically."
 
-#: templates/upload.html.j2:132
+#: templates/upload.html.j2:140
 msgid "Slots file (JSON)"
 msgstr "Slots file (JSON)"
 
-#: templates/upload.html.j2:137
+#: templates/upload.html.j2:145 templates/upload.html.j2:287
 msgid "Create report"
 msgstr "Create report"
 
-#: templates/upload.html.j2:140
-msgid ""
-"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
-"      Statistical analysis of existing CGM/pump data as a basis for "
-"discussions\n"
-"      with the care team — no diagnosis, no treatment decision."
-msgstr ""
-"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
-"      Statistical analysis of existing CGM/pump data as a basis for "
-"discussions\n"
-"      with the care team — no diagnosis, no treatment decision."
-
-#: templates/upload.html.j2:144
-msgid ""
-"<b>CamAPS FX (Auto Mode) only.</b>\n"
-"      The method relies on modulated basal as the loop signal. Other AID "
-"systems\n"
-"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;\n"
-"      results would not be valid there."
-msgstr ""
-"<b>CamAPS FX (Auto Mode) only.</b>\n"
-"      The method relies on modulated basal as the loop signal. Other AID "
-"systems\n"
-"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;\n"
-"      results would not be valid there."
-
 #: templates/upload.html.j2:149
+msgid "Preparing analysis…"
+msgstr ""
+
+#: templates/upload.html.j2:157
+msgid ""
+"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
+"      Statistical analysis of existing CGM/pump data as a basis for "
+"discussions\n"
+"      with the care team — no diagnosis, no treatment decision."
+msgstr ""
+"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
+"      Statistical analysis of existing CGM/pump data as a basis for "
+"discussions\n"
+"      with the care team — no diagnosis, no treatment decision."
+
+#: templates/upload.html.j2:161
+msgid ""
+"<b>CamAPS FX (Auto Mode) only.</b>\n"
+"      The method relies on modulated basal as the loop signal. Other AID "
+"systems\n"
+"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;\n"
+"      results would not be valid there."
+msgstr ""
+"<b>CamAPS FX (Auto Mode) only.</b>\n"
+"      The method relies on modulated basal as the loop signal. Other AID "
+"systems\n"
+"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;\n"
+"      results would not be valid there."
+
+#: templates/upload.html.j2:166
 msgid ""
 "<b>Homelab / private.</b>\n"
 "      Upload is processed in memory or temporarily only, then deleted —\n"
@@ -1377,6 +1376,64 @@ msgstr ""
 "<b>Homelab / private.</b>\n"
 "      Upload is processed in memory or temporarily only, then deleted —\n"
 "      no public hosting, no storage of exports."
+
+#: templates/upload.html.j2:208
+msgid "Queued…"
+msgstr "Queued…"
+
+#: templates/upload.html.j2:209
+msgid "Reading data…"
+msgstr "Reading data…"
+
+#: templates/upload.html.j2:210
+msgid "Analysing meals…"
+msgstr "Analysing meals…"
+
+#: templates/upload.html.j2:211
+msgid "Analysing slots…"
+msgstr "Analysing slots…"
+
+#: templates/upload.html.j2:212
+msgid "Rendering charts…"
+msgstr "Rendering charts…"
+
+#: templates/upload.html.j2:213
+msgid "Rendering daily charts…"
+msgstr "Rendering daily charts…"
+
+#: templates/upload.html.j2:214
+#, fuzzy
+msgid "Preparing report…"
+msgstr "Create report"
+
+#: templates/upload.html.j2:215
+#, fuzzy
+msgid "Rendering report…"
+msgstr "Create report"
+
+#: templates/upload.html.j2:216
+msgid "Analysis complete"
+msgstr "Analysis complete"
+
+#: templates/upload.html.j2:217
+msgid "Analysis failed"
+msgstr "Analysis failed"
+
+#: templates/upload.html.j2:220 templates/upload.html.j2:246
+msgid "Analysing…"
+msgstr "Analysing…"
+
+#: templates/upload.html.j2:235 templates/upload.html.j2:271
+msgid "Could not build report."
+msgstr "Could not build report."
+
+#: templates/upload.html.j2:252
+msgid "Could not start analysis."
+msgstr ""
+
+#: templates/upload.html.j2:262
+msgid "Progress unavailable."
+msgstr ""
 
 #~ msgid ""
 #~ "Targets: TIR ≥70% · TBR&lt;70 &lt;4% "

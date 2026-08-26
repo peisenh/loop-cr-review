@@ -385,7 +385,7 @@ def slot_norm_curves_chart(meals, window, val_at, dark=False):
         return base64.b64encode(buf.getvalue()).decode()
 
 
-def daily_charts(times, gluc, events, basal, tdd, dark=False):
+def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
     """One page-wide panel per day (CGM + bolus/carb + optional basal + TDD)."""
     if basal is None:
         rate, t0, minutes, gmax = None, None, 0, 1.0
@@ -399,8 +399,10 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False):
         ev_by[event["time"].date()].append(event)
     pal = _chart_palette(dark)
     out = []
+    days = sorted(cgm_by)
+    total_days = len(days)
     with _chart_theme(dark):
-        for day in sorted(cgm_by):
+        for day_index, day in enumerate(days, 1):
             fig, axg = plt.subplots(figsize=(11, 2.5))
             axg.axhspan(g(70), g(180), color=pal["tir"])
             axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]],
@@ -428,4 +430,6 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False):
                 ax2.tick_params(labelsize=6, colors=spine)
             _draw_day_events(axg, ev_by.get(day, []), pal)
             out.append({"img": fig_to_b64(fig)})
+            if progress is not None and total_days:
+                progress(day_index, total_days)
     return out

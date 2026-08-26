@@ -58,6 +58,14 @@
         font-weight:700; cursor:pointer; width:auto; margin:0; }
   .rm:hover { background:#f6d6d6; }
   .hidden { display:none; }
+  .progress-card { margin-top:16px; padding:16px; border:1px solid var(--line);
+                   border-radius:10px; background:var(--card); }
+  .progress-head { display:flex; justify-content:space-between; gap:12px;
+                   font-size:13px; font-weight:600; }
+  .progress-track { height:10px; margin-top:10px; background:var(--line);
+                    border-radius:999px; overflow:hidden; }
+  .progress-bar { height:100%; width:0; background:var(--blue); transition:width .2s ease; }
+  .progress-error { color:var(--disc-b); font-size:13px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -134,7 +142,16 @@
       </div>
     </fieldset>
 
-    <button type="submit">{% trans %}Create report{% endtrans %}</button>
+    <button id="submit-btn" type="submit">{% trans %}Create report{% endtrans %}</button>
+
+    <div id="progress-card" class="progress-card hidden" aria-live="polite">
+      <div class="progress-head">
+        <span id="progress-stage">{% trans %}Preparing analysis…{% endtrans %}</span>
+        <span id="progress-percent">0 %</span>
+      </div>
+      <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+      <div id="progress-error" class="progress-error hidden"></div>
+    </div>
 
     <div class="disclaimer">
       {% trans %}<b>⚠︎ Not a medical device, no dosing recommendation.</b>
@@ -173,6 +190,103 @@
   function fillDefaults(){
     var b = document.getElementById("slot-rows"); b.innerHTML="";
     DEFAULTS.forEach(function(d){ b.appendChild(row(d[0],d[1],d[2])); });
+  }
+
+  var form = document.querySelector("form.card");
+  var submitBtn = document.getElementById("submit-btn");
+  var progressCard = document.getElementById("progress-card");
+  var progressBar = document.getElementById("progress-bar");
+  var progressStage = document.getElementById("progress-stage");
+  var progressPercent = document.getElementById("progress-percent");
+  var progressError = document.getElementById("progress-error");
+  var ANALYZE_URL = "{{ url_for('analyze') }}";
+  var PROGRESS_URL = "{{ url_for('progress', job_id='JOB') }}";
+  var RESULT_URL = "{{ url_for('result', job_id='JOB') }}";
+
+  function progressText(stage) {
+    var labels = {
+      queued: "{% trans %}Queued…{% endtrans %}",
+      read: "{% trans %}Reading data…{% endtrans %}",
+      meals: "{% trans %}Analysing meals…{% endtrans %}",
+      analysis: "{% trans %}Analysing slots…{% endtrans %}",
+      charts: "{% trans %}Rendering charts…{% endtrans %}",
+      daily: "{% trans %}Rendering daily charts…{% endtrans %}",
+      report: "{% trans %}Preparing report…{% endtrans %}",
+      render: "{% trans %}Rendering report…{% endtrans %}",
+      done: "{% trans %}Analysis complete{% endtrans %}",
+      error: "{% trans %}Analysis failed{% endtrans %}"
+    };
+    var key = String(stage || "").split(" ")[0];
+    var label = labels[key] || "{% trans %}Analysing…{% endtrans %}";
+    if (key === "daily" && String(stage).length > key.length) {
+      label += " " + String(stage).slice(key.length + 1);
+    }
+    return label;
+  }
+
+  function showProgress(data) {
+    var pct = Math.max(0, Math.min(100, Number(data.percent) || 0));
+    progressBar.style.width = pct + "%";
+    progressPercent.textContent = pct + " %";
+    progressStage.textContent = progressText(data.stage);
+  }
+
+  function showError(message) {
+    progressError.textContent = message || "{% trans %}Could not build report.{% endtrans %}";
+    progressError.classList.remove("hidden");
+    progressStage.textContent = progressText("error");
+  }
+
+  if (form) {
+    form.addEventListener("submit", function(ev) {
+      ev.preventDefault();
+      progressCard.classList.remove("hidden");
+      progressError.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "{% trans %}Analysing…{% endtrans %}";
+      showProgress({stage:"queued", percent:0});
+
+      fetch(ANALYZE_URL, {method:"POST", body:new FormData(form)})
+        .then(function(r) {
+          return r.json().catch(function(){ return {}; }).then(function(j) {
+            if (!r.ok) throw new Error(j.error || "{% trans %}Could not start analysis.{% endtrans %}");
+            return j;
+          });
+        })
+        .then(function(j) {
+          return new Promise(function(resolve, reject) {
+            var poll = function() {
+              fetch(PROGRESS_URL.replace("JOB", j.job_id), {cache:"no-store"})
+                .then(function(r) {
+                  return r.json().catch(function(){ return {}; }).then(function(d) {
+                    if (!r.ok) throw new Error(d.error || "{% trans %}Progress unavailable.{% endtrans %}");
+                    return d;
+                  });
+                })
+                .then(function(d) {
+                  showProgress(d);
+                  if (d.state === "done") {
+                    resolve(j.job_id);
+                  } else if (d.state === "error") {
+                    reject(new Error(d.error || "{% trans %}Could not build report.{% endtrans %}"));
+                  } else {
+                    window.setTimeout(poll, 250);
+                  }
+                })
+                .catch(reject);
+            };
+            poll();
+          });
+        })
+        .then(function(jobId) {
+          window.location.href = RESULT_URL.replace("JOB", jobId);
+        })
+        .catch(function(err) {
+          showError(err.message);
+          submitBtn.disabled = false;
+          submitBtn.textContent = "{% trans %}Create report{% endtrans %}";
+        });
+    });
   }
 
   var exportInput = document.getElementById("export");

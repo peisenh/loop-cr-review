@@ -7,8 +7,12 @@ HTML report back. Intended for private LAN use, not public hosting.
 Health data is handled in a temporary directory and deleted immediately
 after the report is built (ephemeral: nothing is stored, nothing is logged).
 """
+import json
 import os
 import tempfile
+import threading
+import time
+import uuid
 import zipfile
 from pathlib import Path
 
@@ -24,6 +28,13 @@ MAX_UPLOAD_BYTES = 64 * 1024 * 1024        # 64 MB cap for the (compressed) ZIP
 MAX_ENTRIES = 5000                         # refuse archives with absurd file counts
 MAX_FILE_BYTES = 100 * 1024 * 1024         # 100 MB per extracted file
 MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb guard)
+
+# Async analysis jobs are short-lived and live only in the system temp area.
+# Files are removed after the result is fetched (or after the TTL expires).
+JOB_TTL = 15 * 60
+_JOB_ROOT = Path(tempfile.gettempdir()) / "loop-cr-review-jobs"
+_JOB_ROOT.mkdir(mode=0o700, exist_ok=True)
+_JOB_LOCK = threading.Lock()
 
 app = Flask(__name__)
 app.jinja_env.add_extension("jinja2.ext.i18n")
@@ -192,7 +203,57 @@ def _install_ui_i18n(lang):
     app.jinja_env.install_gettext_translations(core.current_translation(), newstyle=True)  # pylint: disable=no-member
 
 
+
+def _job_paths(job_id):
+    """Return the private directory and status/result paths for a job id."""
+    if not job_id or len(job_id) != 32 or any(c not in "0123456789abcdef" for c in job_id):
+        abort(404)
+    job = _JOB_ROOT / job_id
+    return job, job / "status.json", job / "result.html"
+
+
+def _write_job(status_path, **values):
+    """Atomically update a job status JSON file."""
+    tmp = status_path.with_suffix(".tmp")
+    data = dict(values)
+    tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(status_path)
+
+
+def _job_progress(status_path, stage, percent):
+    """Progress callback used by the analysis core."""
+    _write_job(status_path, state="running", stage=stage, percent=int(percent))
+
+
+def _cleanup_job(job):
+    """Remove all temporary input/result data for a completed job."""
+    import shutil
+    shutil.rmtree(job, ignore_errors=True)
+
+
+def _run_job(job, status_path, result_path, options):
+    """Run one analysis job outside the HTTP request thread."""
+    try:
+        _job_progress(status_path, "analysis", 1)
+        html, _ctx = core.generate_report(
+            options["base"], lang=options["lang"], window_hours=options["window_hours"],
+            daily=options["daily"], dark_charts=options["dark_charts"],
+            assume_camaps=options["assume_camaps"], date_from=options["date_from"],
+            date_to=options["date_to"], slots=options["slots"],
+            progress=lambda stage, pct: _job_progress(status_path, stage, pct))
+        result_path.write_text(html, encoding="utf-8")
+        _write_job(status_path, state="done", stage="done", percent=100,
+                   download=options["download"])
+    except (LoopCRError, SystemExit):
+        _write_job(status_path, state="error", stage="error", percent=100,
+                   error="could not build report from this export")
+    except Exception:  # pylint: disable=broad-exception-caught
+        _write_job(status_path, state="error", stage="error", percent=100,
+                   error="could not build report from this export")
+
+
 @app.route("/", methods=["GET"])
+
 def index():
     """Show the upload form (UI language via ?lang=, default German)."""
     lang = _ui_lang()
@@ -226,9 +287,81 @@ def span():
         return jsonify(info)
 
 
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    """Start an asynchronous report job and return its opaque job id."""
+    upload = request.files.get("export")
+    if upload is None or upload.filename == "":
+        abort(400, "no export file uploaded")
+    lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
+    job_id = uuid.uuid4().hex
+    job = _JOB_ROOT / job_id
+    job.mkdir(mode=0o700)
+    status_path = job / "status.json"
+    result_path = job / "result.html"
+    try:
+        slots = _read_slots(job)
+        extract = _unpack_upload(job, upload)
+        base = _find_export_base(extract)
+        options = {
+            "base": str(base), "lang": lang, "window_hours": window_hours,
+            "daily": daily, "dark_charts": dark_charts, "assume_camaps": assume_camaps,
+            "date_from": date_from, "date_to": date_to, "slots": slots,
+            "download": request.form.get("download") == "on",
+        }
+        _write_job(status_path, state="queued", stage="queued", percent=0)
+        threading.Thread(target=_run_job,
+                         args=(job, status_path, result_path, options),
+                         daemon=True).start()
+        return jsonify(job_id=job_id)
+    except Exception:
+        _cleanup_job(job)
+        raise
+
+
+@app.route("/progress/<job_id>", methods=["GET"])
+def progress(job_id):
+    """Return the current state of an asynchronous analysis job."""
+    job, status_path, _result_path = _job_paths(job_id)
+    if not status_path.is_file():
+        abort(404)
+    try:
+        data = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        abort(404)
+    # Do not retain completed/error jobs forever. A caller can still fetch a
+    # completed result immediately; cleanup is handled by /result.
+    if data.get("state") in ("done", "error") and time.time() - status_path.stat().st_mtime > JOB_TTL:
+        _cleanup_job(job)
+        abort(404)
+    return jsonify(data)
+
+
+@app.route("/result/<job_id>", methods=["GET"])
+def result(job_id):
+    """Return and then remove a completed asynchronous report."""
+    job, status_path, result_path = _job_paths(job_id)
+    if not status_path.is_file():
+        abort(404)
+    data = json.loads(status_path.read_text(encoding="utf-8"))
+    if data.get("state") == "error":
+        _cleanup_job(job)
+        abort(400, data.get("error", "could not build report"))
+    if data.get("state") != "done" or not result_path.is_file():
+        return jsonify(error="report not ready"), 409
+    html = result_path.read_text(encoding="utf-8")
+    headers = {}
+    if data.get("download"):
+        headers["Content-Disposition"] = 'attachment; filename="loop-cr-review.html"'
+    _cleanup_job(job)
+    return Response(html, mimetype="text/html", headers=headers)
+
+
 @app.route("/report", methods=["POST"])
 
 def report():
+
     """Build the report from the uploaded export and return it as HTML."""
     upload = request.files.get("export")
     if upload is None or upload.filename == "":
