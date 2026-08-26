@@ -12,8 +12,8 @@ import csv
 import numpy as np
 
 from lcr.common import (
-    LoopCRError, find_below, merge_carb_entries, num, parse_ts, set_glucose_unit,
-    single_match, sorted_unique_series)
+    HEAD_BYTES, LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit,
+    single_match, sniff_candidates, sorted_unique_series)
 
 # Rows before the data: FirstName/LastName/Device carry the patient and device,
 # Alert rows are threshold settings and of no interest here.
@@ -26,10 +26,10 @@ LIMIT_VALUES = {"low": 40.0, "high": 400.0}
 def dexcom_csv(base):
     """The CSV that looks like a Dexcom Clarity export, or None."""
     hits = []
-    for path in find_below(base, "*.csv"):
+    for path in sniff_candidates(base, "*.csv", "CSV files"):
         try:
             with open(path, encoding="utf-8-sig", newline="") as handle:
-                header = handle.readline().lower()
+                header = handle.read(HEAD_BYTES).lower()
         except (OSError, UnicodeDecodeError):
             continue
         if "event type" in header and "transmitter time" in header:

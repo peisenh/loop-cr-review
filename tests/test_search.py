@@ -98,3 +98,65 @@ class TestCliRequiresAFolder(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestReadsNothingUnrelated(unittest.TestCase):
+    """What the search is allowed to touch.
+
+    The readers used to open every CSV below the given folder to look at its
+    header — bank statements included, if one happened to lie there.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def _noise(self):
+        for rel in ("bank/statement.csv", "notes/passwords.csv", "photos/list.csv"):
+            path = self.root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("service;user;secret\n", encoding="utf-8")
+
+    def test_a_glooko_export_reads_no_other_file(self):
+        """Glooko is recognised by file name, so nothing else needs opening."""
+        import builtins   # noqa: PLC0415
+        import shutil     # noqa: PLC0415
+        shutil.copytree(ROOT / "example-data", self.root / "Export", dirs_exist_ok=True)
+        self._noise()
+        opened, real_open = [], builtins.open
+
+        def spy(file, *args, **kwargs):
+            opened.append(str(file))
+            return real_open(file, *args, **kwargs)
+
+        builtins.open = spy
+        try:
+            core.generate_report(str(self.root / "Export"), lang="de")
+        finally:
+            builtins.open = real_open
+        stray = [f for f in opened if any(part in f for part in ("bank", "notes", "photos"))]
+        self.assertEqual(stray, [])
+
+    def test_noise_directories_are_skipped(self):
+        for rel in ("node_modules/a.csv", ".git/b.csv", "__pycache__/c.csv",
+                    ".hidden/d.csv", "Export/wanted.csv"):
+            path = self.root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("x\n", encoding="utf-8")
+        names = [p.name for p in core.find_below(self.root, "*.csv")]
+        self.assertEqual(names, ["wanted.csv"])
+
+    def test_too_many_candidates_are_refused(self):
+        """A folder full of spreadsheets is not an export folder."""
+        for i in range(core.MAX_SNIFF_FILES + 5):
+            (self.root / f"sheet_{i}.csv").write_text("a;b\n", encoding="utf-8")
+        with self.assertRaises(core.LoopCRError) as caught:
+            core.libreview_csv(self.root)
+        self.assertIn("does not look like an export folder", str(caught.exception))
+
+    def test_only_the_head_of_a_file_is_read(self):
+        """A file without line breaks must not be read whole to sniff it."""
+        big = "x" * (core.HEAD_BYTES * 20)
+        (self.root / "huge.csv").write_text(big, encoding="utf-8")
+        self.assertIsNone(core.libreview_csv(self.root))

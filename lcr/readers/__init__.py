@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from lcr.readers.glooko import (
-    numbered_csvs, read_basal_timeline, read_bolus_events, read_cgm, read_meals,
+    is_glooko, numbered_csvs, read_basal_timeline, read_bolus_events, read_cgm, read_meals,
     read_tdd)
 from lcr.readers.dexcom import dexcom_csv, is_dexcom, read_dexcom
 from lcr.readers.libreview import is_libreview, libreview_csv, read_libreview
@@ -33,6 +33,7 @@ from lcr.readers.nightscout import (
     read_nightscout)
 
 __all__ = [
+    "is_glooko",
     "dexcom_csv",
     "is_dexcom",
     "read_dexcom",

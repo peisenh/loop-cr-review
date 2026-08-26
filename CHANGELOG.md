@@ -9,6 +9,17 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The readers no longer open files that are none of their business. Glooko and
+  Nightscout are recognised by file name alone, so they are checked first: for a
+  real Glooko export nothing else is opened at all. Only when neither is present
+  do the LibreView and Clarity readers look at headers — and then at most
+  4 KB per file, so a CSV without line breaks is no longer read whole.
+- Hidden directories and the usual noise (`.git`, `node_modules`, `__pycache__`,
+  `.venv`, …) are skipped; an export never hides in them.
+- More than a dozen CSV candidates below the given folder are refused with a
+  clear message instead of being read one by one: that is not an export folder.
+
 ### Added
 - Added VSCodium project configuration for the repository.
 

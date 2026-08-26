@@ -6,18 +6,20 @@ import csv
 import numpy as np
 
 from lcr.common import (
-    LoopCRError, find_below, merge_carb_entries, num, parse_ts, set_glucose_unit,
-    single_match, sorted_unique_series)
+    HEAD_BYTES, LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit,
+    single_match, sniff_candidates, sorted_unique_series)
 
 
 
 def libreview_csv(base):
     """The CSV that looks like a LibreView glucose export, or None."""
     hits = []
-    for path in find_below(base, "*.csv"):
+    for path in sniff_candidates(base, "*.csv", "CSV files"):
         try:
             with open(path, encoding="utf-8-sig", newline="") as fh:
-                blob = (fh.readline() + " " + fh.readline()).lower()
+                # Only the head: a single-line file of any size would otherwise be
+                # read whole just to look at its first field names.
+                blob = fh.read(HEAD_BYTES).lower()
         except (OSError, UnicodeDecodeError):
             continue
         if "aufzeichnungstyp" in blob or "record type" in blob:

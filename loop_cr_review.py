@@ -22,23 +22,23 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from lcr.common import (  # pylint: disable=unused-import
     BOOTSTRAP_N, BOOTSTRAP_SEED, CR_DEV_HIGH, CR_DEV_LOW, D4_HIGH, D4_STRONG, D4_WEAK,
     DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_MIN_GAP, DAILY_ROW, DEFAULT_SLOTS, FASTING_HOURS,
-    FEW_DAYS_HINT, HYPO_BG, LOOP_RATIO, LoopCRError, MAX_GAP_MIN, MAX_SEARCH_DEPTH,
-    MEAL_MIN_CHO, MERGE_SEC, MGDL_PER_MMOL, MIN_CLEAN_MEALS, MIN_DAYS_FOR_STABILITY,
-    MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW, N_, PEAK_EARLY, PEAK_RISE_HIGH,
-    PRE_BG_HIGH, REPO_URL, REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS,
-    REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL, SLOT_PROFILES, STABILITY_HIGH,
-    STABILITY_MODERATE, TIME_FMTS, TOOL_NAME, WEEKDAYS, _, _GLUCOSE_UNIT, _SLOTS_VAR,
-    _SLOT_PALETTE, _TRANSLATION, _basal_from_segments, _default_slot_state,
-    _derive_slot_globals, _slot_norm_rows, _slot_scope, _slot_state, build_slots,
-    current_translation, find_below, fmt_cr, fmt_delta, fmt_glucose, g, glucose_unit,
-    is_mmol, load_slots_file, merge_carb_entries, num, parse_ts, resource_dir,
-    select_slot_rows, set_glucose_unit, setup_i18n, single_match, slot_median_curve,
-    slot_norm_bands, slot_norm_curve, slot_of, slots_from_profile, sorted_unique_series,
-    tool_version)
+    FEW_DAYS_HINT, HEAD_BYTES, HYPO_BG, LOOP_RATIO, LoopCRError, MAX_GAP_MIN,
+    MAX_SEARCH_DEPTH, MAX_SNIFF_FILES, MEAL_MIN_CHO, MERGE_SEC, MGDL_PER_MMOL,
+    MIN_CLEAN_MEALS, MIN_DAYS_FOR_STABILITY, MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW,
+    N_, PEAK_EARLY, PEAK_RISE_HIGH, PRE_BG_HIGH, REPO_URL, REST_EXCL_AFTER_MEAL_MIN,
+    REST_MIN_HOURS, REST_MIN_WINDOWS, REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL,
+    SKIP_DIRS, SLOT_PROFILES, STABILITY_HIGH, STABILITY_MODERATE, TIME_FMTS, TOOL_NAME,
+    WEEKDAYS, _, _GLUCOSE_UNIT, _SLOTS_VAR, _SLOT_PALETTE, _TRANSLATION,
+    _basal_from_segments, _default_slot_state, _derive_slot_globals, _slot_norm_rows,
+    _slot_scope, _slot_state, build_slots, current_translation, find_below, fmt_cr,
+    fmt_delta, fmt_glucose, g, glucose_unit, is_mmol, load_slots_file, merge_carb_entries,
+    num, parse_ts, resource_dir, select_slot_rows, set_glucose_unit, setup_i18n,
+    single_match, slot_median_curve, slot_norm_bands, slot_norm_curve, slot_of,
+    slots_from_profile, sniff_candidates, sorted_unique_series, tool_version)
 from lcr.readers import (  # pylint: disable=unused-import
     _nightscout_dir, _ns_offset_minutes, _ns_parse_time, clip_by_days, dexcom_csv,
-    is_dexcom, is_libreview, is_nightscout, libreview_csv, numbered_csvs, parse_day,
-    peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
+    is_dexcom, is_glooko, is_libreview, is_nightscout, libreview_csv, numbered_csvs,
+    parse_day, peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
     read_libreview, read_meals, read_nightscout, read_tdd)
 from lcr.charts import (  # pylint: disable=unused-import
     _chart_palette, _chart_theme, _day_title, _draw_day_events, agp_chart, daily_charts,
@@ -233,12 +233,19 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
                   assume_camaps=False, date_from=None, date_to=None):
     """Read all data, analyse, and assemble the template context."""
     ns = None
+    # Name-based sources first: Glooko and Nightscout are recognised by file names
+    # alone. Only when neither is there do the remaining readers open files to look
+    # at their headers — so pointing at a real Glooko export reads nothing else.
+    ns = None
     if is_nightscout(base):
         ns = read_nightscout(base)
-    elif is_libreview(base):
-        ns = read_libreview(base)
-    elif is_dexcom(base):
-        ns = read_dexcom(base)
+    elif not is_glooko(base):
+        # Neither of the two name-based sources: only now is it worth opening
+        # files to look at their headers.
+        if is_libreview(base):
+            ns = read_libreview(base)
+        elif is_dexcom(base):
+            ns = read_dexcom(base)
     if ns:
         times, gluc, name, sensor = ns["times"], ns["gluc"], ns["name"], ns["sensor"]
         meals, minors, pump = ns["meals"], ns["minors"], ns["pump"]

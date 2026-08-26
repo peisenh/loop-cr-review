@@ -11,6 +11,11 @@ from lcr.common import (
     LoopCRError, _basal_from_segments, merge_carb_entries, num, parse_ts, set_glucose_unit)
 
 
+def is_glooko(base):
+    """True when the folder holds Glooko's cgm_data_*.csv. Name only, no reading."""
+    return bool(numbered_csvs(base, "cgm_data"))
+
+
 def numbered_csvs(directory, stem):
     """All numbered export files <stem>_N.csv, sorted numerically.
 

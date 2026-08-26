@@ -19,6 +19,10 @@ import numpy as np
 
 __all__ = [
     "MAX_SEARCH_DEPTH",
+    "HEAD_BYTES",
+    "MAX_SNIFF_FILES",
+    "SKIP_DIRS",
+    "sniff_candidates",
     "find_below",
     "single_match",
     "tool_version",
@@ -109,13 +113,47 @@ __all__ = [
 MAX_SEARCH_DEPTH = 2
 
 
+# Directories that never hold an export but plenty of files. Walking them wastes
+# time and, for the content-sniffing readers, opens files that are none of our
+# business.
+SKIP_DIRS = {".git", ".hg", ".svn", "node_modules", "__pycache__", ".venv", "venv",
+             ".tox", ".mypy_cache", ".pytest_cache", "site-packages", "dist", "build"}
+# Above this many candidates the folder is plainly not an export folder. Reading
+# them all to look for a header would be slow and nosy in equal measure.
+MAX_SNIFF_FILES = 12
+# Enough for any header row, and a cap for files that have no line breaks.
+HEAD_BYTES = 4096
+
+
 def find_below(base, pattern, depth=MAX_SEARCH_DEPTH):
-    """Files matching *pattern* at most *depth* levels below *base*. -> sorted list."""
+    """Files matching *pattern* at most *depth* levels below *base*. -> sorted list.
+
+    Hidden and well-known noise directories are skipped: an export never hides in
+    `.git` or `node_modules`, and descending into them only costs time.
+    """
     base = Path(base)
     hits = []
     for level in range(depth + 1):
-        hits.extend(base.glob("/".join(["*"] * level + [pattern])))
+        for path in base.glob("/".join(["*"] * level + [pattern])):
+            rel = path.relative_to(base).parts[:-1]
+            if any(part in SKIP_DIRS or part.startswith(".") for part in rel):
+                continue
+            hits.append(path)
     return sorted(set(hits))
+
+
+def sniff_candidates(base, pattern, what):
+    """Files worth opening to look at their header. -> list.
+
+    Refuses when there are too many: pointing at a home directory should give a
+    clear answer, not a scan through every spreadsheet below it.
+    """
+    hits = find_below(base, pattern)
+    if len(hits) > MAX_SNIFF_FILES:
+        raise LoopCRError(
+            f"{len(hits)} {what} below {base} - that does not look like an export "
+            f"folder. Point at the export itself.")
+    return hits
 
 
 def single_match(hits, what, base):
