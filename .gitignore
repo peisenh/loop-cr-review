@@ -34,3 +34,7 @@ locale/messages.pot
 docker-compose.yml
 .env
 build-version.bak
+
+# profiling
+profile.prof
+

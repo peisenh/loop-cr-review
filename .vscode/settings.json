@@ -1,0 +1,33 @@
+{
+    "python-envs.workspaceSearchPaths": [
+        "./.venv"
+    ],
+
+    "python.terminal.activateEnvironment": true,
+
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "${workspaceFolder}/tests"
+    ],
+
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+
+    "pylint.enabled": true,
+
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.venv": true
+    },
+
+    "search.exclude": {
+        "**/.venv": true,
+        "**/__pycache__": true
+    }
+}

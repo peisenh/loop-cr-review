@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Added VSCodium project configuration for the repository.
+
 ## [0.17.0] - 2026-08-25
 
 ### Changed

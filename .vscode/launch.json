@@ -1,0 +1,69 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CR Review – CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/loop_cr_review.py",
+            "args": [
+                "${workspaceFolder}/example-data"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "CR Review – Web",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/webapp.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "CR Review – GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/gui.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "CR Review – Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "args": [
+                "discover",
+                "-s",
+                "tests",
+                "-v"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "CR Review – Single Test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "args": [
+                "${input:testName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "testName",
+            "type": "promptString",
+            "description": "unittest target, e.g. tests.test_loop_cr_review.TestSomething.test_something"
+        }
+    ]
+}

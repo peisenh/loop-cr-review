@@ -1,0 +1,91 @@
+{
+    "version": "2.0.0",
+
+    "tasks": [
+        {
+            "label": "Tests – unittest",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "tests",
+                "-v"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Lint – pylint",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/pylint",
+            "args": [
+                "loop_cr_review.py",
+                "webapp.py",
+                "gui.py",
+                "--rcfile=${workspaceFolder}/.pylintrc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Profile – CLI",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "-m",
+                "cProfile",
+                "-o",
+                "${workspaceFolder}/profile.prof",
+                "${workspaceFolder}/loop_cr_review.py",
+                "${input:profileExportDir}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Profile – open SnakeViz",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "-m",
+                "snakeviz",
+                "${workspaceFolder}/profile.prof"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Check – all",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Tests – unittest",
+                "Lint – pylint"
+            ],
+            "problemMatcher": []
+        }
+    ],
+
+    "inputs": [
+        {
+            "id": "profileExportDir",
+            "type": "promptString",
+            "description": "Export-Ordner für das Profiling",
+            "default": "example-data"
+        }
+    ]
+}
