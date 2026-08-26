@@ -109,14 +109,21 @@ class TestLoopExtraBasalAndCrEff(unittest.TestCase):
                              pre=110.0, post=175.0)
         self.assertAlmostEqual(row["d4"], 65.0, places=6)
 
-    def test_meal_outside_basal_timeline_is_skipped(self):
-        """A meal whose window runs past the timeline yields no row."""
+    def test_meal_outside_basal_timeline_keeps_its_glucose(self):
+        """A meal the basal trace does not cover is still a meal.
+
+        It used to be dropped entirely, which silently shrank the sample. Now
+        only the loop figures stay empty; the glucose course still counts.
+        """
         rate = [0.8] * (9 * 60)               # timeline ends 09:00
         meals = [{"time": self.t0 + timedelta(hours=8), "cho": 60.0,
                   "bolus": 6.0, "bg": 120.0}]
         rows = core.analyze_meals(meals, [], _basal(rate, 0.8, self.t0),
                                   self.window, _const_lookup(120.0, 120.0))
-        self.assertEqual(rows, [])
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(np.isnan(rows[0]["exc"]))
+        self.assertTrue(np.isnan(rows[0]["cr_eff"]))
+        self.assertAlmostEqual(rows[0]["cr"], 10.0)
 
 
 class TestContamination(unittest.TestCase):

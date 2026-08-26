@@ -182,7 +182,7 @@ img { width: 100%; border-radius: 8px }
   <a href="{{ repo }}">{{ repo | replace('https://', '') }}</a></div>
 
 {% if source == 'nightscout' or source == 'libreview' %}
-<div class="note">{% if source == 'libreview' %}{% trans %}Source: LibreView. Glucose and meal courses only — no basal, no CR assessment.{% endtrans %}{% elif lite %}{% trans %}Source: Nightscout. Glucose and meal courses only — no CR assessment. CamAPS Part 2 is off unless you opt in.{% endtrans %}{% else %}{% trans %}Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace.{% endtrans %}{% endif %}</div>
+<div class="note">{% if source == 'libreview' %}{% trans %}Source: LibreView. No basal in this export, so no loop figures — the assessment rests on the glucose course alone.{% endtrans %}{% elif lite %}{% trans %}Source: Nightscout. Read without a basal trace, so the assessment rests on the glucose course alone; the CamAPS loop figures are off unless you opt in.{% endtrans %}{% else %}{% trans %}Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace.{% endtrans %}{% endif %}</div>
 {% endif %}
 <div class="disclaimer">
   {% trans %}<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a statistical analysis of
@@ -253,13 +253,19 @@ img { width: 100%; border-radius: 8px }
   </div>
 </div>
 
-{% if not lite %}
+
 <div class="part"><h2>{% trans %}Part 2 — assessment and how to read it{% endtrans %}</h2>
   <div class="part-sub">{% trans %}Everything from here rests on the method described in this part.{% endtrans %}</div></div>
 
 <div class="methodbox">
-  <b>{% trans %}How to read this report (CamAPS FX Auto Mode){% endtrans %}</b><br>
-  {% trans %}• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects via
+  <b>{% if lite %}{% trans %}How to read this report (no basal in the export){% endtrans %}{% else %}{% trans %}How to read this report (CamAPS FX Auto Mode){% endtrans %}{% endif %}</b><br>
+{% if lite %}  {% trans %}• <b>Scope:</b> This export carries no basal rate, so nothing can be said about a
+  loop's share. What remains is the classic view: this much bolus for this many carbs, and this
+  is where glucose stood four hours later.{% endtrans %}<br>
+  {% trans %}• <b>One ratio:</b> <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (it may
+  include correction insulin). It is not a programmed pump setting; it is derived from the
+  export.{% endtrans %}<br>
+{% else %}  {% trans %}• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects via
   <b>modulated basal</b> (not auto-bolus). Other AID systems need a different signal.{% endtrans %}<br>
   {% trans %}• <b>Loop extra basal</b> in the post-meal window:
   <code>∫ (basal rate − fasting basal) dt</code>.
@@ -269,7 +275,7 @@ img { width: 100%; border-radius: 8px }
   <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective ratio <i>including</i> loop compensation.
   Neither is a programmed pump setting; both are derived from the export.
   If the loop already adds or cuts a lot of insulin with no meal, that says nothing about the carb ratios. The less non-meal loop influence in the window, the less CR_eff is shifted by that extra Auto Mode activity.{% endtrans %}<br>
-  {% trans %}• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing instruction.{% endtrans %}
+{% endif %}  {% trans %}• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing instruction.{% endtrans %}
 </div>
 
 <div class="card">
@@ -285,12 +291,12 @@ img { width: 100%; border-radius: 8px }
   {% endif %}
   <table>
     <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
-        <th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th><th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
+        {% if not lite %}<th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
     {% for s in slots %}
     {% set unstable = s.stability and s.stability.band == 'low' %}
     <tr class="{{ s.cls }}{{ ' lowconf' if s.low_confidence or unstable }}"><td>{{ s.label }}{% if s.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}{% if unstable %} <span class="lc-tag">{% trans %}verdict not stable{% endtrans %}</span>{% endif %}</td><td>{{ s.n }} ({{ s.clean }})</td>
         <td>{{ s.cho }} g</td><td>{{ s.cr }}</td><td>{{ s.bol }} U</td>
-        <td>{{ s.exc }} U</td><td>{{ s.cre }}</td><td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
+        {% if not lite %}<td>{{ s.exc }} U</td><td>{{ s.cre }}</td>{% endif %}<td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
   <div class="note" style="margin-top: 6px"><span class="tag ts">{% trans %}too strong → loosen{% endtrans %}</span><span class="tag tw">{% trans %}too weak → tighten{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br></div>
@@ -308,15 +314,15 @@ img { width: 100%; border-radius: 8px }
     <h3>{{ r.label }} — {{ r.headline }}{% if r.low_confidence %} <span class="lc-tag">{% trans %}low confidence{% endtrans %}</span>{% endif %}{% if unstable %} <span class="lc-tag">{% trans %}verdict not stable{% endtrans %}</span>{% endif %}</h3>
     <div class="mline">{% trans %}Peak{% endtrans %} <b>~{{ r.peak }} {{ unit }}</b> {% trans %}after{% endtrans %} <b>~{{ r.peak_t }} min</b> ·
       {% trans %}nadir{% endtrans %} <b>~{{ r.nadir }} {{ unit }}</b> @ {{ r.nadir_t }} min · Δ{{ wlab }} <b>{{ r.d4 }}</b> ·
-      {% trans %}Loop{% endtrans %} {{ r.loop }} U · {% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }} · CR_eff {{ r.cre }}</div>
+      {% if not lite %}{% trans %}Loop{% endtrans %} {{ r.loop }} U · {% endif %}{% trans %}CR (CHO/bolus){% endtrans %} {{ r.cr }}{% if not lite %} · CR_eff {{ r.cre }}{% endif %}</div>
     {% if r.spread or r.range or r.stability %}<div class="meta{{ ' low' if r.stability and r.stability.band == 'low' }}">{% if r.spread %}{% trans %}Spread{% endtrans %}{% if r.spread.cre %} CR_eff {{ r.spread.cre }}{% endif %}{% if r.spread.ratio %} · {% trans %}loop{% endtrans %} {{ r.spread.ratio }}{% endif %}{% elif r.range %}{% trans cre=r.range.cre, meals=r.range.meals, days=r.range.days %}Observed CR_eff {{ cre }} ({{ meals }} meals / {{ days }} days){% endtrans %}{% endif %}{% if (r.spread or r.range) and r.stability %} · {% endif %}{% if r.stability %}{% trans pct=r.stability.pct %}stability {{ pct }}{% endtrans %} % ({{ r.stability.days }} {% trans %}calendar days{% endtrans %}){% if r.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% endif %}</div>{% endif %}
     {% for l in r.levers %}
     <div class="lever"><span class="tag t-{{ l.cls }}">{{ l.tag }}</span>{{ l.text }}</div>
     {% endfor %}
   </div>
   {% endfor %}
-  <div class="note" style="margin-top: 8px">{% trans %}Hypotheses/candidates for the team discussion, not a
-    dosing instruction. Under Auto Mode the loop co-shapes the curve.{% endtrans %}</div>
+  <div class="note" style="margin-top: 8px">{% if lite %}{% trans %}Hypotheses and candidates for the conversation with the care team, not a dosing instruction.{% endtrans %}{% else %}{% trans %}Hypotheses/candidates for the team discussion, not a
+    dosing instruction. Under Auto Mode the loop co-shapes the curve.{% endtrans %}{% endif %}</div>
 </div>
 
 
@@ -324,16 +330,20 @@ img { width: 100%; border-radius: 8px }
   <h2>{% trans %}Explanations &amp; limits{% endtrans %}</h2>
   <div class="note" style="margin: 6px 0 0">
     <b>{% trans %}Time windows:{% endtrans %}</b> {{ slot_defs | join(' · ') }}</div>
-  <div class="note" style="margin: 6px 0 0">
+{% if not lite %}  <div class="note" style="margin: 6px 0 0">
     <b>{% trans %}Fasting basal rate:{% endtrans %}</b> {{ fb }} U/h{% if fb_lo != fb_hi %} ({% trans lo=fb_lo, hi=fb_hi %}mean of the nights; {{ lo }}–{{ hi }} U/h{% endtrans %}){% endif %} —
     {% trans %}the reference the loop extra basal is measured against. It assumes meal- and correction-free
-    nights 00:00–06:00; if that does not hold, every "Loop" figure shifts with it.{% endtrans %}</div>
+    nights 00:00–06:00; if that does not hold, every "Loop" figure shifts with it.{% endtrans %}</div>{% endif %}
   <div class="note" style="margin-top: 8px">
-    {% trans w=wlab %}<b>Method:</b> Loop {{ w }} = basal delivered by Auto Mode in addition to the
+    {% if lite %}{% trans w=wlab %}<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus only (it
+    may contain correction insulin). Δ{{ w }} = glucose at {{ w }} minus pre-meal — with no basal in
+    the export the verdict rests on this return alone. "clean" = meals without another meal in the
+    {{ w }} window and without a large CGM gap.{% endtrans %}
+    {% else %}{% trans w=wlab %}<b>Method:</b> Loop {{ w }} = basal delivered by Auto Mode in addition to the
     fasting basal rate. <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s programmed ICR).
     <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window and without a
-    large CGM gap.{% endtrans %}
+    large CGM gap.{% endtrans %}{% endif %}
     {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
     on contaminated windows and is correspondingly less certain.{% endtrans %}
     {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}
@@ -346,13 +356,13 @@ img { width: 100%; border-radius: 8px }
     that flips under resampling rests on a few individual meals; one that holds does not become
     clinically right by that alone. The thresholds for high/moderate/low are heuristic.{% endtrans %}
     <br>
-    {% trans %}<b>Spread:</b> typical{% endtrans %} 95 % {% trans %}band of CR_eff (and loop share) when days are reshuffled (enough days only).{% endtrans %}
+    {% if lite %}{% trans %}<b>Spread:</b> typical 95 % band of CR (CHO/bolus) when days are reshuffled (only with enough days).{% endtrans %}{% else %}{% trans %}<b>Spread:</b> typical{% endtrans %} 95 % {% trans %}band of CR_eff (and loop share) when days are reshuffled (enough days only).{% endtrans %}{% endif %}
     <br>
     {% trans %}<b>Observed range:</b> min–max of the actual values when there are too few days for a spread.{% endtrans %}
     {% trans %}Neither is a confidence interval for “the true CR”.{% endtrans %}
     <br>
     {% trans lo=15, hi=25, few=34, many=3 %}<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below about {{ lo }} % stays invisible to this method, from about {{ hi }} % it is flagged reliably. Days matter mostly against false alarms — with five days a correctly set slot is still flagged in roughly {{ few }} % of cases, with three weeks in about {{ many }} %. A day count marked {% endtrans %}<b>{% trans %}(few){% endtrans %}</b>{% trans n=10 %} is below {{ n }} days, where that risk is still noticeable.{% endtrans %}</div>
-  <div class="eff">
+{% if not lite %}  <div class="eff">
     {% trans %}<b>CR_eff is an approach, not a target value.</b> It converts the basal the loop pushed in
     into an "effectively used" ratio: <code>CR_eff = CHO / (bolus + loop extra basal)</code>.{% endtrans %}
     {% if cr_example %}<br><br>{% trans label=cr_example.label, cho=cr_example.cho, bol=cr_example.bol, loop=cr_example.loop, cre=cr_example.cre %}Example {{ label }}: {{ cho }} g on
@@ -363,23 +373,23 @@ img { width: 100%; border-radius: 8px }
     is even tighter (roughly: an additional ~Δ/ISF units).{% endtrans %}{% endif %}{% endif %}
     <br><br>{% trans %}<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact pump setting.
     Approximation (loop extra fully attributed to the meal; corrections/exercise/adaptation possible).
-    Small step with the team; re-check after ~1–2 weeks.{% endtrans %}</div>
+    Small step with the team; re-check after ~1–2 weeks.{% endtrans %}</div>{% endif %}
   <div class="note">
     {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
     {{ cr_note | safe }}
-    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
+{% if not lite %}    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
       basal is the meaningful signal. The algorithm adapts over days and can partly smooth out
-      longer-standing misconfigurations.{% endtrans %}<br>
+      longer-standing misconfigurations.{% endtrans %}<br>{% endif %}
     {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
       not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
-    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
+{% if not lite %}    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
       If either mode is active somewhere in the post-meal window, loop extra basal and CR signals can be
-      distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br><br>
+      distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br><br>{% endif %}
   </div>
 </div>
 
 
-{% endif %}
+
 {% if meals %}
 <div class="card">
   <h2>{% trans %}Per-meal detail{% endtrans %}</h2>

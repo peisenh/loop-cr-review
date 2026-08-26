@@ -10,6 +10,7 @@ after the report is built (ephemeral: nothing is stored, nothing is logged).
 import json
 import os
 import tempfile
+import shutil
 import threading
 import time
 import uuid
@@ -230,12 +231,15 @@ def _job_progress(status_path, stage, percent):
 
 def _cleanup_job(job):
     """Remove all temporary input/result data for a completed job."""
-    import shutil
     shutil.rmtree(job, ignore_errors=True)
 
 
-def _run_job(job, status_path, result_path, options):
-    """Run one analysis job outside the HTTP request thread."""
+def _run_job(_job, status_path, result_path, options):
+    """Run one analysis job outside the HTTP request thread.
+
+    The job directory comes with the thread arguments but is not needed here;
+    the paths below already point inside it.
+    """
     try:
         _job_progress(status_path, "analysis", 1)
         html, _ctx = core.generate_report(

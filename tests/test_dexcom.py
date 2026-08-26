@@ -167,8 +167,12 @@ class TestDexcomUpload(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Teil 1", response.get_data(as_text=True))
 
-    def test_clarity_upload_stays_lite(self):
-        """No basal in the file means the CR assessment must not appear."""
+    def test_clarity_upload_has_no_loop_figures(self):
+        """The assessment is there, but nothing that needs a basal trace."""
         body = "".join(egv(10 + i, f"2026-05-0{1 + i // 24}T{i % 24:02d}:00:00", 110 + i % 40)
                        for i in range(60))
-        self.assertNotIn("Teil 2", self._post(body).get_data(as_text=True))
+        html = self._post(body).get_data(as_text=True)
+        self.assertIn("Teil 2", html)
+        for term in ("CR_eff", "Loop-Mehrbasal", "Auto Mode"):
+            with self.subTest(term=term):
+                self.assertNotIn(term, html)

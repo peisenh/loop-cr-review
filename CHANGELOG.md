@@ -9,6 +9,27 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Exports without a basal trace now get the full assessment, not just the curves.
+  Everything the glucose alone can say applies to them as well: the return delta,
+  the verdict that follows from it, and every derivation from the curve shape.
+  Only what genuinely needs a basal trace stays out — the loop extra basal and
+  CR_eff, along with the CamAPS-specific passages. Part 2 used to be dropped
+  wholesale for these sources although the data for most of it was there. What
+  remains is the classic view: this much bolus for this many carbs, and this is
+  where glucose stood four hours later — a picture that is arguably cleaner
+  without a loop smoothing the excursion.
+
+### Fixed
+- A meal the basal trace does not cover was dropped entirely, silently shrinking
+  the sample. It now keeps its glucose course and counts towards the verdict;
+  only its loop figures stay empty.
+- Contamination and hypo rescues were hardcoded as absent for sources without
+  basal, although both come from the glucose curve and meal times alone.
+- With no meal carrying a bolus the report printed a carb ratio of "1:nan".
+- Three loose ends in the live-progress code: an import inside a function and two
+  callback parameters that are part of a signature but unused here.
+
 ### Fixed
 - A real Glooko export was refused on upload. The cap on how many CSVs may be
   opened to look at their headers was set to 12, while a Glooko export holds 18

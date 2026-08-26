@@ -290,34 +290,21 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
     gri = gri_metrics(met)
     if basal is None and not lite:
         raise LoopCRError("No basal rates found.")
-    rows = [] if basal is None else analyze_meals(
-        meals, minors, basal, window, val_at, cgm_times=cgm_times64)
+    # Without a basal trace the loop figures stay empty, but contamination, hypo
+    # rescues and the return delta come from the glucose curve and are worked out
+    # the same way - the assessment then rests on CHO/bolus and the delta alone.
+    rows = analyze_meals(meals, minors, basal, window, val_at, cgm_times=cgm_times64)
     _progress("meals", 50)
-    seen = {r["time"] for r in rows}
-    for meal in meals:
-        if meal["time"] in seen:
-            continue
-        pre, post = val_at(meal["time"], 0), val_at(meal["time"], window)
-        rows.append({
-            "slot": slot_of(meal["time"].hour), "time": meal["time"],
-            "cho": meal["cho"], "bg": meal.get("bg"), "bolus": meal["bolus"],
-            "pre": pre, "cr": meal["cho"] / meal["bolus"] if meal["bolus"] else float("nan"),
-            "exc": float("nan"), "cr_eff": float("nan"),
-            "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
-            "contam": False, "hypo_rescue": False,
-            "cgm_gap": cgm_gap_in_window(meal["time"], window, cgm_times64) if cgm_times64 is not None else False,
-        })
     by_slot = defaultdict(list)
     for row in rows:
         by_slot[row["slot"]].append(row)
     curve_cap, clean_note = _captions(meals, by_slot, window, val_at)
-    if lite:
-        selected, stability, recs, cr_example = {}, {}, [], None
-    else:
-        selected = {slot: select_slot_rows(srows)[0] for slot, srows in by_slot.items()}
-        stability = {slot: decision_stability(srows) for slot, srows in selected.items()}
-        recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
-                                                    stability, selected)
+    # Also without a basal trace: the verdict rule falls back to the return delta,
+    # and every derivation from the curve shape needs nothing but the glucose.
+    selected = {slot: select_slot_rows(srows)[0] for slot, srows in by_slot.items()}
+    stability = {slot: decision_stability(srows) for slot, srows in selected.items()}
+    recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
+                                                stability, selected)
     _progress("analysis", 70)
     device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
 
@@ -327,7 +314,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
     _progress("charts", 71)
     chart_state = {"step": 0}
 
-    def _daily_progress(stage, done, total, dark):
+    def _daily_progress(_stage, done, total, dark):   # stage: callback signature
         # One completed daily panel is one real unit of work. Light and dark
         # panels are separate rendering passes when dark charts are requested.
         passes = 2 if dark_charts else 1
@@ -387,7 +374,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "selection": selection_effect(meals, by_slot, window, val_at),
         "daily_days": daily_days,
         "curve_cap": curve_cap,
-        "slots": [] if lite else _slots_context(by_slot, meals, window, val_at, stability, selected),
+        "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
         "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
         "slot_defs": slot_definitions(),

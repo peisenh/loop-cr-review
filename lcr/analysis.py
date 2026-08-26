@@ -152,35 +152,45 @@ def _scan_minors(start, window, minors, val_at):
 def analyze_meals(meals, minors, basal, window, val_at, cgm_times=None):
     """Per meal: loop extra basal in the window, CR_eff, return Δ, contamination, CGM gap.
 
-    basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) from read_basal_timeline.
+    basal: (rate, t0, minutes, fasting, fasting_lo, fasting_hi) from
+    read_basal_timeline, or None for sources that carry no basal rate. Without it
+    the loop extra basal and CR_eff are nan; everything the glucose curve alone
+    can say - the return delta, contamination, hypo rescues, CGM gaps - is worked
+    out just the same.
     minors: small carb entries (snacks / hypo rescues) below the meal bar. A minor
     inside a meal's window contaminates it; a minor with no bolus at low glucose is
     treated as a hypo rescue, which additionally sets a hypo flag on the meal.
     cgm_times: CGM timestamps for :func:`cgm_gap_in_window` (optional; gap=False if omitted).
     """
-    rate, t0, minutes, fasting = basal[:4]
+    rate, t0, minutes, fasting = basal[:4] if basal else (None, None, None, None)
     meal_times = [m["time"] for m in meals]
     cgm_times64 = (np.asarray(cgm_times, dtype="datetime64[ns]")
                    if cgm_times is not None else None)
     rows = []
     for meal in meals:
         start = meal["time"]
-        i0 = int((start - t0).total_seconds() // 60)
-        if i0 < 0 or i0 + window >= minutes:
-            continue
+        # A meal the basal trace does not cover is still a meal: it keeps its
+        # glucose course and counts towards the verdict, only the loop figures
+        # stay empty. Dropping it would silently shrink the sample.
+        i0, covered = 0, False
+        if basal:
+            i0 = int((start - t0).total_seconds() // 60)
+            covered = 0 <= i0 and i0 + window < minutes
         contam = any(0 < (o - start).total_seconds() <= window * 60
                      for o in meal_times if o != start)
         minor_contam, hypo_rescue = _scan_minors(start, window, minors, val_at)
         contam = contam or minor_contam
         cgm_gap = cgm_gap_in_window(start, window, cgm_times64) if cgm_times64 is not None else False
-        excess = float(np.sum(rate[i0:i0 + window] - fasting) / 60.0)
+        excess = (float(np.sum(rate[i0:i0 + window] - fasting) / 60.0)
+                  if covered else np.nan)
         pre, post = val_at(start, 0), val_at(start, window)
-        total = meal["bolus"] + excess
+        total = meal["bolus"] + excess if covered else np.nan
         rows.append({
             "slot": slot_of(start.hour), "time": start, "cho": meal["cho"],
             "bg": meal["bg"], "bolus": meal["bolus"], "pre": pre,
-            "cr": meal["cho"] / meal["bolus"], "exc": excess,
-            "cr_eff": meal["cho"] / total if total > 0 else np.nan,
+            "cr": meal["cho"] / meal["bolus"] if meal["bolus"] else np.nan,
+            "exc": excess,
+            "cr_eff": meal["cho"] / total if covered and total > 0 else np.nan,
             "d4": (post - pre) if not np.isnan(post) and not np.isnan(pre) else np.nan,
             "contam": contam, "hypo_rescue": hypo_rescue, "cgm_gap": cgm_gap,
         })
@@ -362,7 +372,11 @@ def _weak_levers(agg, window):
                    "(contradictory signal) → possibly an outlier/small sample size "
                    "rather than a CR problem; check individual meals before tightening"))]
     out = [(_("Dose"), "cr",
-            _("underdosed → tighten CR, rough direction CR_eff %(cre)s") % {"cre": fmt_cr(agg["cre"])})]
+            _("underdosed → tighten CR, rough direction CR_eff %(cre)s") % {"cre": fmt_cr(agg["cre"])}
+            if not np.isnan(agg["cre"])
+            # Without a basal trace there is no CR_eff to point at; the direction
+            # is all that is left, and naming an em dash would only puzzle.
+            else _("underdosed → tighten CR; decide the size with the care team"))]
     if agg["d4"] < 0:
         # The verdict comes solely from the loop activity; but the BG has even
         # fallen at the end of the window (the loop caught it). To the reader,
@@ -484,6 +498,9 @@ def build_cr_note(rows, by_slot):
         if not np.isnan(scr) and (scr < CR_DEV_LOW * med_cr or scr > CR_DEV_HIGH * med_cr):
             dev.append((slot, scr, spre))
     if not dev:
+        if np.isnan(med_cr):
+            # No meal with a bolus at all: there is no median to talk about.
+            return ""
         return _("• Derived CR = CHO/bolus; no slot deviates notably from the median "
                  "(1:%(m).1f).<br>") % {"m": med_cr}
     parts = []

@@ -48,7 +48,11 @@ class TestLibreView(unittest.TestCase):
             html, ctx = core.generate_report(tmp, lang="en")
             self.assertEqual(ctx["source"], "libreview")
             self.assertTrue(ctx["lite"])
-            self.assertEqual(ctx["slots"], [])
+            # The slots are assessed even without basal — only the loop
+            # figures stay empty, so CR_eff has nothing to show.
+            self.assertTrue(ctx["slots"])
+            for slot in ctx["slots"]:
+                self.assertEqual(slot["cre"], "—")
             self.assertNotIn("How to read this report (CamAPS", html)
             self.assertIn("LibreView", html)
             self.assertIn("Per-meal", html)

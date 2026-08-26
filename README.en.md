@@ -47,7 +47,7 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 
 **Data flow:** CamAPS FX (Auto Mode) → Glooko → CSV export (ZIP) → `loop-cr-review` → HTML report. So "Glooko/CamAPS export" refers to the ZIP file with CamAPS data downloaded from Glooko.
 
-The same CamAPS stream can also sit in **Nightscout** (`entries` / `treatments`). That dump is recognised and stays in **lite** mode by default (Part 1 + meal table, no CR assessment). Part 2 only with `--assume-camaps` or the upload checkbox.
+The same CamAPS stream can also sit in **Nightscout** (`entries` / `treatments`). That dump is recognised and stays in **lite** mode by default: the assessment rests on the glucose course alone and the loop figures stay empty. They are added only with `--assume-camaps` or the upload checkbox.
 
 ## ⚠️ Supported systems — CamAPS FX only
 
@@ -57,10 +57,18 @@ The core method relies on CamAPS delivering auto-corrections as **modulated basa
 
 - **Tandem Control-IQ, Omnipod 5, and others** deliver auto-corrections partly as **boluses**. These do not appear in the basal → the loop extra basal underestimates the compensation, and the verdict is distorted.
 - **Nightscout:** `entries.json` + `treatments.json` dump (API, no live fetch). CGM from `sgv`, meals from Meal/Correction Bolus, basal from `Temp Basal`. Times: UTC from the ISO string, local clock via the CGM `utcOffset` (treatment offset 0 is ignored). **Default is lite** — Part 2 only with `--assume-camaps`, and only if this really is CamAPS via NS. Do not treat AAPS/Loop Nightscout as CamAPS.
-- **LibreView:** one glucose CSV (record types 0/4/5). Always lite — no basal, no Part 2.
+- **LibreView:** one glucose CSV (record types 0/4/5). Always lite — no basal, so no loop figures.
 - **Dexcom Clarity:** the CSV from the Clarity export (`EGV`/`Carbs`/`Insulin` rows).
   Carbs and insulin only as far as they were logged in the Dexcom app; long-acting
-  insulin does not count as a meal bolus. Always lite — no basal, no Part 2.
+  insulin does not count as a meal bolus. Always lite — no basal, so no loop figures.
+
+**What lite sources show.** Without a basal trace only the loop figures drop out — loop extra
+basal, `CR_eff` and the fasting basal rate. Everything the glucose curve alone can say stays:
+the return Δ4h, the per-slot CR assessment that follows from it, stability and spread, and all
+derivations from the curve shape. What remains is the classic view — this much bolus for this
+many carbs, and this is where glucose stood four hours later. With no loop smoothing the
+excursion that signal is arguably more direct than under CamAPS.
+
 
 Use with other loops is **conceivable with adaptations**, but untested — in particular, (1) the export columns would need to be mapped and (2) auto-correction **boluses** would need to be included in the "loop extra basal" term. Without these adaptations, the results are not valid for non-CamAPS systems.
 
@@ -131,7 +139,7 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `export_dir` | Folder with a Glooko export, Nightscout dump, LibreView or Clarity CSV. **Required**; searched up to two levels below | — |
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--dark-charts` | also render dark-theme chart PNGs (AGP, slot curves, baseline-norm, and daily with `-d`); without this, only light charts | off |
-| `--assume-camaps` | Part 2 (CamAPS CR) for Nightscout as well. LibreView and Clarity stay lite. Default off | off |
+| `--assume-camaps` | Loop figures (loop extra basal, CR_eff) for Nightscout as well. LibreView and Clarity stay lite. Default off | off |
 | `--span` | print the CGM date range, no report | off |
 | `--from` / `--to` | calendar days YYYY-MM-DD (inclusive) | full export |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |

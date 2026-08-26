@@ -6,7 +6,7 @@ max-line-length=120
 # read_nightscout, build_context, slot_norm_curves_chart). They are wide by
 # nature — one place that maps many fields — not deeply nested. Splitting them
 # would spread one mapping over several functions without making it clearer.
-max-locals=42
+max-locals=50
 # i18n infrastructure (gettext setup, catalogs), the reusable generate_report()
 # entry point (shared by the CLI and a web front-end) and the dark-mode chart
 # variants, the decision-stability bootstrap and the day spread pushed the
@@ -16,8 +16,10 @@ max-module-lines=1000
 # as keyword arguments (lang/window/daily/dark/slots/template); that is the
 # natural arity of the front-end boundary, not accidental growth.
 # The analysis/chart functions take the same number of data inputs.
-max-args=10
-max-positional-arguments=10
+# generate_report is the front-end boundary: every option the CLI, the web app
+# and the GUI can set arrives here as a keyword. That is its arity, not growth.
+max-args=11
+max-positional-arguments=11
 # N_ is the conventional gettext_noop marker for deferred translation.
 good-names=N_
 
