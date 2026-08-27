@@ -9,6 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The web UI (Docker and the desktop window) shows a finished report in an
+  app chrome: New report goes back to the form, Save downloads the same HTML
+  the CLI writes. The report file itself is unchanged. Jobs used for viewing
+  stay until the existing 15-minute sweep so a second look or a save still
+  works; only the "download" tick still removes the job right after the file
+  is sent.
+
 ## [0.18.2] - 2026-08-27
 
 ### Fixed

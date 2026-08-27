@@ -161,8 +161,9 @@ A small Flask app offers the same analysis in the browser: Glooko ZIP, Nightscou
 ZIP (`entries.json` + `treatments.json`), or LibreView CSV. After choosing the
 file the full date range is filled in, then the report. Those are separate
 requests. While a report is being built the upload and the result sit in a
-private folder under the system temp directory; both are removed once the report
-has been fetched, and at the latest after 15 minutes. Nightscout stays lite unless you tick
+private folder under the system temp directory; they are gone after 15
+minutes at the latest. The report is shown in a chrome (New report / Save);
+the saved HTML is the same file the CLI writes. Nightscout stays lite unless you tick
 “force CamAPS assessment”. Meant for **private LAN use, not public hosting**.
 
 ```bash
@@ -281,7 +282,8 @@ loop-cr-review/
 ├── gui.py                     # desktop app (pywebview + local server)
 ├── templates/
 │   ├── report.html.j2         # presentation (Jinja2) — adjust layout/wording here
-│   └── upload.html.j2         # web front-end upload form
+│   ├── upload.html.j2         # web front-end upload form
+│   └── viewer.html.j2         # chrome around the report (New report / Save)
 ├── static/                    # logo assets served by the web front-end
 ├── example-data/              # synthetic example export to try it out
 ├── tests/                     # regression tests (example-data)

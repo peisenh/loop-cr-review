@@ -161,8 +161,9 @@ Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP, Nightsc
 (`entries.json` + `treatments.json`) oder LibreView-CSV. Nach der Dateiauswahl kommt
 der volle Zeitraum (Von/Bis), danach der Report. Beides sind getrennte Requests;
 Während der Report gebaut wird, liegen Upload und Ergebnis in einem
-privaten Ordner im System-Temp-Verzeichnis; beides wird gelöscht, sobald der Report
-abgeholt wurde, spätestens nach 15 Minuten. Nightscout bleibt Lite, außer Häkchen
+privaten Ordner im System-Temp-Verzeichnis; spätestens nach 15 Minuten
+sind sie weg. Der Report erscheint in einem Rahmen (Neuer Report / Speichern);
+die gespeicherte HTML ist dieselbe Datei wie von der Kommandozeile. Nightscout bleibt Lite, außer Häkchen
 „CamAPS-Auswertung erzwingen“. Gedacht für den **privaten Betrieb im Heimnetz,
 nicht für öffentliches Hosting**.
 
@@ -287,7 +288,8 @@ loop-cr-review/
 ├── gui.py                     # Desktop-App (pywebview + lokaler Server)
 ├── templates/
 │   ├── report.html.j2         # Darstellung (Jinja2) — Layout/Wording hier anpassen
-│   └── upload.html.j2         # Upload-Formular des Web-Frontends
+│   ├── upload.html.j2         # Upload-Formular des Web-Frontends
+│   └── viewer.html.j2         # Rahmen um den Report (Neuer Report / Speichern)
 ├── static/                    # Logo-Assets fürs Web-Frontend
 ├── example-data/              # synthetischer Beispiel-Export zum Ausprobieren
 ├── tests/                     # Regressionstests (example-data)

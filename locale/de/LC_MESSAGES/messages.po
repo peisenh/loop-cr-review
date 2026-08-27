@@ -2171,3 +2171,11 @@ msgstr "Fortschritt nicht verfügbar."
 #~ "      Upload nur im Arbeitsspeicher bzw. temporär, danach Löschung —\n"
 #~ "      kein öffentliches Hosting, keine Speicherung der Exporte."
 
+
+#: templates/viewer.html.j2
+msgid "New report"
+msgstr "Neuer Report"
+
+#: templates/viewer.html.j2
+msgid "Save"
+msgstr "Speichern"

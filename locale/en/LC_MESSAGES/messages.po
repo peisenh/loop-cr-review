@@ -2181,3 +2181,11 @@ msgstr "Progress unavailable."
 #~ ""
 #~ "      no public hosting, no storage of exports."
 
+
+#: templates/viewer.html.j2
+msgid "New report"
+msgstr "New report"
+
+#: templates/viewer.html.j2
+msgid "Save"
+msgstr "Save"

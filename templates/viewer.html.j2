@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!-- SPDX-FileCopyrightText: 2026 Peter Eisenhauer -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>loop-cr-review</title>
+<style>
+  :root {
+    --ink:#3F454A; --muted:#5a6b82; --line:#dde3ee; --bg:#eef1f6; --blue:#1A6FC6;
+    --bar:#fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:#e6eaf0; --muted:#a8b4c4; --line:#3a4556; --bg:#12161c; --blue:#4d9eef;
+      --bar:#1c2330;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+               font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .bar {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bar);
+  }
+  .bar a, .bar button {
+    display:inline-block; padding:8px 12px; border-radius:8px; font-size:13px;
+    font-weight:600; text-decoration:none; border:0; cursor:pointer;
+  }
+  .bar .primary { background:var(--blue); color:#fff; }
+  .bar .primary:hover { filter:brightness(0.95); }
+  .bar .sec { background:transparent; color:var(--blue); border:1px solid var(--line); }
+  iframe { display:block; width:100%; height:calc(100% - 49px); border:0; background:#fff; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <a class="primary" href="{{ url_for('index', lang=lang) }}">{% trans %}New report{% endtrans %}</a>
+    <a class="sec" href="{{ url_for('result_download', job_id=job_id) }}">{% trans %}Save{% endtrans %}</a>
+  </div>
+  <iframe title="loop-cr-review" src="{{ url_for('result_body', job_id=job_id) }}"></iframe>
+</body>
+</html>

@@ -95,7 +95,17 @@ class TestAsyncReport(WebTestCase):
         self.assertEqual(state["state"], "done", state)
         result = self.client.get(f"/result/{job_id}")
         self.assertEqual(result.status_code, 200)
-        self.assertIn(b"<!doctype html>", result.data[:40].lower())
+        page = result.data.decode()
+        self.assertIn("<iframe", page)
+        self.assertIn(f"/result/{job_id}/body", page)
+        body = self.client.get(f"/result/{job_id}/body")
+        self.assertEqual(body.status_code, 200)
+        self.assertIn(b"<!doctype html>", body.data[:40].lower())
+        # Looking at the chrome must not delete the job: Save still works.
+        saved = self.client.get(f"/result/{job_id}/download")
+        self.assertEqual(saved.status_code, 200)
+        self.assertIn("attachment", saved.headers.get("Content-Disposition", ""))
+        self.assertIn(b"<!doctype html>", saved.data[:40].lower())
 
     def test_invalid_async_upload_is_rejected(self):
         res = self.client.post("/analyze", data={

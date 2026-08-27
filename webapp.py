@@ -32,7 +32,7 @@ MAX_FILE_BYTES = 100 * 1024 * 1024         # 100 MB per extracted file
 MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb guard)
 
 # Async analysis jobs are short-lived and live only in the system temp area.
-# Files are removed after the result is fetched (or after the TTL expires).
+# Files are removed when a download-as-attachment finishes, or when the TTL expires.
 JOB_TTL = 15 * 60
 _JOB_ROOT = Path(tempfile.gettempdir()) / "loop-cr-review-jobs"
 _JOB_LOCK = threading.Lock()
@@ -306,7 +306,7 @@ def _do_job(status_path, result_path, options):
             progress=lambda stage, pct: _job_progress(status_path, stage, pct))
         result_path.write_text(html, encoding="utf-8")
         _write_job(status_path, state="done", stage="done", percent=100,
-                   download=options["download"])
+                   download=options["download"], lang=options["lang"])
     except (LoopCRError, SystemExit) as exc:
         # LoopCRError carries a message written for the person in front of the
         # browser ("no CGM samples in the chosen date range"). Replacing it with a
@@ -406,24 +406,65 @@ def progress(job_id):
     return jsonify(data)
 
 
-@app.route("/result/<job_id>", methods=["GET"])
-def result(job_id):
-    """Return and then remove a completed asynchronous report."""
+def _finished_report(job_id):
+    """Return (job dir, status dict, report HTML) for a completed job, or abort."""
     job, status_path, result_path = _job_paths(job_id)
     if not status_path.is_file():
         abort(404)
-    data = json.loads(status_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        abort(404)
     if data.get("state") == "error":
         _cleanup_job(job)
         abort(400, data.get("error", "could not build report"))
     if data.get("state") != "done" or not result_path.is_file():
         return jsonify(error="report not ready"), 409
     html = result_path.read_text(encoding="utf-8")
-    headers = {}
+    return job, data, html
+
+
+@app.route("/result/<job_id>", methods=["GET"])
+def result(job_id):
+    """Show the report in the app chrome, or attach it when download was ticked.
+
+    The generated HTML is not modified. Looking at it does not delete the job:
+    Save and a second look still work until the TTL sweep.
+    """
+    finished = _finished_report(job_id)
+    if not isinstance(finished, tuple):
+        return finished
+    job, data, html = finished
     if data.get("download"):
-        headers["Content-Disposition"] = 'attachment; filename="loop-cr-review.html"'
-    _cleanup_job(job)
-    return Response(html, mimetype="text/html", headers=headers)
+        _cleanup_job(job)
+        return Response(html, mimetype="text/html", headers={
+            "Content-Disposition": 'attachment; filename="loop-cr-review.html"',
+        })
+    lang = data.get("lang") or _ui_lang()
+    _install_ui_i18n(lang)
+    return render_template("viewer.html.j2", lang=lang, job_id=job_id)
+
+
+@app.route("/result/<job_id>/body", methods=["GET"])
+def result_body(job_id):
+    """Unchanged report HTML for the viewer iframe."""
+    finished = _finished_report(job_id)
+    if not isinstance(finished, tuple):
+        return finished
+    _job, _data, html = finished
+    return Response(html, mimetype="text/html")
+
+
+@app.route("/result/<job_id>/download", methods=["GET"])
+def result_download(job_id):
+    """Same file the CLI writes; no app chrome."""
+    finished = _finished_report(job_id)
+    if not isinstance(finished, tuple):
+        return finished
+    _job, _data, html = finished
+    return Response(html, mimetype="text/html", headers={
+        "Content-Disposition": 'attachment; filename="loop-cr-review.html"',
+    })
 
 
 @app.route("/report", methods=["POST"])
