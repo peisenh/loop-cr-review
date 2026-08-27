@@ -472,8 +472,13 @@ def slot_headline(agg, met):
         if rise_end < -g(25):                        # curve at 4h really below start
             return (_("high peak, then drop below baseline") if met["nadir"] < g(NADIR_LOW)
                     else _("falls below baseline"))
-        # Verdict "strong" came from the loop signal, not from an actual curve drop
-        return _("returns close to baseline, loop throttles noticeably")
+        # The curve did not really drop, so the verdict came from somewhere else.
+        # Only claim throttling when the extra basal actually is negative - saying
+        # it while the loop added insulin is the contradiction a reader spots
+        # immediately against the daily charts.
+        if not np.isnan(agg["exc"]) and agg["exc"] < 0:
+            return _("returns close to baseline, loop throttles noticeably")
+        return _("returns close to baseline")
     if agg["cls"] == "weak":
         return _("climbs and does not return to baseline")
     if rise_end > 20:

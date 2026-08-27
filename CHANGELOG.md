@@ -9,6 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- A slot could be headlined "loop throttles noticeably" while its loop figure was
+  positive. The sentence was produced by elimination — a "too strong" verdict that
+  did not come from a real drop in the curve was assumed to come from the loop —
+  without ever looking at the extra basal. It is only used now when the extra
+  basal really is negative; otherwise the headline just says the curve returns
+  close to baseline.
+
 ## [0.18.0] - 2026-08-26
 
 ### Changed

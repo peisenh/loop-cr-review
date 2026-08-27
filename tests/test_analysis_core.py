@@ -474,3 +474,34 @@ class TestSelectionEffect(unittest.TestCase):
             with self.subTest(slot=entry["label"]):
                 self.assertEqual(entry["used"], entry["total"])
                 self.assertIn(entry["shift"], ("0", "0.0", "—"))
+
+
+class TestSlotHeadline(unittest.TestCase):
+    """The headline must not claim something the numbers contradict.
+
+    Regression: when a "strong" verdict did not come from a real drop in the
+    curve, the headline said the loop throttles noticeably — by elimination,
+    without ever looking at the extra basal. A report showed that sentence next
+    to a loop figure of +1.08 U, which reads as a contradiction against the
+    daily charts.
+    """
+
+    MET = {"end": 100, "start": 110, "peak_t": 60, "peak": 180, "nadir": 95}
+
+    def test_throttling_is_claimed_only_when_basal_was_cut(self):
+        head = core.slot_headline({"cls": "strong", "exc": -2.0}, self.MET)
+        self.assertIn("throttl", head.lower())
+
+    def test_no_throttling_claim_when_the_loop_added_insulin(self):
+        head = core.slot_headline({"cls": "strong", "exc": 1.08}, self.MET)
+        self.assertNotIn("throttl", head.lower())
+
+    def test_no_throttling_claim_without_a_basal_trace(self):
+        head = core.slot_headline({"cls": "strong", "exc": float("nan")}, self.MET)
+        self.assertNotIn("throttl", head.lower())
+
+    def test_a_real_drop_is_still_described_as_such(self):
+        met = dict(self.MET, end=60, start=110)      # curve ends well below start
+        head = core.slot_headline({"cls": "strong", "exc": 1.08}, met)
+        self.assertIn("baseline", head.lower())
+        self.assertNotIn("throttl", head.lower())

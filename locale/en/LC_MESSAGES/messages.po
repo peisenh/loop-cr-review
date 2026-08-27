@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-26 18:51+0000\n"
+"POT-Creation-Date: 2026-08-27 04:36+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -116,7 +116,7 @@ msgstr " ⚠︎ (few clean meals)"
 msgid "rises and then falls to low values"
 msgstr "rises and then falls to low values"
 
-#: lcr/analysis.py:351 lcr/analysis.py:478
+#: lcr/analysis.py:351 lcr/analysis.py:483
 msgid "climbs and does not return to baseline"
 msgstr "climbs and does not return to baseline"
 
@@ -124,7 +124,7 @@ msgstr "climbs and does not return to baseline"
 msgid "falls clearly below baseline"
 msgstr "falls clearly below baseline"
 
-#: lcr/analysis.py:354 lcr/analysis.py:483
+#: lcr/analysis.py:354 lcr/analysis.py:488
 msgid "returns close to baseline (balanced)"
 msgstr "returns close to baseline (balanced)"
 
@@ -283,19 +283,23 @@ msgstr "high peak, then drop below baseline"
 msgid "falls below baseline"
 msgstr "falls below baseline"
 
-#: lcr/analysis.py:476
+#: lcr/analysis.py:480
 msgid "returns close to baseline, loop throttles noticeably"
 msgstr "returns close to baseline, loop throttles noticeably"
 
-#: lcr/analysis.py:480
+#: lcr/analysis.py:481
+msgid "returns close to baseline"
+msgstr "returns close to baseline"
+
+#: lcr/analysis.py:485
 msgid "slight late rise, but net balanced"
 msgstr "slight late rise, but net balanced"
 
-#: lcr/analysis.py:482
+#: lcr/analysis.py:487
 msgid "early peak, then returns cleanly"
 msgstr "early peak, then returns cleanly"
 
-#: lcr/analysis.py:504
+#: lcr/analysis.py:509
 #, python-format
 msgid ""
 "• Derived CR = CHO/bolus; no slot deviates notably from the median "
@@ -304,31 +308,31 @@ msgstr ""
 "• Derived CR = CHO/bolus; no slot deviates notably from the median "
 "(1:%(m).1f).<br>"
 
-#: lcr/analysis.py:508
+#: lcr/analysis.py:513
 msgid "tighter"
 msgstr "tighter"
 
-#: lcr/analysis.py:508
+#: lcr/analysis.py:513
 msgid "looser"
 msgstr "looser"
 
-#: lcr/analysis.py:510
-msgid ""
-"elevated pre-meal BG → correction likely blended in by the calculator, "
-"derived CR underestimates the programmed ratio"
-msgstr ""
-"elevated pre-meal BG → correction likely blended in by the calculator, "
-"derived CR underestimates the programmed ratio"
-
-#: lcr/analysis.py:513
-msgid ""
-"pre-meal BG not clearly elevated → rather a genuinely different "
-"programmed ratio than a pure correction"
-msgstr ""
-"pre-meal BG not clearly elevated → rather a genuinely different "
-"programmed ratio than a pure correction"
-
 #: lcr/analysis.py:515
+msgid ""
+"elevated pre-meal BG → correction likely blended in by the calculator, "
+"derived CR underestimates the programmed ratio"
+msgstr ""
+"elevated pre-meal BG → correction likely blended in by the calculator, "
+"derived CR underestimates the programmed ratio"
+
+#: lcr/analysis.py:518
+msgid ""
+"pre-meal BG not clearly elevated → rather a genuinely different "
+"programmed ratio than a pure correction"
+msgstr ""
+"pre-meal BG not clearly elevated → rather a genuinely different "
+"programmed ratio than a pure correction"
+
+#: lcr/analysis.py:520
 #, python-format
 msgid ""
 "%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-"
@@ -337,7 +341,7 @@ msgstr ""
 "%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-"
 "meal BG ~%(bg).0f %(u)s – %(hint)s"
 
-#: lcr/analysis.py:519
+#: lcr/analysis.py:524
 msgid ""
 "• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
 "deviations: "
@@ -345,7 +349,7 @@ msgstr ""
 "• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
 "deviations: "
 
-#: lcr/analysis.py:520
+#: lcr/analysis.py:525
 msgid ""
 ". Clarification (programmed ratio vs. correction factor vs. timing) by "
 "the care team.<br>"
@@ -465,7 +469,6 @@ msgid ""
 "Source: LibreView. No basal in this export, so no loop figures — the "
 "assessment rests on the glucose course alone."
 msgstr ""
-""
 "Source: LibreView. No basal in this export, so no loop figures — the "
 "assessment rests on the glucose course alone."
 
@@ -475,7 +478,6 @@ msgid ""
 "on the glucose course alone; the CamAPS loop figures are off unless you "
 "opt in."
 msgstr ""
-""
 "Source: Nightscout. Read without a basal trace, so the assessment rests "
 "on the glucose course alone; the CamAPS loop figures are off unless you "
 "opt in."

@@ -28,3 +28,5 @@ disable=missing-module-docstring,
         missing-class-docstring
 max-statements=72
 max-branches=22
+# slot_headline is a lookup table written as branches: one return per shape.
+max-returns=8
