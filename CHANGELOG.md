@@ -10,6 +10,17 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Fixed
+- The web app started a thread per upload with no limit. Each analysis unpacks up
+  to 300 MB and holds a whole report in memory, so a handful of parallel uploads
+  could run a small home server out of memory. At most two run at once now; the
+  rest wait and stay visible as queued.
+- The job directory in the shared temp area was created with mode 0700, which only
+  helps when we create it. An existing one kept whatever owner and mode it had, so
+  someone could put it there first and read the exports afterwards. It is now
+  refused when it belongs to another user or is not a directory, and tightened
+  when its permissions are too open.
+
+### Fixed
 - A slot could be headlined "loop throttles noticeably" while its loop figure was
   positive. The sentence was produced by elimination — a "too strong" verdict that
   did not come from a real drop in the curve was assumed to come from the loop —

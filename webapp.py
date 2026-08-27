@@ -10,6 +10,7 @@ after the report is built (ephemeral: nothing is stored, nothing is logged).
 import json
 import os
 import tempfile
+import stat
 import shutil
 import threading
 import time
@@ -34,8 +35,36 @@ MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb
 # Files are removed after the result is fetched (or after the TTL expires).
 JOB_TTL = 15 * 60
 _JOB_ROOT = Path(tempfile.gettempdir()) / "loop-cr-review-jobs"
-_JOB_ROOT.mkdir(mode=0o700, exist_ok=True)
 _JOB_LOCK = threading.Lock()
+# At most this many analyses run at once. Each one unpacks up to MAX_TOTAL_BYTES
+# and holds a full report in memory, so an unbounded thread per upload is an easy
+# way to run a small home server out of memory.
+MAX_CONCURRENT_JOBS = 2
+_JOB_SLOTS = threading.Semaphore(MAX_CONCURRENT_JOBS)
+
+
+def _prepare_job_root():
+    """Create the job directory, and refuse a pre-existing one we do not own.
+
+    The temp area is shared. Creating it with mode 0o700 only helps when we
+    create it: an existing directory keeps whatever owner and mode it has, so
+    someone could put it there first and read the exports afterwards.
+    """
+    try:
+        _JOB_ROOT.mkdir(mode=0o700)
+        return
+    except FileExistsError:
+        pass
+    info = _JOB_ROOT.lstat()
+    if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
+        raise RuntimeError(f"{_JOB_ROOT} exists and is not a directory")
+    if info.st_uid != os.getuid():
+        raise RuntimeError(f"{_JOB_ROOT} belongs to another user - refusing to use it")
+    if info.st_mode & 0o077:
+        _JOB_ROOT.chmod(0o700)
+
+
+_prepare_job_root()
 
 app = Flask(__name__)
 app.jinja_env.add_extension("jinja2.ext.i18n")
@@ -261,6 +290,12 @@ def _run_job(_job, status_path, result_path, options):
     The job directory comes with the thread arguments but is not needed here;
     the paths below already point inside it.
     """
+    with _JOB_SLOTS:
+        _do_job(status_path, result_path, options)
+
+
+def _do_job(status_path, result_path, options):
+    """The analysis itself, once a slot is free."""
     try:
         _job_progress(status_path, "analysis", 1)
         html, _ctx = core.generate_report(

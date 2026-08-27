@@ -295,3 +295,62 @@ class TestJobCleanup(unittest.TestCase):
     def test_sweep_survives_a_file_in_the_job_root(self):
         (self.root / "stray.txt").write_text("x", encoding="utf-8")
         webapp._sweep_stale_jobs()          # must not raise
+
+
+class TestJobRootIsOurs(unittest.TestCase):
+    """The temp area is shared, so the job directory has to be checked.
+
+    Creating it with mode 0o700 only helps when we are the ones creating it.
+    An existing directory keeps whatever owner and mode it has — someone could
+    put it there first and read the exports afterwards.
+    """
+
+    def setUp(self):
+        self.root = webapp._JOB_ROOT
+        shutil.rmtree(self.root, ignore_errors=True)
+        self.addCleanup(webapp._prepare_job_root)
+        self.addCleanup(shutil.rmtree, self.root, True)
+
+    def test_a_fresh_directory_is_private(self):
+        webapp._prepare_job_root()
+        self.assertEqual(self.root.stat().st_mode & 0o777, 0o700)
+
+    def test_permissions_that_are_too_open_are_tightened(self):
+        self.root.mkdir(mode=0o777)
+        webapp._prepare_job_root()
+        self.assertEqual(self.root.stat().st_mode & 0o777, 0o700)
+
+    def test_a_file_in_the_way_is_refused(self):
+        self.root.write_text("not a directory", encoding="utf-8")
+        with self.assertRaises(RuntimeError):
+            webapp._prepare_job_root()
+        self.root.unlink()
+
+    @unittest.skipUnless(os.getuid() == 0, "changing the owner needs root")
+    def test_a_directory_owned_by_someone_else_is_refused(self):
+        self.root.mkdir(mode=0o700)
+        os.chown(self.root, 12345, 12345)
+        try:
+            with self.assertRaises(RuntimeError):
+                webapp._prepare_job_root()
+        finally:
+            os.chown(self.root, os.getuid(), os.getgid())
+
+
+class TestConcurrencyLimit(unittest.TestCase):
+    """An unbounded thread per upload is an easy way to exhaust a home server."""
+
+    def test_only_a_few_analyses_run_at_once(self):
+        self.assertGreaterEqual(webapp.MAX_CONCURRENT_JOBS, 1)
+        self.assertLessEqual(webapp.MAX_CONCURRENT_JOBS, 4)
+
+    def test_further_jobs_wait_instead_of_starting(self):
+        """The semaphore hands out exactly MAX_CONCURRENT_JOBS slots."""
+        held = [webapp._JOB_SLOTS.acquire(blocking=False)
+                for _ in range(webapp.MAX_CONCURRENT_JOBS)]
+        try:
+            self.assertTrue(all(held))
+            self.assertFalse(webapp._JOB_SLOTS.acquire(blocking=False))
+        finally:
+            for _ in [h for h in held if h]:
+                webapp._JOB_SLOTS.release()
