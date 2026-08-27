@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-08-27
+
 ### Fixed
 - After downloading a report the form stayed stuck. With "download" ticked the
   browser saves the file and stays on the page, so no navigation ever reset the
@@ -911,7 +913,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.2...HEAD
+[0.18.2]: https://github.com/peisenh/loop-cr-review/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...v0.17.0
