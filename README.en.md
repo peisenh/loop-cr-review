@@ -161,8 +161,9 @@ A small Flask app offers the same analysis in the browser: Glooko ZIP, Nightscou
 ZIP (`entries.json` + `treatments.json`), or LibreView CSV. After choosing the
 file the full date range is filled in, then the report. Those are separate
 requests. While a report is being built the upload and the result sit in a
-private folder under the system temp directory; they are gone after 15
-minutes at the latest. The report is shown in a chrome (New report / Save);
+private folder under the system temp directory. The export is deleted as soon as
+the report exists; the report itself after 15 minutes at the latest, or right
+away with "download". The report is shown in a chrome (New report / Save);
 the saved HTML is the same file the CLI writes. Nightscout stays lite unless you tick
 “force CamAPS assessment”. Meant for **private LAN use, not public hosting**.
 
@@ -222,7 +223,7 @@ Everything happens locally; the data never leaves your machine.
 > Not legal advice — technical notes for **self-hosted** use only.
 
 - **CLI and desktop app:** analysis runs only on your machine; the export and HTML report stay local. The tool does not upload data to any network service.
-- **Web front-end:** intended for a **private home network**, not the public internet. Uploads are written to a temporary directory and removed after the report; there is deliberately no persistence and no analysis logging of file contents.
+- **Web front-end:** intended for a **private home network**, not the public internet. Uploads are written to a temporary directory and deleted as soon as the report has been built from them; the report follows within a quarter of an hour. There is deliberately no persistence and no analysis logging of file contents.
 - **Health data** (CGM/pump) is sensitive. If you make the service available to *others* (even on LAN), you are responsible for access control (trusted users only; optionally HTTPS + Basic-Auth behind Traefik as in `docker-compose.example.yml`).
 - **Public hosting** (open internet, accounts, storage) is **not** the intended mode and would trigger much stricter requirements (legal basis, transparency, security measures, often a DPIA) — this project is not designed for that.
 - **Imprint / privacy policy** are typically needed when offering a service *commercially* or publicly — not for personal use on your own machine. If unsure, check yourself or get professional advice.

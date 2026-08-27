@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-27 04:50+0000\n"
+"POT-Creation-Date: 2026-08-27 20:26+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -1408,7 +1408,8 @@ msgstr ""
 msgid "Slots file (JSON)"
 msgstr "Slots file (JSON)"
 
-#: templates/upload.html.j2:145 templates/upload.html.j2:288
+#: templates/upload.html.j2:145 templates/upload.html.j2:292
+#: templates/upload.html.j2:298
 msgid "Create report"
 msgstr "Create report"
 
@@ -1447,76 +1448,90 @@ msgid ""
 "<b>Homelab / private.</b>\n"
 "      While the analysis runs, the upload and the finished report sit in "
 "a private\n"
-"      folder in the system temp area. Both are deleted as soon as the "
-"report has been\n"
-"      fetched, and at the latest 15 minutes later — no public hosting, no"
-" archive."
+"      folder in the system temp area. The export itself is deleted as "
+"soon\n"
+"      as the report exists; the report follows after 15 minutes at the "
+"latest, or\n"
+"      right away if you tick \"download\". Until then it stays open so "
+"you can still\n"
+"      save it. No public hosting, no archive."
 msgstr ""
 "<b>Homelab / private.</b>\n"
 "      While the analysis runs, the upload and the finished report sit in "
 "a private\n"
-"      folder in the system temp area. Both are deleted as soon as the "
-"report has been\n"
-"      fetched, and at the latest 15 minutes later — no public hosting, no"
-" archive."
+"      folder in the system temp area. The export itself is deleted as "
+"soon\n"
+"      as the report exists; the report follows after 15 minutes at the "
+"latest, or\n"
+"      right away if you tick \"download\". Until then it stays open so "
+"you can still\n"
+"      save it. No public hosting, no archive."
 
-#: templates/upload.html.j2:209
+#: templates/upload.html.j2:211
 msgid "Queued…"
 msgstr "Queued…"
 
-#: templates/upload.html.j2:210
+#: templates/upload.html.j2:212
 msgid "Reading data…"
 msgstr "Reading data…"
 
-#: templates/upload.html.j2:211
+#: templates/upload.html.j2:213
 msgid "Analysing meals…"
 msgstr "Analysing meals…"
 
-#: templates/upload.html.j2:212
+#: templates/upload.html.j2:214
 msgid "Analysing slots…"
 msgstr "Analysing slots…"
 
-#: templates/upload.html.j2:213
+#: templates/upload.html.j2:215
 msgid "Rendering charts…"
 msgstr "Rendering charts…"
 
-#: templates/upload.html.j2:214
+#: templates/upload.html.j2:216
 msgid "Rendering daily charts…"
 msgstr "Rendering daily charts…"
 
-#: templates/upload.html.j2:215
+#: templates/upload.html.j2:217
 #, fuzzy
 msgid "Preparing report…"
 msgstr "Create report"
 
-#: templates/upload.html.j2:216
+#: templates/upload.html.j2:218
 #, fuzzy
 msgid "Rendering report…"
 msgstr "Create report"
 
-#: templates/upload.html.j2:217
+#: templates/upload.html.j2:219
 msgid "Analysis complete"
 msgstr "Analysis complete"
 
-#: templates/upload.html.j2:218
+#: templates/upload.html.j2:220
 msgid "Analysis failed"
 msgstr "Analysis failed"
 
-#: templates/upload.html.j2:221 templates/upload.html.j2:247
+#: templates/upload.html.j2:223 templates/upload.html.j2:249
 msgid "Analysing…"
 msgstr "Analysing…"
 
-#: templates/upload.html.j2:236 templates/upload.html.j2:272
+#: templates/upload.html.j2:238 templates/upload.html.j2:274
 msgid "Could not build report."
 msgstr "Could not build report."
 
-#: templates/upload.html.j2:253
+#: templates/upload.html.j2:255
 msgid "Could not start analysis."
 msgstr "Could not start analysis."
 
-#: templates/upload.html.j2:263
+#: templates/upload.html.j2:265
 msgid "Progress unavailable."
 msgstr "Progress unavailable."
+
+#: templates/viewer.html.j2:39
+msgid "New report"
+msgstr "New report"
+
+#: templates/viewer.html.j2:40
+msgid "Save"
+msgstr "Save"
 
 #~ msgid ""
 #~ "Targets: TIR ≥70% · TBR&lt;70 &lt;4% "
@@ -2181,11 +2196,82 @@ msgstr "Progress unavailable."
 #~ ""
 #~ "      no public hosting, no storage of exports."
 
+#~ msgid ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. Both are deleted as soon as"
+#~ " the report has been\n"
+#~ "      fetched, and at the latest "
+#~ "15 minutes later — no public "
+#~ "hosting, no archive."
+#~ msgstr ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. Both are deleted as soon as"
+#~ " the report has been\n"
+#~ "      fetched, and at the latest "
+#~ "15 minutes later — no public "
+#~ "hosting, no archive."
 
-#: templates/viewer.html.j2
-msgid "New report"
-msgstr "New report"
+#~ msgid ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. Saving the report removes them "
+#~ "at once;\n"
+#~ "      otherwise they go after 15 "
+#~ "minutes, so the report stays open "
+#~ "and can be saved\n"
+#~ "      later — no public hosting, no archive."
+#~ msgstr ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. Saving the report removes them "
+#~ "at once;\n"
+#~ "      otherwise they go after 15 "
+#~ "minutes, so the report stays open "
+#~ "and can be saved\n"
+#~ "      later — no public hosting, no archive."
 
-#: templates/viewer.html.j2
-msgid "Save"
-msgstr "Save"
+#~ msgid ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. They are gone after 15 "
+#~ "minutes at the\n"
+#~ "      latest — sooner if you tick"
+#~ " \"download\", which hands the file "
+#~ "over directly.\n"
+#~ "      Otherwise the report stays open"
+#~ " so you can still save it. No"
+#~ " public hosting,\n"
+#~ "      no archive."
+#~ msgstr ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      While the analysis runs, the "
+#~ "upload and the finished report sit "
+#~ "in a private\n"
+#~ "      folder in the system temp "
+#~ "area. They are gone after 15 "
+#~ "minutes at the\n"
+#~ "      latest — sooner if you tick"
+#~ " \"download\", which hands the file "
+#~ "over directly.\n"
+#~ "      Otherwise the report stays open"
+#~ " so you can still save it. No"
+#~ " public hosting,\n"
+#~ "      no archive."
+

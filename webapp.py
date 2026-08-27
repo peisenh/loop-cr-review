@@ -32,7 +32,10 @@ MAX_FILE_BYTES = 100 * 1024 * 1024         # 100 MB per extracted file
 MAX_TOTAL_BYTES = 300 * 1024 * 1024        # 300 MB total uncompressed (zip-bomb guard)
 
 # Async analysis jobs are short-lived and live only in the system temp area.
-# Files are removed when a download-as-attachment finishes, or when the TTL expires.
+# The upload and the unpacked export go as soon as the report exists. What is
+# left - the report itself - is removed when it is handed over as a direct
+# download, and otherwise by the TTL sweep, which also runs on a timer. Viewing
+# in the app chrome deliberately keeps the report, so Save and a second look work.
 JOB_TTL = 15 * 60
 _JOB_ROOT = Path(tempfile.gettempdir()) / "loop-cr-review-jobs"
 _JOB_LOCK = threading.Lock()
@@ -294,6 +297,35 @@ def _run_job(_job, status_path, result_path, options):
         _do_job(status_path, result_path, options)
 
 
+def _drop_raw_input(job, keep):
+    """Remove everything in *job* except the files named in *keep*."""
+    for entry in job.iterdir():
+        if entry.name in keep:
+            continue
+        try:
+            if entry.is_dir():
+                shutil.rmtree(entry, ignore_errors=True)
+            else:
+                entry.unlink()
+        except OSError:
+            continue
+
+
+def _sweep_forever(interval=60):
+    """Run the sweep on a timer.
+
+    Without it the TTL only bites when something else happens - a new upload, or
+    a restart. On a machine that is simply left running, an abandoned job would
+    stay for as long as nobody uses the tool again.
+    """
+    while True:
+        time.sleep(interval)
+        try:
+            _sweep_stale_jobs()
+        except Exception:  # pylint: disable=broad-exception-caught
+            continue
+
+
 def _do_job(status_path, result_path, options):
     """The analysis itself, once a slot is free."""
     try:
@@ -305,6 +337,11 @@ def _do_job(status_path, result_path, options):
             date_to=options["date_to"], slots=options["slots"],
             progress=lambda stage, pct: _job_progress(status_path, stage, pct))
         result_path.write_text(html, encoding="utf-8")
+        # The upload and the unpacked export are the health data; the report is
+        # derived from them. Once it exists they serve no purpose, and since
+        # viewing no longer removes the job, they would otherwise sit here until
+        # the TTL sweep.
+        _drop_raw_input(status_path.parent, keep={status_path.name, result_path.name})
         _write_job(status_path, state="done", stage="done", percent=100,
                    download=options["download"], lang=options["lang"])
     except (LoopCRError, SystemExit) as exc:
@@ -407,7 +444,10 @@ def progress(job_id):
 
 
 def _finished_report(job_id):
-    """Return (job dir, status dict, report HTML) for a completed job, or abort."""
+    """(job dir, status dict, report HTML) for a completed job.
+
+    None while it is still running; aborts for anything worse.
+    """
     job, status_path, result_path = _job_paths(job_id)
     if not status_path.is_file():
         abort(404)
@@ -419,7 +459,10 @@ def _finished_report(job_id):
         _cleanup_job(job)
         abort(400, data.get("error", "could not build report"))
     if data.get("state") != "done" or not result_path.is_file():
-        return jsonify(error="report not ready"), 409
+        # None, not a response: the 409 case used to come back as a 2-tuple, and
+        # the callers - which check isinstance(..., tuple) - then unpacked it
+        # into three names and turned "not ready" into a 500.
+        return None
     html = result_path.read_text(encoding="utf-8")
     return job, data, html
 
@@ -432,8 +475,8 @@ def result(job_id):
     Save and a second look still work until the TTL sweep.
     """
     finished = _finished_report(job_id)
-    if not isinstance(finished, tuple):
-        return finished
+    if finished is None:
+        return jsonify(error="report not ready"), 409
     job, data, html = finished
     if data.get("download"):
         _cleanup_job(job)
@@ -449,8 +492,8 @@ def result(job_id):
 def result_body(job_id):
     """Unchanged report HTML for the viewer iframe."""
     finished = _finished_report(job_id)
-    if not isinstance(finished, tuple):
-        return finished
+    if finished is None:
+        return jsonify(error="report not ready"), 409
     _job, _data, html = finished
     return Response(html, mimetype="text/html")
 
@@ -459,8 +502,8 @@ def result_body(job_id):
 def result_download(job_id):
     """Same file the CLI writes; no app chrome."""
     finished = _finished_report(job_id)
-    if not isinstance(finished, tuple):
-        return finished
+    if finished is None:
+        return jsonify(error="report not ready"), 409
     _job, _data, html = finished
     return Response(html, mimetype="text/html", headers={
         "Content-Disposition": 'attachment; filename="loop-cr-review.html"',
@@ -526,6 +569,7 @@ def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps
 # Anything left from an earlier run is stale by definition: sweep once at import,
 # so a restart cleans up after a crash as well.
 _sweep_stale_jobs()
+threading.Thread(target=_sweep_forever, daemon=True).start()
 
 
 if __name__ == "__main__":

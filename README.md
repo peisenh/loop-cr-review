@@ -161,8 +161,9 @@ Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP, Nightsc
 (`entries.json` + `treatments.json`) oder LibreView-CSV. Nach der Dateiauswahl kommt
 der volle Zeitraum (Von/Bis), danach der Report. Beides sind getrennte Requests;
 Während der Report gebaut wird, liegen Upload und Ergebnis in einem
-privaten Ordner im System-Temp-Verzeichnis; spätestens nach 15 Minuten
-sind sie weg. Der Report erscheint in einem Rahmen (Neuer Report / Speichern);
+privaten Ordner im System-Temp-Verzeichnis. Der Export wird gelöscht, sobald der
+Report fertig ist; der Report selbst spätestens nach 15 Minuten, oder sofort mit
+„Herunterladen". Der Report erscheint in einem Rahmen (Neuer Report / Speichern);
 die gespeicherte HTML ist dieselbe Datei wie von der Kommandozeile. Nightscout bleibt Lite, außer Häkchen
 „CamAPS-Auswertung erzwingen“. Gedacht für den **privaten Betrieb im Heimnetz,
 nicht für öffentliches Hosting**.
@@ -226,7 +227,7 @@ Alles läuft lokal; die Daten verlassen den Rechner nicht.
 > Keine Rechtsberatung — nur technische Einordnung für den **selbst betriebenen** Einsatz.
 
 - **CLI und Desktop-App:** Auswertung nur lokal; der Export und der HTML-Report bleiben auf dem Rechner. Es gibt keinen Netz-Upload durch das Tool.
-- **Web-Frontend:** für das **private Heimnetz** gedacht, nicht für öffentliches Internet. Der Upload landet in einem temporären Verzeichnis und wird nach dem Report wieder entfernt; absichtlich keine Persistenz und kein Analyse-Logging der Dateiinhalte.
+- **Web-Frontend:** für das **private Heimnetz** gedacht, nicht für öffentliches Internet. Der Upload landet in einem temporären Verzeichnis und wird gelöscht, sobald der Report daraus gebaut ist; der Report folgt spätestens nach einer Viertelstunde. Absichtlich keine Persistenz und kein Analyse-Logging der Dateiinhalte.
 - **Gesundheitsdaten** (CGM/Pumpe) sind besonders schützenswert. Wer den Dienst *anderen* zugänglich macht (auch im LAN), trägt die Verantwortung für Zugriffsschutz (z. B. nur vertrauenswürdige Nutzer, optional HTTPS + Basic-Auth hinter Traefik wie in `docker-compose.example.yml`).
 - **Öffentliches Hosting** (freies Internet, Accounts, Speicherung) ist **nicht** der vorgesehene Betrieb und würde deutlich strengere Anforderungen (u. a. Rechtsgrundlage, Transparenz, TOMs, oft DSFA) auslösen — dafür ist dieses Projekt nicht ausgelegt.
 - **Impressum / Datenschutzerklärung** braucht man typischerweise, wenn man einen Dienst *geschäftsmäßig* oder öffentlich anbietet — nicht für den reinen Eigengebrauch auf dem eigenen Rechner. Bei Unsicherheit: selbst prüfen oder fachlich beraten lassen.

@@ -165,8 +165,10 @@
       <br><br>
       {% trans %}<b>Homelab / private.</b>
       While the analysis runs, the upload and the finished report sit in a private
-      folder in the system temp area. Both are deleted as soon as the report has been
-      fetched, and at the latest 15 minutes later — no public hosting, no archive.{% endtrans %}
+      folder in the system temp area. The export itself is deleted as soon
+      as the report exists; the report follows after 15 minutes at the latest, or
+      right away if you tick "download". Until then it stays open so you can still
+      save it. No public hosting, no archive.{% endtrans %}
     </div>
   </form>
 

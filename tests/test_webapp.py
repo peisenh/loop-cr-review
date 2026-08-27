@@ -12,10 +12,13 @@ from __future__ import annotations
 
 import io
 import re
+import json
 import os
 import shutil
+import threading
 import time
 import unittest
+import unittest.mock
 import zipfile
 from pathlib import Path
 
@@ -431,3 +434,128 @@ class TestFormRecoversAfterDownload(unittest.TestCase):
     def test_the_progress_box_ends_on_done(self):
         after = self.html.split("window.location.href", 1)[1][:600]
         self.assertIn('stage: "done"', after)
+
+
+class TestResultRoutesWhileRunning(unittest.TestCase):
+    """A report that is not finished yet must say so, not fail.
+
+    Regression: the helper signalled "not ready" by returning a 2-tuple, while
+    the callers told a result apart from a response by asking whether it was a
+    tuple — so they unpacked the 409 into three names and every route answered
+    500 while an analysis was still running.
+    """
+
+    def setUp(self):
+        shutil.rmtree(webapp._JOB_ROOT, ignore_errors=True)
+        webapp._prepare_job_root()
+        self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
+        self.job_id = "b" * 32
+        job, status_path, _result = webapp._job_paths(self.job_id)
+        job.mkdir(parents=True)
+        status_path.write_text(json.dumps({"state": "running", "percent": 30}),
+                               encoding="utf-8")
+        self.client = webapp.app.test_client()
+
+    def test_all_three_routes_answer_409(self):
+        for path in (f"/result/{self.job_id}",
+                     f"/result/{self.job_id}/body",
+                     f"/result/{self.job_id}/download"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 409)
+
+    def test_an_unknown_job_is_a_404(self):
+        self.assertEqual(self.client.get("/result/" + "c" * 32).status_code, 404)
+
+
+class TestViewingKeepsTheJob(unittest.TestCase):
+    """Looking at a report must not delete it — Save comes after looking."""
+
+    def setUp(self):
+        shutil.rmtree(webapp._JOB_ROOT, ignore_errors=True)
+        webapp._prepare_job_root()
+        self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
+        self.job_id = "d" * 32
+        self.job, status_path, result_path = webapp._job_paths(self.job_id)
+        self.job.mkdir(parents=True)
+        status_path.write_text(json.dumps({"state": "done", "lang": "de"}),
+                               encoding="utf-8")
+        result_path.write_text("<html><body>report</body></html>", encoding="utf-8")
+        self.client = webapp.app.test_client()
+
+    def test_the_viewer_leaves_the_job_in_place(self):
+        self.assertEqual(self.client.get(f"/result/{self.job_id}").status_code, 200)
+        self.assertTrue(self.job.exists())
+
+    def test_the_frame_serves_the_report_unchanged(self):
+        body = self.client.get(f"/result/{self.job_id}/body").get_data(as_text=True)
+        self.assertEqual(body, "<html><body>report</body></html>")
+
+    def test_saving_hands_over_a_file_and_keeps_the_job(self):
+        """A second Save has to work too; the TTL sweep does the cleaning."""
+        response = self.client.get(f"/result/{self.job_id}/download")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment", response.headers.get("Content-Disposition", ""))
+        self.assertTrue(self.job.exists())
+
+
+class TestRawInputGoesEarly(unittest.TestCase):
+    """The export must not outlive the report it produced.
+
+    Viewing a report deliberately keeps the job alive, so Save and a second look
+    work. That would also have kept the uploaded ZIP and the unpacked CSVs lying
+    around until the TTL sweep — the actual health data, long after anything
+    needed it.
+    """
+
+    def setUp(self):
+        shutil.rmtree(webapp._JOB_ROOT, ignore_errors=True)
+        webapp._prepare_job_root()
+        self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
+        self.client = webapp.app.test_client()
+
+    def test_only_report_and_status_remain(self):
+        with open(EXAMPLE_ZIP, "rb") as handle:
+            job_id = self.client.post(
+                "/analyze", content_type="multipart/form-data",
+                data={"export": (io.BytesIO(handle.read()), "e.zip"), "lang": "de"}
+            ).get_json()["job_id"]
+        for _ in range(120):
+            time.sleep(0.5)
+            state = self.client.get(f"/progress/{job_id}").get_json()
+            if state and state.get("state") in ("done", "error"):
+                break
+        self.assertEqual(state.get("state"), "done")
+        job = webapp._JOB_ROOT / job_id
+        self.assertEqual(sorted(p.name for p in job.iterdir()),
+                         ["result.html", "status.json"])
+        # And the report is still there to look at.
+        self.assertEqual(self.client.get(f"/result/{job_id}/body").status_code, 200)
+
+    def test_drop_raw_input_keeps_what_it_is_told_to(self):
+        job = webapp._JOB_ROOT / ("f" * 32)
+        (job / "export").mkdir(parents=True)
+        (job / "export" / "cgm_data_1.csv").write_text("x", encoding="utf-8")
+        (job / "upload.zip").write_text("x", encoding="utf-8")
+        (job / "status.json").write_text("{}", encoding="utf-8")
+        (job / "result.html").write_text("<html></html>", encoding="utf-8")
+        webapp._drop_raw_input(job, keep={"status.json", "result.html"})
+        self.assertEqual(sorted(p.name for p in job.iterdir()),
+                         ["result.html", "status.json"])
+
+
+class TestSweepRunsOnATimer(unittest.TestCase):
+    """The TTL has to bite on a machine that is simply left running."""
+
+    def test_a_sweeper_thread_is_started(self):
+        names = [t.name for t in threading.enumerate()]
+        running = any(getattr(t, "_target", None) is webapp._sweep_forever
+                      for t in threading.enumerate())
+        self.assertTrue(running, f"no sweeper among {names}")
+
+    def test_the_sweeper_survives_a_failing_sweep(self):
+        """One bad sweep must not end the thread and stop all later ones."""
+        with unittest.mock.patch("webapp._sweep_stale_jobs", side_effect=OSError):
+            with unittest.mock.patch("webapp.time.sleep",
+                                     side_effect=[None, StopIteration]):
+                with self.assertRaises(StopIteration):
+                    webapp._sweep_forever(interval=0)

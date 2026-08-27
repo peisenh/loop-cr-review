@@ -12,15 +12,29 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ### Changed
 - The web UI (Docker and the desktop window) shows a finished report in an
   app chrome: New report goes back to the form, Save downloads the same HTML
-  the CLI writes. The report file itself is unchanged. Jobs used for viewing
-  stay until the existing 15-minute sweep so a second look or a save still
-  works; only the "download" tick still removes the job right after the file
-  is sent.
+  the CLI writes. The report file itself is unchanged. Viewing no longer removes
+  the job, so a second look or a save still works.
+- Since viewing keeps the job, the upload and the unpacked export are deleted as
+  soon as the report exists rather than waiting for the sweep — the raw health
+  data would otherwise have stayed around long after anything needed it. What is
+  left is the report: gone right away with "download" ticked, otherwise with the
+  sweep.
+- That sweep now also runs on a timer. It used to happen only at start-up and
+  before a new upload, so on a machine that is simply left running the TTL never
+  came into effect.
 
 ### Fixed
+- The result routes answered 500 instead of 409 while a report was still being
+  built. The helper signalled "not ready" by returning a 2-tuple, while the
+  callers told a result apart from a response by asking whether it was a tuple —
+  so they unpacked the 409 into three names.
 - Save in the desktop window did nothing. pywebview disables downloads unless
   ALLOW_DOWNLOADS is set; Qt WebEngine then shows the normal save dialog for
   the same link the browser already used.
+- The privacy note promised the files go as soon as the report has been fetched,
+  which stopped being true with the viewer. Both READMEs, the upload page and the
+  comment at the top of `webapp.py` now say what actually happens — and say it
+  the same way, which is where this kept going wrong.
 
 ## [0.18.2] - 2026-08-27
 
