@@ -160,7 +160,9 @@ the first-start note under [3 · Desktop app](#3--desktop-app-double-click).
 A small Flask app offers the same analysis in the browser: Glooko ZIP, Nightscout
 ZIP (`entries.json` + `treatments.json`), or LibreView CSV. After choosing the
 file the full date range is filled in, then the report. Those are separate
-requests; nothing is kept on the server. Nightscout stays lite unless you tick
+requests. While a report is being built the upload and the result sit in a
+private folder under the system temp directory; both are removed once the report
+has been fetched, and at the latest after 15 minutes. Nightscout stays lite unless you tick
 “force CamAPS assessment”. Meant for **private LAN use, not public hosting**.
 
 ```bash

@@ -234,6 +234,27 @@ def _cleanup_job(job):
     shutil.rmtree(job, ignore_errors=True)
 
 
+def _sweep_stale_jobs():
+    """Drop job directories older than the TTL.
+
+    A browser that is closed after the upload never fetches the result, and
+    nothing else would ever remove it: the upload, the unpacked export and the
+    finished report would stay in the temp area for as long as the machine runs.
+    Called at start-up and before every new job, which is often enough without a
+    background thread.
+    """
+    cutoff = time.time() - JOB_TTL
+    with _JOB_LOCK:
+        for job in _JOB_ROOT.iterdir():
+            if not job.is_dir():
+                continue
+            try:
+                if job.stat().st_mtime < cutoff:
+                    shutil.rmtree(job, ignore_errors=True)
+            except OSError:
+                continue
+
+
 def _run_job(_job, status_path, result_path, options):
     """Run one analysis job outside the HTTP request thread.
 
@@ -302,6 +323,7 @@ def analyze():
     if upload is None or upload.filename == "":
         abort(400, "no export file uploaded")
     lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
+    _sweep_stale_jobs()
     job_id = uuid.uuid4().hex
     job = _JOB_ROOT / job_id
     job.mkdir(mode=0o700)
@@ -419,6 +441,11 @@ def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps
         abort(400, "could not build report from this export "
                    "(unrecognised or corrupt data)")
     return ""                                 # pragma: no cover
+
+
+# Anything left from an earlier run is stale by definition: sweep once at import,
+# so a restart cleans up after a crash as well.
+_sweep_stale_jobs()
 
 
 if __name__ == "__main__":

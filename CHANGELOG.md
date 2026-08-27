@@ -16,6 +16,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   without ever looking at the extra basal. It is only used now when the extra
   basal really is negative; otherwise the headline just says the curve returns
   close to baseline.
+- The web app left every abandoned job behind. Cleanup only happened when the
+  client fetched the result or polled after the TTL, so a browser tab closed
+  right after the upload left the export, the unpacked files and the finished
+  report in the temp area for as long as the machine ran. Stale jobs are now
+  swept at import and before each new upload; a running job is untouched.
+- The privacy note said nothing is kept on the server, which stopped being true
+  when the analysis moved into a background job: the upload and the result do
+  sit on disk while the report is built. README and upload page say so now,
+  together with when they go away.
 
 ## [0.18.0] - 2026-08-26
 

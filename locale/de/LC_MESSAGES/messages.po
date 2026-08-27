@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-27 04:36+0000\n"
+"POT-Creation-Date: 2026-08-27 04:50+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: de\n"
@@ -1391,7 +1391,7 @@ msgstr ""
 msgid "Slots file (JSON)"
 msgstr "Slots-Datei (JSON)"
 
-#: templates/upload.html.j2:145 templates/upload.html.j2:287
+#: templates/upload.html.j2:145 templates/upload.html.j2:288
 msgid "Create report"
 msgstr "Report erstellen"
 
@@ -1430,68 +1430,73 @@ msgstr ""
 #: templates/upload.html.j2:166
 msgid ""
 "<b>Homelab / private.</b>\n"
-"      Upload is processed in memory or temporarily only, then deleted —\n"
-"      no public hosting, no storage of exports."
+"      While the analysis runs, the upload and the finished report sit in "
+"a private\n"
+"      folder in the system temp area. Both are deleted as soon as the "
+"report has been\n"
+"      fetched, and at the latest 15 minutes later — no public hosting, no"
+" archive."
 msgstr ""
-"<b>Homelab / privat.</b>\n"
-"      Upload nur im Arbeitsspeicher bzw. temporär, danach Löschung —\n"
-"      kein öffentliches Hosting, keine Speicherung der Exporte."
+"<b>Homelab / privat.</b> Während die Auswertung läuft, liegen der Upload und der "
+"fertige Report in einem privaten Ordner im System-Temp-Verzeichnis. Beides wird "
+"gelöscht, sobald der Report abgeholt wurde, spätestens 15 Minuten später — kein "
+"öffentliches Hosting, kein Archiv."
 
-#: templates/upload.html.j2:208
+#: templates/upload.html.j2:209
 msgid "Queued…"
 msgstr "Warteschlange…"
 
-#: templates/upload.html.j2:209
+#: templates/upload.html.j2:210
 msgid "Reading data…"
 msgstr "Daten werden eingelesen…"
 
-#: templates/upload.html.j2:210
+#: templates/upload.html.j2:211
 msgid "Analysing meals…"
 msgstr "Mahlzeiten werden analysiert…"
 
-#: templates/upload.html.j2:211
+#: templates/upload.html.j2:212
 msgid "Analysing slots…"
 msgstr "Zeitfenster werden analysiert…"
 
-#: templates/upload.html.j2:212
+#: templates/upload.html.j2:213
 msgid "Rendering charts…"
 msgstr "Diagramme werden erzeugt…"
 
-#: templates/upload.html.j2:213
+#: templates/upload.html.j2:214
 msgid "Rendering daily charts…"
 msgstr "Tagesdiagramme werden erzeugt…"
 
-#: templates/upload.html.j2:214
+#: templates/upload.html.j2:215
 #, fuzzy
 msgid "Preparing report…"
 msgstr "Report erstellen"
 
-#: templates/upload.html.j2:215
+#: templates/upload.html.j2:216
 #, fuzzy
 msgid "Rendering report…"
 msgstr "Report erstellen"
 
-#: templates/upload.html.j2:216
+#: templates/upload.html.j2:217
 msgid "Analysis complete"
 msgstr "Analyse abgeschlossen"
 
-#: templates/upload.html.j2:217
+#: templates/upload.html.j2:218
 msgid "Analysis failed"
 msgstr "Analyse fehlgeschlagen"
 
-#: templates/upload.html.j2:220 templates/upload.html.j2:246
+#: templates/upload.html.j2:221 templates/upload.html.j2:247
 msgid "Analysing…"
 msgstr "Analyse läuft…"
 
-#: templates/upload.html.j2:235 templates/upload.html.j2:271
+#: templates/upload.html.j2:236 templates/upload.html.j2:272
 msgid "Could not build report."
 msgstr "Report konnte nicht erstellt werden."
 
-#: templates/upload.html.j2:252
+#: templates/upload.html.j2:253
 msgid "Could not start analysis."
 msgstr "Auswertung konnte nicht gestartet werden."
 
-#: templates/upload.html.j2:262
+#: templates/upload.html.j2:263
 msgid "Progress unavailable."
 msgstr "Fortschritt nicht verfügbar."
 
@@ -2154,4 +2159,15 @@ msgstr "Fortschritt nicht verfügbar."
 #~ "Mahlzeitenverläufe — keine CR-Beurteilung. "
 #~ "CamAPS-Teil 2 nur nach expliziter "
 #~ "Wahl."
+
+#~ msgid ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      Upload is processed in memory "
+#~ "or temporarily only, then deleted —\n"
+#~ ""
+#~ "      no public hosting, no storage of exports."
+#~ msgstr ""
+#~ "<b>Homelab / privat.</b>\n"
+#~ "      Upload nur im Arbeitsspeicher bzw. temporär, danach Löschung —\n"
+#~ "      kein öffentliches Hosting, keine Speicherung der Exporte."
 

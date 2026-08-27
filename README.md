@@ -160,7 +160,9 @@ siehe den Hinweis zum ersten Start unter [3 · Desktop-App](#3--desktop-app-dopp
 Eine kleine Flask-App bietet dieselbe Auswertung im Browser: Glooko-ZIP, Nightscout-ZIP
 (`entries.json` + `treatments.json`) oder LibreView-CSV. Nach der Dateiauswahl kommt
 der volle Zeitraum (Von/Bis), danach der Report. Beides sind getrennte Requests;
-nichts bleibt auf dem Server. Nightscout bleibt Lite, außer Häkchen
+Während der Report gebaut wird, liegen Upload und Ergebnis in einem
+privaten Ordner im System-Temp-Verzeichnis; beides wird gelöscht, sobald der Report
+abgeholt wurde, spätestens nach 15 Minuten. Nightscout bleibt Lite, außer Häkchen
 „CamAPS-Auswertung erzwingen“. Gedacht für den **privaten Betrieb im Heimnetz,
 nicht für öffentliches Hosting**.
 

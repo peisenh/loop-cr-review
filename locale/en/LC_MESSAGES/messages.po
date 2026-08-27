@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-27 04:36+0000\n"
+"POT-Creation-Date: 2026-08-27 04:50+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -1408,7 +1408,7 @@ msgstr ""
 msgid "Slots file (JSON)"
 msgstr "Slots file (JSON)"
 
-#: templates/upload.html.j2:145 templates/upload.html.j2:287
+#: templates/upload.html.j2:145 templates/upload.html.j2:288
 msgid "Create report"
 msgstr "Create report"
 
@@ -1445,68 +1445,76 @@ msgstr ""
 #: templates/upload.html.j2:166
 msgid ""
 "<b>Homelab / private.</b>\n"
-"      Upload is processed in memory or temporarily only, then deleted —\n"
-"      no public hosting, no storage of exports."
+"      While the analysis runs, the upload and the finished report sit in "
+"a private\n"
+"      folder in the system temp area. Both are deleted as soon as the "
+"report has been\n"
+"      fetched, and at the latest 15 minutes later — no public hosting, no"
+" archive."
 msgstr ""
 "<b>Homelab / private.</b>\n"
-"      Upload is processed in memory or temporarily only, then deleted —\n"
-"      no public hosting, no storage of exports."
+"      While the analysis runs, the upload and the finished report sit in "
+"a private\n"
+"      folder in the system temp area. Both are deleted as soon as the "
+"report has been\n"
+"      fetched, and at the latest 15 minutes later — no public hosting, no"
+" archive."
 
-#: templates/upload.html.j2:208
+#: templates/upload.html.j2:209
 msgid "Queued…"
 msgstr "Queued…"
 
-#: templates/upload.html.j2:209
+#: templates/upload.html.j2:210
 msgid "Reading data…"
 msgstr "Reading data…"
 
-#: templates/upload.html.j2:210
+#: templates/upload.html.j2:211
 msgid "Analysing meals…"
 msgstr "Analysing meals…"
 
-#: templates/upload.html.j2:211
+#: templates/upload.html.j2:212
 msgid "Analysing slots…"
 msgstr "Analysing slots…"
 
-#: templates/upload.html.j2:212
+#: templates/upload.html.j2:213
 msgid "Rendering charts…"
 msgstr "Rendering charts…"
 
-#: templates/upload.html.j2:213
+#: templates/upload.html.j2:214
 msgid "Rendering daily charts…"
 msgstr "Rendering daily charts…"
 
-#: templates/upload.html.j2:214
+#: templates/upload.html.j2:215
 #, fuzzy
 msgid "Preparing report…"
 msgstr "Create report"
 
-#: templates/upload.html.j2:215
+#: templates/upload.html.j2:216
 #, fuzzy
 msgid "Rendering report…"
 msgstr "Create report"
 
-#: templates/upload.html.j2:216
+#: templates/upload.html.j2:217
 msgid "Analysis complete"
 msgstr "Analysis complete"
 
-#: templates/upload.html.j2:217
+#: templates/upload.html.j2:218
 msgid "Analysis failed"
 msgstr "Analysis failed"
 
-#: templates/upload.html.j2:220 templates/upload.html.j2:246
+#: templates/upload.html.j2:221 templates/upload.html.j2:247
 msgid "Analysing…"
 msgstr "Analysing…"
 
-#: templates/upload.html.j2:235 templates/upload.html.j2:271
+#: templates/upload.html.j2:236 templates/upload.html.j2:272
 msgid "Could not build report."
 msgstr "Could not build report."
 
-#: templates/upload.html.j2:252
+#: templates/upload.html.j2:253
 msgid "Could not start analysis."
 msgstr "Could not start analysis."
 
-#: templates/upload.html.j2:262
+#: templates/upload.html.j2:263
 msgid "Progress unavailable."
 msgstr "Progress unavailable."
 
@@ -2159,4 +2167,17 @@ msgstr "Progress unavailable."
 #~ "courses only — no CR assessment. "
 #~ "CamAPS Part 2 is off unless you"
 #~ " opt in."
+
+#~ msgid ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      Upload is processed in memory "
+#~ "or temporarily only, then deleted —\n"
+#~ ""
+#~ "      no public hosting, no storage of exports."
+#~ msgstr ""
+#~ "<b>Homelab / private.</b>\n"
+#~ "      Upload is processed in memory "
+#~ "or temporarily only, then deleted —\n"
+#~ ""
+#~ "      no public hosting, no storage of exports."
 

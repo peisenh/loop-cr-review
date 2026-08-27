@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import io
 import re
+import os
+import shutil
+import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -245,3 +248,50 @@ class TestReverseProxyPrefix(WebTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestJobCleanup(unittest.TestCase):
+    """Nothing may be left behind when the browser walks away.
+
+    Cleanup used to happen only when the client fetched the result or polled
+    after the TTL. A tab closed right after the upload left the export, the
+    unpacked files and the finished report in the temp area for as long as the
+    machine ran — health data with no expiry.
+    """
+
+    def setUp(self):
+        self.root = webapp._JOB_ROOT
+        shutil.rmtree(self.root, ignore_errors=True)
+        self.root.mkdir(mode=0o700, exist_ok=True)
+        self.addCleanup(shutil.rmtree, self.root, True)
+
+    def _stale_job(self, age_seconds):
+        job = self.root / ("a" * 32)
+        job.mkdir()
+        (job / "result.html").write_text("<html></html>", encoding="utf-8")
+        stamp = time.time() - age_seconds
+        os.utime(job, (stamp, stamp))
+        return job
+
+    def test_a_job_past_the_ttl_is_removed(self):
+        job = self._stale_job(webapp.JOB_TTL + 60)
+        webapp._sweep_stale_jobs()
+        self.assertFalse(job.exists())
+
+    def test_a_fresh_job_survives(self):
+        """The sweep runs on every new upload and must not hit running jobs."""
+        job = self._stale_job(5)
+        webapp._sweep_stale_jobs()
+        self.assertTrue(job.exists())
+
+    def test_a_new_upload_sweeps_first(self):
+        stale = self._stale_job(webapp.JOB_TTL + 60)
+        client = webapp.app.test_client()
+        with open(EXAMPLE_ZIP, "rb") as handle:
+            client.post("/analyze", content_type="multipart/form-data",
+                        data={"export": (io.BytesIO(handle.read()), "e.zip"), "lang": "de"})
+        self.assertFalse(stale.exists())
+
+    def test_sweep_survives_a_file_in_the_job_root(self):
+        (self.root / "stray.txt").write_text("x", encoding="utf-8")
+        webapp._sweep_stale_jobs()          # must not raise
