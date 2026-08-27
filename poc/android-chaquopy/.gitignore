@@ -1,0 +1,15 @@
+# Copied from the repository by sync-analysis.sh / the Gradle syncAnalysis task.
+# Versioning them would recreate the stale snapshot this project got rid of.
+app/src/main/python/loop_cr_review.py
+app/src/main/python/webapp.py
+app/src/main/python/_version.py
+app/src/main/python/lcr/
+app/src/main/python/templates/
+app/src/main/python/locale/
+
+# Android build output
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
