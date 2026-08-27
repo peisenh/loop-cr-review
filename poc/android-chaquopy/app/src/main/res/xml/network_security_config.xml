@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext is permitted for loopback only. The Flask server runs on the device
+  itself and nothing ever leaves it, so there is nothing to encrypt - but every
+  other destination stays refused.
+
+  All three spellings are needed: Android matches these as plain names, and the
+  WebView is pointed at the numeric address. "localhost" alone left it failing
+  with ERR_CLEARTEXT_NOT_PERMITTED.
+-->
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">::1</domain>
     </domain-config>
 </network-security-config>

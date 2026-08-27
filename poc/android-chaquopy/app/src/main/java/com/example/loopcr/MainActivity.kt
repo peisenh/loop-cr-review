@@ -3,15 +3,17 @@ package com.example.loopcr
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.ScrollView
+import android.widget.TextView
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -20,7 +22,9 @@ import com.chaquo.python.android.AndroidPlatform
  * Thin shell: Chaquopy starts Flask on loopback; WebView shows the existing UI.
  * Health data never leaves the device (processed in Python temp dirs).
  */
-class MainActivity : AppCompatActivity() {
+private const val TAG = "loop-cr-review"
+
+class MainActivity : Activity() {
     private lateinit var webView: WebView
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var server: PyObject? = null
@@ -38,13 +42,23 @@ class MainActivity : AppCompatActivity() {
             val port = module.callAttr("start").toInt()
             setupWebView(port)
         } catch (e: Exception) {
-            Toast.makeText(
-                this,
-                "Python/Flask failed to start: ${e.message}",
-                Toast.LENGTH_LONG
-            ).show()
-            finish()
+            // A toast truncates the message and is gone in seconds, which is
+            // useless for a Python traceback - log the whole thing, and keep the
+            // window open with the text on screen instead of closing silently.
+            Log.e(TAG, "Python/Flask failed to start", e)
+            showStartupError(e)
         }
+    }
+
+    private fun showStartupError(e: Exception) {
+        val text = TextView(this).apply {
+            setPadding(32, 64, 32, 32)
+            typeface = Typeface.MONOSPACE
+            textSize = 12f
+            setTextIsSelectable(true)
+            text = "Python/Flask failed to start\n\n" + Log.getStackTraceString(e)
+        }
+        setContentView(ScrollView(this).apply { addView(text) })
     }
 
     private fun setupWebView(port: Int) {

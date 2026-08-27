@@ -64,19 +64,33 @@ val syncAnalysis by tasks.registering(Copy::class) {
     }
 }
 
+// preBuild alone is not enough: Chaquopy's own tasks read src/main/python, and
+// Gradle refuses a task that consumes another task's output without the
+// dependency being declared ("A problem was found with the configuration of
+// task ':app:mergeDebugPythonSources'"). Naming them explicitly settles the
+// order instead of leaving it to chance.
 tasks.named("preBuild") { dependsOn(syncAnalysis) }
+tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
+    .configureEach { dependsOn(syncAnalysis) }
 
 chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
             // Keep in sync with desktop requirements where practical
-            // Kept in step with requirements.txt / requirements-gui.txt. Pinned
-            // rather than ranged: a Chaquopy build resolves wheels for Android,
-            // and a surprise version there fails at runtime, not at build time.
+            // NOT the versions from requirements.txt. Chaquopy builds its own
+            // wheels for Android and the scientific packages lag well behind the
+            // desktop ones - numpy 2.3.5 simply does not exist there, the build
+            // stops with "Could not find a version that satisfies the
+            // requirement". Leave numpy and matplotlib unpinned so pip takes
+            // whatever Chaquopy offers, and pin the pure-Python ones.
+            //
+            // The analysis runs on numpy 1.26 / matplotlib 3.8 as well: the full
+            // test suite passes and the generated report is text-identical to the
+            // one built with numpy 2.x. Only the chart rasterisation differs.
+            install("numpy")
+            install("matplotlib")
             install("Flask==3.1.2")
-            install("numpy==2.3.5")
-            install("matplotlib==3.10.8")
             install("Jinja2==3.1.6")
             install("waitress==3.0.2")
         }
@@ -85,5 +99,7 @@ chaquopy {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
+    // No AppCompat: the activity is a WebView container and uses a plain
+    // platform theme. Pulling it in would only add size and the requirement
+    // to inherit from Theme.AppCompat.
 }
