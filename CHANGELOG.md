@@ -19,8 +19,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   someone could put it there first and read the exports afterwards. It is now
   refused when it belongs to another user or is not a directory, and tightened
   when its permissions are too open.
-
-### Fixed
 - A slot could be headlined "loop throttles noticeably" while its loop figure was
   positive. The sentence was produced by elimination — a "too strong" verdict that
   did not come from a real drop in the curve was assumed to come from the loop —
