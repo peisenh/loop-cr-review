@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-08-27
+
 ### Changed
 - The web UI (Docker and the desktop window) shows a finished report in an
   app chrome: New report goes back to the form, Save downloads the same HTML
@@ -940,7 +942,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.3...HEAD
+[0.18.3]: https://github.com/peisenh/loop-cr-review/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/peisenh/loop-cr-review/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...v0.18.0
