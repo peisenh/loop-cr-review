@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-08-27
+
 ### Fixed
 - The web app started a thread per upload with no limit. Each analysis unpacks up
   to 300 MB and holds a whole report in memory, so a handful of parallel uploads
@@ -893,7 +895,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.1...HEAD
+[0.18.1]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/peisenh/loop-cr-review/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/peisenh/loop-cr-review/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/peisenh/loop-cr-review/compare/v0.15.0...v0.16.0
