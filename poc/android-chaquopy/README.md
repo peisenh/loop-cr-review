@@ -3,8 +3,9 @@
 **Status: it works on a 4 KB device.** Built, installed, and a report generated
 on an API 34 emulator — roughly as fast as on a modest desktop machine, so the
 computation is not the obstacle. On a device with a 16 KB memory page size numpy
-cannot be loaded at all; see below. That is the one thing standing between this
-and something usable.
+cannot be loaded at all — the build picks up numpy 1.26.2 with a
+pre-October-2024 `libgfortran`. A newer numpy for Android exists in a separate
+index; see below for the experiment that would settle it.
 
 Built because the browser build could not meet the actual goal: browsers refuse
 to load WebAssembly from a `file://` path, so "download it and it runs" does not
@@ -111,22 +112,63 @@ Built, installed and started on an emulator — and then:
     E linker : ".../requirements/chaquopy/lib/libgfortran.so.3"
                program alignment (4096) cannot be smaller than system page size (16384)
 
-numpy pulls in `libgfortran.so.3`, which Chaquopy ships built for 4 KB memory
-pages. Android 15 and later can run with 16 KB pages, and recent emulator images
-do so by default; the linker then refuses the library, numpy cannot be imported
-and Flask never starts. Nothing in this project can fix that — it is Chaquopy's
-prebuilt wheel (chaquo/chaquopy issue #1171, still open).
+Android 15 and later can run with 16 KB memory pages, and recent emulator images
+do so by default. Native libraries built for 4 KB pages are refused by the linker.
+
+**Chaquopy itself is not the problem.** Version 17.0.0 — the one this project
+uses — supports 16 KB pages; issue #1171 is resolved on that side. Its changelog
+adds the part that bites here:
+
+> Devices with 16 KB pages are now supported by Chaquopy itself. However, many
+> existing Android wheels will still fail to load on 16 KB devices. For best
+> compatibility with these devices, use Python 3.13 or later.
+
+This project already runs Python 3.13, so it is on the recommended setup, and the
+build still resolved numpy to **1.26.2** ("from versions: 1.26.2"), whose bundled
+`libgfortran.so.3` predates the October 2024 rebuilds.
+
+**A newer numpy does exist.** `chaquo.com/pypi-upstream/numpy/` lists
+`numpy-2.3.2-1-cp313-cp313-android_24_arm64_v8a.whl` and the matching
+`android_24_x86_64.whl`, both dated December 2025 — so for both ABIs, and built
+well after the October 2024 cut-off. A wheel of that age is very likely 16 KB
+aligned.
+
+The build did not use it. Chaquopy searches `pypi.org/simple` and its own
+`pypi-13.1` index, where the newest numpy is 1.26.2; `pypi-upstream` is a
+separate index and does not appear to be searched by default.
+
+### Now wired in, but untested
+
+`app/build.gradle.kts` adds that index and pins the version:
+
+```kotlin
+options("--extra-index-url", "https://chaquo.com/pypi-upstream")
+install("numpy==2.3.2")
+```
+
+Build it and start it on a **16 KB device** — the API 37 emulator that failed
+before will do. If numpy imports, the one blocker here is gone.
+
+Two things to watch, because neither has been tried:
+
+- **Does the index resolve at all?** If not, remove the two lines; the build
+  falls back to numpy 1.26.2, which works on a 4 KB device.
+- **Does matplotlib match?** It is left unpinned so pip can pick something
+  suitable, but matplotlib 3.8 was compiled against numpy 1 and may fail at
+  import with an ABI complaint even after installing cleanly. The build log shows
+  which version was chosen; `pypi-upstream` may carry a newer one.
 
 **Verified**: on an API 34 emulator (4 KB pages) the whole chain works — Python
 starts, numpy and matplotlib import, Flask serves the form, and a report is
-generated from an export at a speed comparable to a modest desktop. Use an API 34 image, a non-16 KB
-API 35 image, or a phone on Android 14/15 without the 16 KB developer option.
+generated from an export at a speed comparable to a modest desktop. Use an API 34
+image, a non-16 KB API 35 image, or a phone on Android 14/15 without the 16 KB
+developer option.
 
-**What it means beyond testing:** apps targeting API 35 and above have had to
-support 16 KB pages to be published on Google Play since November 2025. As long
-as Chaquopy's scientific wheels are 4 KB aligned, this app cannot go into the
-Play Store at all. For a sideloaded APK on one's own phone it is only a matter
-of which device.
+**What it means beyond testing:** Google Play has required apps targeting
+Android 15+ to support 16 KB pages for new releases since November 2025, and for
+updates from May 2026. Until the numpy wheel is rebuilt, this app could not go
+there. For a sideloaded APK it is a question of which device — and that window
+narrows with every new one.
 
 ## Fixed on the way to the first run
 

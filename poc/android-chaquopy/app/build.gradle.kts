@@ -77,19 +77,26 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            // Keep in sync with desktop requirements where practical
-            // NOT the versions from requirements.txt. Chaquopy builds its own
-            // wheels for Android and the scientific packages lag well behind the
-            // desktop ones - numpy 2.3.5 simply does not exist there, the build
-            // stops with "Could not find a version that satisfies the
-            // requirement". Leave numpy and matplotlib unpinned so pip takes
-            // whatever Chaquopy offers, and pin the pure-Python ones.
+            // Chaquopy's own index (pypi-13.1) has numpy 1.26.2 at the newest,
+            // and that wheel's libgfortran will not load on a 16 KB page size
+            // device. chaquo.com/pypi-upstream carries numpy 2.3.2 for both ABIs,
+            // built December 2025 - late enough to be 16 KB aligned. That index
+            // is not searched by default, so it is added here.
             //
-            // The analysis runs on numpy 1.26 / matplotlib 3.8 as well: the full
-            // test suite passes and the generated report is text-identical to the
-            // one built with numpy 2.x. Only the chart rasterisation differs.
-            install("numpy")
+            // If this turns out not to resolve, drop the two lines below and the
+            // pin: the build then falls back to 1.26.2, which works on a 4 KB
+            // device. The analysis itself runs on either - the test suite passes
+            // with numpy 1.26 and matplotlib 3.8, and the report comes out
+            // text-identical to the one built with numpy 2.x.
+            options("--extra-index-url", "https://chaquo.com/pypi-upstream")
+            install("numpy==2.3.2")
+
+            // Left unpinned on purpose: it has to be a build that matches
+            // numpy 2.x. matplotlib 3.8 was compiled against numpy 1 and may
+            // fail at import with an ABI complaint even though it installs -
+            // watch the build log for which version is picked.
             install("matplotlib")
+
             install("Flask==3.1.2")
             install("Jinja2==3.1.6")
             install("waitress==3.0.2")
