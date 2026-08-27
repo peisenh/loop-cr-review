@@ -17,6 +17,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   works; only the "download" tick still removes the job right after the file
   is sent.
 
+### Fixed
+- Save in the desktop window did nothing. pywebview disables downloads unless
+  ALLOW_DOWNLOADS is set; Qt WebEngine then shows the normal save dialog for
+  the same link the browser already used.
+
 ## [0.18.2] - 2026-08-27
 
 ### Fixed

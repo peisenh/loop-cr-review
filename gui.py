@@ -75,6 +75,9 @@ def main():
     port = _free_port()
     threading.Thread(target=serve, args=(port,), daemon=True).start()
     wait_until_up(port)
+    # Off by default. Without this Qt WebEngine ignores Content-Disposition
+    # and the Save link in the report frame does nothing.
+    webview.settings['ALLOW_DOWNLOADS'] = True
     webview.create_window(WINDOW_TITLE, f"http://127.0.0.1:{port}/",
                           width=780, height=920)
     webview.start(gui=_gui_backend())

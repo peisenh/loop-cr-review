@@ -37,7 +37,7 @@
 <body>
   <div class="bar">
     <a class="primary" href="{{ url_for('index', lang=lang) }}">{% trans %}New report{% endtrans %}</a>
-    <a class="sec" href="{{ url_for('result_download', job_id=job_id) }}">{% trans %}Save{% endtrans %}</a>
+    <a class="sec" href="{{ url_for('result_download', job_id=job_id) }}" download="loop-cr-review.html">{% trans %}Save{% endtrans %}</a>
   </div>
   <iframe title="loop-cr-review" src="{{ url_for('result_body', job_id=job_id) }}"></iframe>
 </body>
