@@ -1,0 +1,219 @@
+<!doctype html>
+<!--
+SPDX-FileCopyrightText: 2026 Peter Eisenhauer <github@peter-e.de>
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+Front end for the browser build: the analysis runs in this tab as WebAssembly.
+The export is never uploaded and nothing is sent anywhere.
+
+The folder does have to be served over HTTP, though - browsers refuse to load
+WebAssembly from a file:// path. Any static server will do, including a local
+one; see the README next to this file.
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop-CR-Review</title>
+<style>
+  :root { --bg:#eef1f6; --card:#fff; --line:#dde3ee; --ink:#1a2233; --muted:#5a6b82;
+          --accent:#2b5aa8; --bad:#b3261e; }
+  * { box-sizing: border-box }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--ink);
+         font-family: system-ui, "Segoe UI", Roboto, sans-serif; line-height:1.5 }
+  .wrap { max-width: 720px; margin: 0 auto }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:18px 20px; margin-bottom:16px }
+  h1 { font-size:20px; margin:0 0 4px } h2 { font-size:15px; margin:0 0 10px }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:18px }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px }
+  input[type=file], select, input[type=number] {
+    width:100%; padding:8px; border:1px solid var(--line); border-radius:8px;
+    font-size:14px; background:#fff }
+  .row { display:flex; gap:12px } .row > div { flex:1 }
+  .check { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:14px }
+  .check input { width:auto }
+  button { margin-top:16px; width:100%; padding:11px; border:0; border-radius:8px;
+           background:var(--accent); color:#fff; font-size:15px; font-weight:600;
+           cursor:pointer }
+  button:disabled { background:#9bb0cf; cursor:default }
+  .note { font-size:12.5px; color:var(--muted); margin-top:10px }
+  .status { font-size:13.5px; margin-top:14px; min-height:1.4em }
+  .err { color:var(--bad); font-weight:600 }
+  .hidden { display:none }
+  .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:8px }
+  .bar > i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s }
+  a.dl { display:inline-block; margin-top:12px; color:var(--accent); font-weight:600 }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>Loop-CR-Review</h1>
+    <div class="sub">AGP und loop-aware CR-Beurteilung aus einem CGM-Export.</div>
+
+    <label for="file">Export (ZIP oder CSV)</label>
+    <input id="file" type="file" accept=".zip,.csv">
+    <div class="note">Glooko-ZIP, Nightscout-ZIP (entries.json + treatments.json)
+      oder eine Glukose-CSV von LibreView oder Dexcom Clarity.</div>
+
+    <div class="row">
+      <div>
+        <label for="lang">Sprache</label>
+        <select id="lang"><option value="de">Deutsch</option><option value="en">English</option></select>
+      </div>
+      <div>
+        <label for="window">Fenster (h)</label>
+        <input id="window" type="number" value="4" min="2" max="6" step="0.5">
+      </div>
+    </div>
+
+    <div class="check"><input id="daily" type="checkbox"><label for="daily"
+      style="margin:0;font-weight:400">Tagesgrafiken anhängen</label></div>
+    <div class="check"><input id="camaps" type="checkbox"><label for="camaps"
+      style="margin:0;font-weight:400">Nightscout als CamAPS auswerten</label></div>
+
+    <button id="go" disabled>Wird geladen…</button>
+    <div class="bar hidden" id="bar"><i></i></div>
+    <div class="status" id="status"></div>
+    <div id="out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Wo die Daten bleiben</h2>
+    <div class="note">
+      Die Auswertung läuft vollständig in diesem Browser-Tab — die Analyse ist als
+      WebAssembly eingebettet. Der Export wird <b>nicht hochgeladen</b>, und nach dem
+      Laden der Seite gibt es keine Netzwerkzugriffe mehr. Die Seite kann also aus
+      einem beliebigen eigenen Verzeichnis kommen; sie schickt nichts irgendwohin.
+      <br><br>
+      <b>Kein Medizinprodukt, keine Dosierempfehlung.</b> Gesprächsgrundlage für
+      das Diabetes-Team.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// A classic script on purpose: a module script that fails to load - a web server
+// serving .mjs as text/plain is enough - dies before any of our code runs, so no
+// error handler is installed and the page just sits there saying "loading".
+// Here the import happens inside try/catch and every failure is visible.
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status"), bar = $("bar"), fill = bar.firstElementChild;
+
+function say(text, isError) {
+  statusEl.textContent = text;
+  statusEl.className = "status" + (isError ? " err" : "");
+}
+function progress(pct) {
+  bar.classList.toggle("hidden", pct === null);
+  if (pct !== null) fill.style.width = pct + "%";
+}
+
+let py = null;
+
+async function loadRuntime() {
+  // Prefer the ES module; fall back to the classic build when the server sends
+  // a MIME type the browser refuses for modules.
+  try {
+    const mod = await import("./pyodide/pyodide.module.js");
+    return mod.loadPyodide;
+  } catch (err) {
+    await new Promise((resolve, reject) => {
+      const el = document.createElement("script");
+      el.src = "./pyodide/pyodide.js";
+      el.onload = resolve;
+      el.onerror = () => reject(new Error("pyodide/pyodide.js not found"));
+      document.head.appendChild(el);
+    });
+    if (!window.loadPyodide) throw new Error("pyodide.js loaded but exports nothing");
+    return window.loadPyodide;
+  }
+}
+
+async function boot() {
+  say("Laufzeit wird geladen…");
+  progress(15);
+  const loadPyodide = await loadRuntime();
+  py = await loadPyodide({ indexURL: "./pyodide/" });
+  progress(45);
+  say("Pakete werden geladen…");
+  await py.loadPackage(["numpy", "matplotlib", "jinja2"]);
+  progress(75);
+  say("Werkzeug wird eingerichtet…");
+  // The analysis code and its data ship next to this page as one archive, so a
+  // single fetch is enough and nothing has to be assembled at runtime.
+  const bundle = await (await fetch("./app.zip")).arrayBuffer();
+  py.FS.mkdirTree("/app");
+  py.unpackArchive(bundle, "zip", { extractDir: "/app" });
+  await py.runPythonAsync(`
+import sys, os
+sys.path.insert(0, "/app")
+os.chdir("/app")
+os.environ["MPLCONFIGDIR"] = "/tmp/mpl"
+import browser_entry
+`);
+  progress(null);
+  say("");
+  $("go").disabled = !$("file").files.length;
+  $("go").textContent = "Report erstellen";
+}
+
+$("file").addEventListener("change", function () {
+  $("out").innerHTML = "";
+  say("");
+  $("go").disabled = !(py && this.files.length);
+});
+
+$("go").addEventListener("click", async () => {
+  const file = $("file").files[0];
+  if (!file) return;
+  $("go").disabled = true;
+  $("out").innerHTML = "";
+  say("Auswertung läuft…");
+  progress(30);
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    py.globals.set("_data", bytes);
+    py.globals.set("_name", file.name);
+    progress(60);
+    const html = await py.runPythonAsync(`
+browser_entry.build_report(
+    _data.to_py(), _name,
+    lang=${JSON.stringify($("lang").value)},
+    window_hours=${Number($("window").value) || 4},
+    daily=${$("daily").checked ? "True" : "False"},
+    assume_camaps=${$("camaps").checked ? "True" : "False"})
+`);
+    progress(100);
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const stem = file.name.replace(/\.[^.]+$/, "");
+    $("out").innerHTML =
+      `<a class="dl" href="${url}" download="${stem}_loop-cr-review.html">Report speichern</a>
+       &nbsp;·&nbsp; <a class="dl" href="${url}" target="_blank" rel="noopener">im neuen Tab öffnen</a>`;
+    say("Fertig.");
+  } catch (err) {
+    // LoopCRError messages are written for the person reading them.
+    const text = String(err && err.message || err);
+    const m = text.match(/LoopCRError:\s*(.+)/);
+    say(m ? m[1].split("\n")[0] : "Report konnte nicht erstellt werden.", true);
+  } finally {
+    progress(null);
+    $("go").disabled = false;
+  }
+});
+
+boot().catch((e) => {
+  progress(null);
+  $("go").textContent = "Report erstellen";
+  say("Laufzeit konnte nicht geladen werden: " + (e && e.message || e), true);
+});
+window.addEventListener("error", (e) => {
+  if (!py) say("Fehler beim Laden: " + (e.message || e.type), true);
+});
+</script>
+</body>
+</html>

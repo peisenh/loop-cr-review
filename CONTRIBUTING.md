@@ -178,6 +178,12 @@ chromium/google-chrome is installed and writes both pictures into `docs/`. Look
 at them before committing — a report that has grown past the captured height is
 cut off without any error.
 
+### Proofs of concept
+
+`poc/` holds experiments that are not part of the product. Each one carries a
+README saying what it showed and why it was or was not pursued — the numbers are
+worth keeping even when the answer is no.
+
 ## Method validation
 
 The unit tests pin the arithmetic; they do not validate the statistics. For that
