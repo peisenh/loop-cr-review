@@ -281,6 +281,14 @@
         })
         .then(function(jobId) {
           window.location.href = RESULT_URL.replace("JOB", jobId);
+          // With "download" the browser saves the file and stays on this page, so
+          // no navigation resets the form: without this the box would keep saying
+          // the analysis is running and the button would stay disabled.
+          window.setTimeout(function() {
+            showProgress({percent: 100, stage: "done"});
+            submitBtn.disabled = false;
+            submitBtn.textContent = "{% trans %}Create report{% endtrans %}";
+          }, 1500);
         })
         .catch(function(err) {
           showError(err.message);
@@ -292,22 +300,39 @@
 
   var exportInput = document.getElementById("export");
   if (exportInput) {
+    var dateFrom = document.getElementById("date_from");
+    var dateTo = document.getElementById("date_to");
+
+    // The range belongs to one particular file. Leaving the old values in place
+    // while the new ones are fetched - or after the fetch failed - means the
+    // next report is built for a period the new export may not even cover.
+    function clearRange(){ dateFrom.value = ""; dateTo.value = ""; }
+
     exportInput.addEventListener("change", function(){
       var f = this.files && this.files[0];
       var hint = document.getElementById("span-hint");
-      if (!f) return;
+      clearRange();
+      if (!f) { hint.textContent = ""; return; }
       var fd = new FormData();
       fd.append("export", f);
       hint.textContent = "...";
+      submitBtn.disabled = true;
       fetch("{{ url_for('span') }}", {method:"POST", body:fd})
         .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
         .then(function(x){
           if (!x.ok) { hint.textContent = (x.j && x.j.error) || "error"; return; }
-          document.getElementById("date_from").value = x.j.from;
-          document.getElementById("date_to").value = x.j.to;
+          dateFrom.value = x.j.from;
+          dateTo.value = x.j.to;
           hint.textContent = x.j.source + ": " + x.j.days + " d";
         })
-        .catch(function(){ hint.textContent = "error"; });
+        .catch(function(){ hint.textContent = "error"; })
+        .then(function(){ submitBtn.disabled = false; });
+    });
+
+    // Coming back with the browser restores the form from the cache, including
+    // a range that was read from the file chosen before.
+    window.addEventListener("pageshow", function(e){
+      if (e.persisted) { clearRange(); document.getElementById("span-hint").textContent = ""; }
     });
   }
   function slotMode(m){

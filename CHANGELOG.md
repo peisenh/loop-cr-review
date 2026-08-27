@@ -9,6 +9,22 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- After downloading a report the form stayed stuck. With "download" ticked the
+  browser saves the file and stays on the page, so no navigation ever reset the
+  form: the box kept announcing a running analysis and the button stayed
+  disabled, leaving no way to start a second report without reloading.
+- Choosing a second file in the web form kept the date range of the first one.
+  The range is read from the chosen export, but the old values stayed in place
+  while the new ones were fetched — and after a failed fetch, or after going
+  back in the browser, they stayed for good. The report was then built for a
+  period the new export may not cover, and failed. The range is cleared as soon
+  as another file is picked, submitting waits until the new one is known, and
+  coming back with the browser clears it too.
+- A failed analysis said only "could not build report from this export". The
+  underlying message is written for the user ("no CGM samples in the chosen
+  date range") and is passed on now, as the synchronous path already did.
+
 ## [0.18.1] - 2026-08-27
 
 ### Fixed

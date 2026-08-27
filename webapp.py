@@ -307,12 +307,16 @@ def _do_job(status_path, result_path, options):
         result_path.write_text(html, encoding="utf-8")
         _write_job(status_path, state="done", stage="done", percent=100,
                    download=options["download"])
-    except (LoopCRError, SystemExit):
+    except (LoopCRError, SystemExit) as exc:
+        # LoopCRError carries a message written for the person in front of the
+        # browser ("no CGM samples in the chosen date range"). Replacing it with a
+        # generic line leaves them guessing; the synchronous path passes it on too.
         _write_job(status_path, state="error", stage="error", percent=100,
-                   error="could not build report from this export")
+                   error=f"could not build report: {exc}")
     except Exception:  # pylint: disable=broad-exception-caught
         _write_job(status_path, state="error", stage="error", percent=100,
-                   error="could not build report from this export")
+                   error="could not build report from this export "
+                         "(unrecognised or corrupt data)")
 
 
 @app.route("/", methods=["GET"])

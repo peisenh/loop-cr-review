@@ -354,3 +354,70 @@ class TestConcurrencyLimit(unittest.TestCase):
         finally:
             for _ in [h for h in held if h]:
                 webapp._JOB_SLOTS.release()
+
+
+class TestStaleDateRange(unittest.TestCase):
+    """Choosing a second file must not keep the first file's date range.
+
+    Going back in the browser restores the form, including a range that was read
+    from the export chosen before. Picking another file then produced a report
+    request for a period the new export may not even cover.
+    """
+
+    def setUp(self):
+        self.html = webapp.app.test_client().get("/").get_data(as_text=True)
+
+    def test_the_range_is_cleared_before_the_new_one_is_fetched(self):
+        self.assertIn("clearRange", self.html)
+
+    def test_going_back_clears_the_restored_range(self):
+        self.assertIn("pageshow", self.html)
+
+    def test_submitting_is_blocked_while_the_range_is_unknown(self):
+        self.assertIn("submitBtn.disabled = true", self.html)
+
+
+class TestErrorMessagesReachTheUser(unittest.TestCase):
+    """A job failure has to say what went wrong."""
+
+    def setUp(self):
+        shutil.rmtree(webapp._JOB_ROOT, ignore_errors=True)
+        webapp._prepare_job_root()
+        self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
+
+    def test_a_range_outside_the_data_says_so(self):
+        client = webapp.app.test_client()
+        with open(EXAMPLE_ZIP, "rb") as handle:
+            job_id = client.post(
+                "/analyze", content_type="multipart/form-data",
+                data={"export": (io.BytesIO(handle.read()), "e.zip"), "lang": "de",
+                      "date_from": "2026-01-01", "date_to": "2026-01-14"}
+            ).get_json()["job_id"]
+        for _ in range(120):
+            time.sleep(0.5)
+            state = client.get(f"/progress/{job_id}").get_json()
+            if state and state.get("state") in ("done", "error"):
+                break
+        self.assertEqual(state.get("state"), "error")
+        # The generic line alone would leave the user guessing.
+        self.assertIn("date range", state.get("error", ""))
+
+
+class TestFormRecoversAfterDownload(unittest.TestCase):
+    """With "download" ticked the browser saves the file and stays on the page.
+
+    Nothing navigated away, so nothing reset the form: the box kept announcing a
+    running analysis and the button stayed disabled — no second report without a
+    reload.
+    """
+
+    def setUp(self):
+        self.html = webapp.app.test_client().get("/").get_data(as_text=True)
+
+    def test_the_button_is_re_enabled_after_the_result_is_requested(self):
+        after = self.html.split("window.location.href", 1)[1][:600]
+        self.assertIn("submitBtn.disabled = false", after)
+
+    def test_the_progress_box_ends_on_done(self):
+        after = self.html.split("window.location.href", 1)[1][:600]
+        self.assertIn('stage: "done"', after)
