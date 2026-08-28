@@ -153,6 +153,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
       - uses: android-actions/setup-android@v3
       - name: SDK platforms
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
