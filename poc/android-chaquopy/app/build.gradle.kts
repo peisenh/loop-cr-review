@@ -77,30 +77,20 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            // Chaquopy's own index (pypi-13.1) has numpy 1.26.2 at the newest,
-            // and that wheel's libgfortran will not load on a 16 KB page size
-            // device. chaquo.com/pypi-upstream carries numpy 2.3.2 for both ABIs,
-            // built December 2025 - late enough to be 16 KB aligned. That index
-            // is not searched by default, so it is added here.
+            // Deliberately unpinned, and deliberately without the upstream
+            // index. This is the combination that works.
             //
-            // If this turns out not to resolve, drop the two lines below and the
-            // pin: the build then falls back to 1.26.2, which works on a 4 KB
-            // device. The analysis itself runs on either - the test suite passes
-            // with numpy 1.26 and matplotlib 3.8, and the report comes out
-            // text-identical to the one built with numpy 2.x.
-            options("--extra-index-url", "https://chaquo.com/pypi-upstream")
-            install("numpy==2.3.2")
-
-            // This is where it stops. With numpy 2.3.2 installed, matplotlib
-            // still comes from Chaquopy's own index, built against numpy 1:
-            //     ImportError: numpy.core.multiarray failed to import
-            // (numpy 2 renamed that module to numpy._core). And there is no
-            // other build to take: pypi-upstream has no matplotlib, and PyPI has
-            // no Android wheels for it at all.
+            // chaquo.com/pypi-upstream has numpy 2.3.2, which does load on a
+            // 16 KB page size device where 1.26.2 does not. But matplotlib then
+            // comes from Chaquopy's own index, built against numpy 1, and dies
+            // with "numpy.core.multiarray failed to import" - and there is no
+            // matplotlib built against numpy 2 anywhere to take instead.
             //
-            // So the two pins above cannot be used yet. Remove them and this
-            // falls back to numpy 1.26 with a matching matplotlib - which works,
-            // but only on a 4 KB page size device. See the README.
+            // To try again once there is one, add:
+            //     options("--extra-index-url", "https://chaquo.com/pypi-upstream")
+            //     install("numpy==2.3.2")
+            // See the README for the full picture.
+            install("numpy")
             install("matplotlib")
 
             install("Flask==3.1.2")

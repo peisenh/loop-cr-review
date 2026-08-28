@@ -139,7 +139,7 @@ separate index and does not appear to be searched by default.
 
 ### Tried: numpy works, matplotlib has no matching build
 
-`app/build.gradle.kts` adds that index and pins the version:
+Tried by adding the index and pinning the version:
 
 ```kotlin
 options("--extra-index-url", "https://chaquo.com/pypi-upstream")
@@ -170,8 +170,13 @@ numpy), across every release. So the two cannot be satisfied together today:
 | matplotlib available | yes | **no** |
 
 The condition to watch is a single one: **a matplotlib for Android built against
-numpy 2.** Until that exists, this proof of concept runs on 4 KB devices with
-numpy 1.26 and nowhere else. To go back to that, drop the two lines above.
+numpy 2.** Until that exists, this runs on 4 KB devices with numpy 1.26 and
+nowhere else.
+
+`app/build.gradle.kts` is therefore back on the combination that works — no
+extra index, nothing pinned — with those two lines kept as a comment. Leaving
+them active would have meant committing a proof of concept that does not run at
+all.
 
 **Verified**: on an API 34 emulator (4 KB pages) the whole chain works — Python
 starts, numpy and matplotlib import, Flask serves the form, and a report is
