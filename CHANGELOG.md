@@ -9,6 +9,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Android launcher icon uses the report mark (`docs/logo-mark.svg`)
+  instead of the hand-drawn placeholder.
+
 ## [0.19.0] - 2026-08-28
 
 ### Added
