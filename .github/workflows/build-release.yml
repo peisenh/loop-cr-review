@@ -156,7 +156,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: SDK platforms
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Build sideload APK
