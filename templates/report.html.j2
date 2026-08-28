@@ -179,7 +179,7 @@ img { width: 100%; border-radius: 8px }
 <h1>{% if lite %}{% trans %}Ambulatory Glucose Profile &amp; Meal Windows{% endtrans %}{% else %}{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}{% endif %}</h1>
 <div class="sub">{{ name }} · {{ span }} · {% trans %}{{ days }} days{% endtrans %} · {{ device }} · {% trans %}sensor wear{% endtrans %} {{ wear }}%</div>
 <div class="gen">{% trans %}Created with{% endtrans %} {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {% trans %}{{ wlab }} window{% endtrans %} ·
-  <a href="{{ repo }}">{{ repo | replace('https://', '') }}</a></div>
+  <a href="{{ repo }}" target="_blank" rel="noopener noreferrer">{{ repo | replace('https://', '') }}</a></div>
 
 {% if source == 'nightscout' or source == 'libreview' %}
 <div class="note">{% if source == 'libreview' %}{% trans %}Source: LibreView. No basal in this export, so no loop figures — the assessment rests on the glucose course alone.{% endtrans %}{% elif lite %}{% trans %}Source: Nightscout. Read without a basal trace, so the assessment rests on the glucose course alone; the CamAPS loop figures are off unless you opt in.{% endtrans %}{% else %}{% trans %}Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace.{% endtrans %}{% endif %}</div>

@@ -78,6 +78,8 @@ def main():
     # Off by default. Without this Qt WebEngine ignores Content-Disposition
     # and the Save link in the report frame does nothing.
     webview.settings['ALLOW_DOWNLOADS'] = True
+    # Footer GitHub link is target=_blank; without this Qt keeps it in-window.
+    webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
     webview.create_window(WINDOW_TITLE, f"http://127.0.0.1:{port}/",
                           width=780, height=920)
     webview.start(gui=_gui_backend())
