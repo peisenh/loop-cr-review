@@ -21,6 +21,8 @@ Android app
   └── WebView → http://127.0.0.1:<port>/
 ```
 
+Application ID: `de.peisenh.loopcrreview`.
+
 No remote backend. Health data stays on device (same ephemeral temp handling as the desktop web app).
 
 ## Requirements

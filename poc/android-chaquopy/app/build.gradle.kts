@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.example.loopcr"
+    namespace = "de.peisenh.loopcrreview"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.loopcr"
+        applicationId = "de.peisenh.loopcrreview"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
+        versionCode = 2
         versionName = (findProperty("appVersion") as String?) ?: "0.1.0-poc"
         ndk {
             val abi = findProperty("abi") as String?

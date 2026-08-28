@@ -1,4 +1,4 @@
-package com.example.loopcr
+package de.peisenh.loopcrreview
 
 import android.annotation.SuppressLint
 import android.app.Activity

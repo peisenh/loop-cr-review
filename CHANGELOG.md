@@ -10,6 +10,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Android applicationId and namespace are `de.peisenh.loopcrreview`
+  (was `com.example.loopcr`). Existing sideload installs must be
+  uninstalled once; this is a new app as far as Android is concerned.
+  versionCode is 2.
+
+
+### Changed
 - Android launcher icon uses the report mark (`docs/logo-mark.svg`)
   instead of the hand-drawn placeholder.
 
