@@ -4,7 +4,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>loop-cr-review</title>
 <style>
   :root {
@@ -19,19 +19,23 @@
   }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
-               font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+               font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+               display:flex; flex-direction:column; }
   .bar {
-    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-    padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bar);
+    display:flex; align-items:center; gap:10px; flex-wrap:nowrap;
+    flex:0 0 auto;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line); background:var(--bar);
   }
   .bar a, .bar button {
     display:inline-block; padding:8px 12px; border-radius:8px; font-size:13px;
     font-weight:600; text-decoration:none; border:0; cursor:pointer;
+    white-space:nowrap;
   }
   .bar .primary { background:var(--blue); color:#fff; }
   .bar .primary:hover { filter:brightness(0.95); }
   .bar .sec { background:transparent; color:var(--blue); border:1px solid var(--line); }
-  iframe { display:block; width:100%; height:calc(100% - 49px); border:0; background:#fff; }
+  iframe { display:block; flex:1 1 auto; width:100%; min-height:0; border:0; background:#fff; }
 </style>
 </head>
 <body>

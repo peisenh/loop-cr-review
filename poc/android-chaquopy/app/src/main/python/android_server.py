@@ -26,6 +26,7 @@ def start():
         # templates/locale live next to this package tree under Chaquopy
         root = Path(__file__).resolve().parent
         app.template_folder = str(root / "templates")
+        app.static_folder = str(root / "static")
         _server = make_server("127.0.0.1", 0, app, threaded=True)
         _thread = threading.Thread(
             target=_server.serve_forever, name="loop-cr-flask", daemon=True

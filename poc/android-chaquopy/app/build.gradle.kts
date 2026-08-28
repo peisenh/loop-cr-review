@@ -54,6 +54,7 @@ val syncAnalysis by tasks.registering(Copy::class) {
     }
     from(repoRoot.resolve("lcr")) { into("lcr") }
     from(repoRoot.resolve("templates")) { into("templates") }
+    from(repoRoot.resolve("static")) { into("static"); include("*.svg") }
     // Only the compiled catalogues are needed at runtime.
     from(repoRoot.resolve("locale")) { into("locale"); include("**/*.mo") }
     exclude("**/__pycache__/**")

@@ -320,14 +320,23 @@
       hint.textContent = "...";
       submitBtn.disabled = true;
       fetch("{{ url_for('span') }}", {method:"POST", body:fd})
-        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+        .then(function(r){
+          return r.text().then(function(t){
+            var j = null;
+            try { j = JSON.parse(t); } catch (e) {}
+            return {ok:r.ok, j:j, status:r.status};
+          });
+        })
         .then(function(x){
-          if (!x.ok) { hint.textContent = (x.j && x.j.error) || "error"; return; }
+          if (!x.ok) {
+            hint.textContent = (x.j && x.j.error) || ("error " + x.status);
+            return;
+          }
           dateFrom.value = x.j.from;
           dateTo.value = x.j.to;
           hint.textContent = x.j.source + ": " + x.j.days + " d";
         })
-        .catch(function(){ hint.textContent = "error"; })
+        .catch(function(err){ hint.textContent = "error: " + (err && err.message ? err.message : "network"); })
         .then(function(){ submitBtn.disabled = false; });
     });
 

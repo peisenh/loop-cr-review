@@ -3,20 +3,28 @@ package com.example.loopcr
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.database.Cursor
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
+import android.view.ViewGroup
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import java.io.File
 
 /**
  * Thin shell: Chaquopy starts Flask on loopback; WebView shows the existing UI.
@@ -32,6 +40,7 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         try {
             if (!Python.isStarted()) {
@@ -42,9 +51,6 @@ class MainActivity : Activity() {
             val port = module.callAttr("start").toInt()
             setupWebView(port)
         } catch (e: Exception) {
-            // A toast truncates the message and is gone in seconds, which is
-            // useless for a Python traceback - log the whole thing, and keep the
-            // window open with the text on screen instead of closing silently.
             Log.e(TAG, "Python/Flask failed to start", e)
             showStartupError(e)
         }
@@ -62,11 +68,28 @@ class MainActivity : Activity() {
     }
 
     private fun setupWebView(port: Int) {
+        // Pad a wrapper, not the WebView: WebView eats WindowInsets and the
+        // chrome then sits under the Pixel status bar.
+        val root = FrameLayout(this)
         webView = WebView(this)
-        setContentView(webView)
+        root.addView(
+            webView,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+        setContentView(root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.requestApplyInsets(root)
+
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = false
+        webView.settings.allowFileAccess = true
         webView.settings.allowContentAccess = true
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
@@ -86,15 +109,12 @@ class MainActivity : Activity() {
             ): Boolean {
                 fileCallback?.onReceiveValue(null)
                 fileCallback = filePathCallback
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "*/*"
-                    putExtra(
-                        Intent.EXTRA_MIME_TYPES,
-                        arrayOf("application/zip", "text/csv", "text/*", "application/json")
-                    )
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startActivityForResult(intent, FILE_REQUEST)
+                startActivityForResult(Intent.createChooser(intent, null), FILE_REQUEST)
                 return true
             }
         }
@@ -104,11 +124,59 @@ class MainActivity : Activity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FILE_REQUEST) {
-            val result = if (resultCode == Activity.RESULT_OK && data?.data != null) {
-                arrayOf(data.data!!)
+            val picked = data?.data
+            val result = if (resultCode == Activity.RESULT_OK && picked != null) {
+                runCatching { arrayOf(copyPickToCache(picked)) }
+                    .onFailure { Log.e(TAG, "could not copy picked file", it) }
+                    .getOrNull()
             } else null
             fileCallback?.onReceiveValue(result)
             fileCallback = null
+        }
+    }
+
+    private fun copyPickToCache(uri: Uri): Uri {
+        val hinted = displayName(uri)
+        val tmp = File(cacheDir, "picked.bin")
+        contentResolver.openInputStream(uri).use { input ->
+            requireNotNull(input) { "no stream for $uri" }
+            tmp.outputStream().use { input.copyTo(it) }
+        }
+        val named = File(cacheDir, withSuffix(tmp, hinted))
+        if (named != tmp) {
+            if (named.exists()) named.delete()
+            if (!tmp.renameTo(named)) {
+                tmp.copyTo(named, overwrite = true)
+                tmp.delete()
+            }
+        }
+        Log.i(TAG, "picked ${named.name} ${named.length()} bytes")
+        return Uri.fromFile(named)
+    }
+
+    private fun displayName(uri: Uri): String {
+        var name = "export"
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { c: Cursor ->
+                if (c.moveToFirst()) {
+                    val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (i >= 0) name = c.getString(i) ?: name
+                }
+            }
+        return File(name).name.ifBlank { "export" }
+    }
+
+    private fun withSuffix(file: File, name: String): String {
+        val lower = name.lowercase()
+        if (lower.endsWith(".zip") || lower.endsWith(".csv") || lower.endsWith(".json")) {
+            return name
+        }
+        val head = ByteArray(4)
+        val n = file.inputStream().use { it.read(head) }
+        return if (n >= 2 && head[0] == 0x50.toByte() && head[1] == 0x4b.toByte()) {
+            "$name.zip"
+        } else {
+            name
         }
     }
 

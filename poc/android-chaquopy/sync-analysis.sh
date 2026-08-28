@@ -25,6 +25,9 @@ copy_into() {   # copy_into <target-dir>
     rm -rf "${out:?}/$d"
     cp -r "$REPO/$d" "$out/$d"
   done
+  rm -rf "${out:?}/static"
+  mkdir -p "$out/static"
+  cp "$REPO"/static/*.svg "$out/static/"
   # Only the compiled catalogues are read at runtime.
   rm -rf "${out:?}/locale"
   mkdir -p "$out/locale"

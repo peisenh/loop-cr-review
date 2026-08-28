@@ -60,7 +60,9 @@ folder would look empty until the first build.
   the one from the repository. That was the point of the whole arrangement, and
   it is now demonstrated rather than assumed.
 - File picker for ZIP/CSV through `WebChromeClient`; the server is stopped in
-  `onDestroy`.
+  `onDestroy`. On Pixel 8 / Android 17 the pick is copied into app cache first
+  so Flask gets a real `.zip` / `.csv` rather than an unreadable `content://`
+  URI.
 
 ## Known limits (before any production/store build)
 

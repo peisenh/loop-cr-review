@@ -9,6 +9,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- Android PoC: choosing an export on a Pixel 8 left "error" under the date
+  range. The system file URI never reached Flask. The pick is copied into
+  app cache as a real .zip/.csv first.
+- Android PoC: after a report, New report / Save sat under the status bar
+  and could not be used. Insets go on a wrapper around the WebView; the
+  chrome layout no longer assumes a 49 px bar.
+- Android PoC: broken logo on the upload page. Sync now copies static/*.svg
+  into the APK and Flask serves that folder.
+
 ## [0.18.3] - 2026-08-27
 
 ### Changed
