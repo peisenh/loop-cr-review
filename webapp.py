@@ -9,7 +9,6 @@ after the report is built (ephemeral: nothing is stored, nothing is logged).
 """
 import json
 import os
-import re
 import tempfile
 import stat
 import shutil
@@ -81,19 +80,6 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
-_JOB_ID_RE = re.compile(r"^[0-9a-f]{32}$")
-
-
-def _checked_job_id(raw):
-    """Accept only the 32-hex token we mint ourselves. The route parameter is
-    otherwise treated as a filesystem path by static analysis.
-    """
-    matched = _JOB_ID_RE.fullmatch(raw or "")
-    if matched is None:
-        abort(404)
-    return matched.group(0)
-
-
 def _safe_extract(zf, dest):
     """Extract a ZIP into dest, guarding against path- and size-based abuse.
 
@@ -102,65 +88,43 @@ def _safe_extract(zf, dest):
     exceeds the per-file or total caps (decompression bomb). Sizes come from the
     central directory, which is enough to stop the practical bombs before any
     bytes are written to disk.
-
-    Members are written one by one. extractall() would reuse the raw archive
-    names and is what path-injection queries flag even after the prefix check.
     """
     dest = dest.resolve()
     infos = zf.infolist()
     if len(infos) > MAX_ENTRIES:
         abort(400, "archive has too many entries")
     total = 0
-    planned = []
     for info in infos:
+        target = (dest / info.filename).resolve()
+        if target != dest and not str(target).startswith(str(dest) + os.sep):
+            abort(400, "unsafe path in archive")
         if info.file_size > MAX_FILE_BYTES:
             abort(400, "a file in the archive is too large")
         total += info.file_size
         if total > MAX_TOTAL_BYTES:
             abort(400, "archive expands to too much data")
-        rel = info.filename.replace("\\", "/")
-        parts = [p for p in rel.split("/") if p not in ("", ".")]
-        if not parts:
-            continue
-        if any(p == ".." or "/" in p or "\\" in p or p.startswith("/") for p in parts):
-            abort(400, "unsafe path in archive")
-        target = dest.joinpath(*parts).resolve()
-        if target != dest and not str(target).startswith(str(dest) + os.sep):
-            abort(400, "unsafe path in archive")
-        planned.append((info, target, rel.endswith("/")))
-    for info, target, is_dir in planned:
-        if is_dir or info.is_dir():
-            target.mkdir(parents=True, exist_ok=True)
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with zf.open(info, "r") as src, open(target, "wb") as out:
-            shutil.copyfileobj(src, out, length=1024 * 1024)
+    zf.extractall(dest)
 
 
 def _unpack_upload(tmpd, upload):
-    """Save the upload into tmpd/export and return that folder. No keep after tmpd dies.
-
-    The original client filename is not used on disk: it is user-controlled and
-    only the suffix (.zip / .csv) matters.
-    """
+    """Save the upload into tmpd/export and return that folder. No keep after tmpd dies."""
     extract = tmpd / "export"
     extract.mkdir()
     raw = Path(upload.filename or "export").name
-    suffix = Path(raw).suffix.lower()
+    name = Path(raw).name
+    if name in ("", ".", "..") or "/" in name or "\\" in name:
+        abort(400, "invalid file name")
+    suffix = Path(name).suffix.lower()
+    saved = tmpd / name
+    upload.save(saved)
     if suffix == ".csv":
-        saved = tmpd / "upload.csv"
-        upload.save(saved)
-        saved.replace(extract / "upload.csv")
-    elif suffix in (".zip", ""):
-        saved = tmpd / "upload.zip"
-        upload.save(saved)
+        saved.replace(extract / name)
+    else:
         try:
             with zipfile.ZipFile(saved) as zf:
                 _safe_extract(zf, extract)
         except zipfile.BadZipFile:
             abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
-    else:
-        abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
     return extract
 
 
@@ -277,10 +241,18 @@ def _install_ui_i18n(lang):
 
 
 def _job_paths(job_id):
-    """Return the private directory and status/result paths for a job id."""
-    token = _checked_job_id(job_id)
-    job = _JOB_ROOT / token
-    return job, job / "status.json", job / "result.html"
+    """Return the private directory and status/result paths for a job id.
+
+    The directory object comes from listing _JOB_ROOT, not from joining the
+    route parameter onto the filesystem. The URL value is only compared to
+    names we already created (uuid4 hex).
+    """
+    if not job_id or len(job_id) != 32 or any(c not in "0123456789abcdef" for c in job_id):
+        abort(404)
+    for job in _JOB_ROOT.iterdir():
+        if job.is_dir() and job.name == job_id:
+            return job, job / "status.json", job / "result.html"
+    abort(404)
 
 
 def _write_job(status_path, **values):
@@ -421,8 +393,10 @@ def span():
         base = _find_export_base(extract)
         try:
             info = core.peek_span(base)
-        except (LoopCRError, FileNotFoundError) as exc:
+        except LoopCRError as exc:
             return jsonify(error=str(exc) or "could not read span"), 400
+        except FileNotFoundError:
+            return jsonify(error="could not read span"), 400
         return jsonify(info)
 
 
