@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-08-28
+
 ### Added
 - Android app on the release: GitHub Actions builds
   `loop-cr-review-android.apk` and attaches it next to the desktop
@@ -960,7 +962,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.18.3...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/peisenh/loop-cr-review/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/peisenh/loop-cr-review/compare/v0.18.2...v0.18.3
 [0.18.2]: https://github.com/peisenh/loop-cr-review/compare/v0.18.1...v0.18.2
 [0.18.1]: https://github.com/peisenh/loop-cr-review/compare/v0.18.0...v0.18.1
