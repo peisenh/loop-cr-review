@@ -25,7 +25,7 @@ from source instead (see README).
 
 **Linux:** make it executable first — `chmod +x loop-cr-review-gui-linux`.
 
-- **Android (sideload)** — `loop-cr-review-android.apk`
+**Android (sideload)** — `loop-cr-review-android.apk`
   Same analysis on the phone, all on-device. **Not a Play Store build.**
   Works on devices that boot **4 KB memory pages** (Pixel 8/9/10 with the
   16 KB developer option *off*, Lenovo Tab M11, most current phones).
