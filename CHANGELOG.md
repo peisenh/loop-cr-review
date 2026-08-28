@@ -9,6 +9,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Security
+- Web jobs are looked up by listing the temp directory, not by joining
+  the URL token onto a path.
+- Uploads are stored as `upload.zip` / `upload.csv`; zip members are
+  written one by one after each path component is checked. The original
+  client filename is not used on disk.
+- HTTP error text no longer includes raw exception strings or filesystem
+  paths (`/span`, date fields, failed jobs).
+
 ## [0.20.0] - 2026-08-28
 
 ### Changed
