@@ -450,8 +450,8 @@ class TestResultRoutesWhileRunning(unittest.TestCase):
         webapp._prepare_job_root()
         self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
         self.job_id = "b" * 32
+        (webapp._JOB_ROOT / self.job_id).mkdir(parents=True)
         job, status_path, _result = webapp._job_paths(self.job_id)
-        job.mkdir(parents=True)
         status_path.write_text(json.dumps({"state": "running", "percent": 30}),
                                encoding="utf-8")
         self.client = webapp.app.test_client()
@@ -475,8 +475,8 @@ class TestViewingKeepsTheJob(unittest.TestCase):
         webapp._prepare_job_root()
         self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
         self.job_id = "d" * 32
+        (webapp._JOB_ROOT / self.job_id).mkdir(parents=True)
         self.job, status_path, result_path = webapp._job_paths(self.job_id)
-        self.job.mkdir(parents=True)
         status_path.write_text(json.dumps({"state": "done", "lang": "de"}),
                                encoding="utf-8")
         result_path.write_text("<html><body>report</body></html>", encoding="utf-8")

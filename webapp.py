@@ -9,6 +9,7 @@ after the report is built (ephemeral: nothing is stored, nothing is logged).
 """
 import json
 import os
+import re
 import tempfile
 import stat
 import shutil
@@ -80,6 +81,16 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
+
+def _client_message(exc, fallback):
+    """User-facing LoopCRError text, never a filesystem path or traceback."""
+    raw = exc.args[0] if exc.args else fallback
+    if not isinstance(raw, str) or not raw.strip():
+        return fallback
+    if "/" in raw or "\\" in raw or "Traceback" in raw:
+        return fallback
+    return raw
+
 def _safe_extract(zf, dest):
     """Extract a ZIP into dest, guarding against path- and size-based abuse.
 
@@ -94,37 +105,60 @@ def _safe_extract(zf, dest):
     if len(infos) > MAX_ENTRIES:
         abort(400, "archive has too many entries")
     total = 0
+    planned = []
+    part_ok = re.compile(r"^[\w .()+\-\[\]]{1,200}$", re.UNICODE)
     for info in infos:
-        target = (dest / info.filename).resolve()
-        if target != dest and not str(target).startswith(str(dest) + os.sep):
-            abort(400, "unsafe path in archive")
         if info.file_size > MAX_FILE_BYTES:
             abort(400, "a file in the archive is too large")
         total += info.file_size
         if total > MAX_TOTAL_BYTES:
             abort(400, "archive expands to too much data")
-    zf.extractall(dest)
+        rel = info.filename.replace("\\", "/")
+        raw_parts = [p for p in rel.split("/") if p not in ("", ".")]
+        if not raw_parts:
+            continue
+        parts = []
+        for raw in raw_parts:
+            matched = part_ok.fullmatch(raw)
+            if matched is None or raw == "..":
+                abort(400, "unsafe path in archive")
+            parts.append(matched.group(0))
+        target = dest.joinpath(*parts).resolve()
+        if target != dest and not str(target).startswith(str(dest) + os.sep):
+            abort(400, "unsafe path in archive")
+        planned.append((info, target, rel.endswith("/")))
+    for info, target, is_dir in planned:
+        if is_dir or info.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zf.open(info, "r") as src, open(target, "wb") as out:
+            shutil.copyfileobj(src, out, length=1024 * 1024)
 
 
 def _unpack_upload(tmpd, upload):
-    """Save the upload into tmpd/export and return that folder. No keep after tmpd dies."""
+    """Save the upload into tmpd/export and return that folder. No keep after tmpd dies.
+
+    On disk the file is always upload.zip or upload.csv.
+    """
     extract = tmpd / "export"
     extract.mkdir()
     raw = Path(upload.filename or "export").name
-    name = Path(raw).name
-    if name in ("", ".", "..") or "/" in name or "\\" in name:
-        abort(400, "invalid file name")
-    suffix = Path(name).suffix.lower()
-    saved = tmpd / name
-    upload.save(saved)
+    suffix = Path(raw).suffix.lower()
     if suffix == ".csv":
-        saved.replace(extract / name)
-    else:
+        saved = tmpd / "upload.csv"
+        upload.save(saved)
+        saved.replace(extract / "upload.csv")
+    elif suffix in (".zip", ""):
+        saved = tmpd / "upload.zip"
+        upload.save(saved)
         try:
             with zipfile.ZipFile(saved) as zf:
                 _safe_extract(zf, extract)
         except zipfile.BadZipFile:
             abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
+    else:
+        abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
     return extract
 
 
@@ -176,7 +210,7 @@ def _read_options():
         date_from = core.parse_day(date_from)
         date_to = core.parse_day(date_to)
     except LoopCRError as exc:
-        abort(400, str(exc))
+        abort(400, _client_message(exc, "invalid date"))
     return lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to
 
 
@@ -356,7 +390,7 @@ def _do_job(status_path, result_path, options):
         # browser ("no CGM samples in the chosen date range"). Replacing it with a
         # generic line leaves them guessing; the synchronous path passes it on too.
         _write_job(status_path, state="error", stage="error", percent=100,
-                   error=f"could not build report: {exc}")
+                   error=_client_message(exc, "could not build report"))
     except Exception:  # pylint: disable=broad-exception-caught
         _write_job(status_path, state="error", stage="error", percent=100,
                    error="could not build report from this export "
@@ -394,7 +428,7 @@ def span():
         try:
             info = core.peek_span(base)
         except LoopCRError as exc:
-            return jsonify(error=str(exc) or "could not read span"), 400
+            return jsonify(error=_client_message(exc, "could not read span")), 400
         except FileNotFoundError:
             return jsonify(error="could not read span"), 400
         return jsonify(info)
