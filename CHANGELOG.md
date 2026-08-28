@@ -9,6 +9,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- Android: the GitHub link at the bottom of the page did nothing. External
+  URLs now open in the system browser; only loopback stays in the WebView.
+
+
 ### Security
 - Web jobs are looked up by listing the temp directory, not by joining
   the URL token onto a path.

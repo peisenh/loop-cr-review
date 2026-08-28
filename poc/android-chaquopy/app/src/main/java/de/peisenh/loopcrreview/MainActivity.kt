@@ -96,9 +96,15 @@ class MainActivity : Activity() {
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
-                val host = request.url.host ?: return true
-                return !host.equals("localhost", ignoreCase = true)
-                        && !host.equals("127.0.0.1", ignoreCase = true)
+                val uri = request.url
+                val host = uri.host ?: return true
+                if (host.equals("localhost", ignoreCase = true)
+                    || host.equals("127.0.0.1", ignoreCase = true)
+                ) {
+                    return false
+                }
+                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                return true
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
