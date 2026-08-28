@@ -16,6 +16,7 @@ name: Build executables
 # GUI backends:
 #   Linux  → Qt WebEngine (bundled)
 #   Windows → Qt WebEngine (full) + Edge WebView2 (slim, modern Windows)
+# Android  → separate job, sideload APK (4 KB page-size wheels, not Play)
 on:
   push:
     tags: ["v*"]
@@ -142,8 +143,28 @@ jobs:
           name: loop-cr-review-gui-windows.exe
           path: loop-cr-review-gui-windows.exe
 
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: SDK platforms
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Build sideload APK
+        run: ./tools/build-android-apk.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: loop-cr-review-android.apk
+          path: dist/loop-cr-review-android.apk
+
   release:
-    needs: build
+    needs: [build, android]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:

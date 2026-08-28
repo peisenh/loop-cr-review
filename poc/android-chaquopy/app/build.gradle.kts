@@ -13,9 +13,14 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-poc"
+        versionName = (findProperty("appVersion") as String?) ?: "0.1.0-poc"
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            val abi = findProperty("abi") as String?
+            if (!abi.isNullOrBlank()) {
+                abiFilters += abi.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+            } else {
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
         }
     }
 

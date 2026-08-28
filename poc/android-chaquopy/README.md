@@ -35,18 +35,21 @@ No remote backend. Health data stays on device (same ephemeral temp handling as 
 
 ## Build
 
-1. Open **this directory** in Android Studio (not a parent folder).
-2. Let Gradle sync; first Chaquopy/pip resolve can take several minutes.
-3. Run on an **arm64** emulator or device (`arm64-v8a`). x86_64 emulators are also listed in `abiFilters`.
-4. Debug variant: **Run → app**.
+From the **repository root** (JDK 17 + Android SDK, `ANDROID_HOME` set):
 
-Open **this directory** in Android Studio — not a parent folder; the Gradle
-project starts here. Studio provides its own Gradle and generates the wrapper on
-import, which is why neither is checked in.
+```bash
+./tools/build-android-apk.sh
+# → dist/loop-cr-review-android.apk
+```
 
-Run `./sync-analysis.sh` once before the first import: Gradle copies the analysis
-before every *build*, but a project *sync* does not run that task, so the Python
-folder would look empty until the first build.
+That is the same command GitHub Actions runs on a `v*` tag. Default ABI is
+`arm64-v8a` (phones/tablets). Both ABIs: `ANDROID_ABI=arm64-v8a,x86_64 ./tools/build-android-apk.sh`.
+
+Or Android Studio: open **this directory** (not a parent folder). Gradle
+copies the analysis before every *build* (`syncAnalysis`); a project *sync*
+does not, so run `./sync-analysis.sh` once before the first import.
+
+The wrapper (`gradlew`) is in git so a machine without Studio can still build.
 
 ## What works — measured on an API 34 emulator
 

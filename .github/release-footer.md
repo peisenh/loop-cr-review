@@ -25,4 +25,13 @@ from source instead (see README).
 
 **Linux:** make it executable first — `chmod +x loop-cr-review-gui-linux`.
 
+- **Android (sideload)** — `loop-cr-review-android.apk`
+  Same analysis on the phone, all on-device. **Not a Play Store build.**
+  Works on devices that boot **4 KB memory pages** (Pixel 8/9/10 with the
+  16 KB developer option *off*, Lenovo Tab M11, most current phones).
+  Fails where the kernel uses **16 KB pages** (16 KB emulator image,
+  Pixel with “Boot with 16KB page size” on, future devices that default
+  to 16 KB): Chaquopy’s numpy/matplotlib wheels are 4 KB-aligned.
+  Install from the file manager; unsigned / debug-signed.
+
 All variants run entirely on your machine; your data never leaves it.

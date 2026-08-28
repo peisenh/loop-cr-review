@@ -113,8 +113,8 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Nutzung
 
-Drei Wege — einer genügt: die **Kommandozeile** (1), das **Web-Frontend
-fürs Homelab** (2) oder die **Desktop-App** (3).
+Vier Wege — einer genügt: die **Kommandozeile** (1), das **Web-Frontend
+fürs Homelab** (2), die **Desktop-App** (3) oder die **Android-App** (4).
 
 ### 1 · Kommandozeile
 
@@ -221,6 +221,33 @@ pip install -r requirements-gui-webview2.txt && python3 gui.py
 
 Alles läuft lokal; die Daten verlassen den Rechner nicht.
 
+### 4 · Android (Sideload)
+
+Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
+`loop-cr-review-android.apk`. Installation über den Dateimanager
+(unbekannte Quellen erlauben). **Kein Play-Store-Build.**
+
+**Geht:** Geräte mit **4-KB-Speicherseiten** — Pixel 8/9/10 (16-KB-Schalter
+aus), Lenovo Tab M11, die meisten aktuellen Telefone. Lokal gebaut und auf
+Pixel 8 (Android 17) und Tab M11 geprüft.
+
+**Geht nicht:** Kernel mit **16-KB-Seiten** (16-KB-Emulator, Pixel-Schalter
+„Boot with 16KB page size“, künftige Geräte mit 16 KB als Default). Die
+numpy/matplotlib-Wheels von Chaquopy sind 4-KB-aligniert; ein zu numpy 2
+passendes matplotlib-Wheel gibt es dafür nicht. Deshalb auch kein Play-Upload
+(`targetSdk` 35 verlangt 16-KB-fähige Native-Libs).
+
+Lokal bauen (JDK 17 + Android-SDK):
+
+```bash
+./tools/build-android-apk.sh
+# → dist/loop-cr-review-android.apk
+```
+
+Projekt und Technik: `poc/android-chaquopy/`.
+
+Alles bleibt auf dem Gerät; die Daten gehen nicht ins Netz.
+
 
 ## Datenschutz & Homelab (kurz)
 
@@ -302,7 +329,8 @@ loop-cr-review/
 ├── requirements-web.txt       # zusätzliche Abhängigkeiten fürs Web-Frontend
 ├── requirements-gui.txt       # Desktop-App Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
-├── tools/                     # Validierungsskripte (nicht Teil der Auswertung)
+├── tools/                     # Binaries, Screenshots, Android-APK, Validierung
+├── poc/android-chaquopy/      # Android-App (Sideload, 4-KB-Geräte)
 ├── VALIDATION.md              # gemessene Belastbarkeit von Streubereich/Stabilität
 ├── sim/
 │   ├── SIMULATION-SPEC.md     # Spezifikation der Methodenvalidierung (Phase A/B, frozen)

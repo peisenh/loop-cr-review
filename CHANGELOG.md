@@ -9,6 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Android app on the release: GitHub Actions builds
+  `loop-cr-review-android.apk` and attaches it next to the desktop
+  binaries. Same analysis, on-device, sideload only. Local build:
+  `./tools/build-android-apk.sh` (JDK 17 + Android SDK).
+- Documented where that APK works (4 KB page-size devices) and where it
+  does not (16 KB kernels / Play Store).
+
 ### Fixed
 - Android PoC: choosing an export on a Pixel 8 left "error" under the date
   range. The system file URI never reached Flask. The pick is copied into

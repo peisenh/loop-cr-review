@@ -113,8 +113,8 @@ pyinstaller --onefile --name loop-cr-review \
 
 ## Usage
 
-Three ways to run it — pick one: the **command line** (1), the **homelab web
-front-end** (2), or the **desktop app** (3).
+Four ways to run it — pick one: the **command line** (1), the **homelab web
+front-end** (2), the **desktop app** (3), or the **Android app** (4).
 
 ### 1 · Command line
 
@@ -217,6 +217,33 @@ pip install -r requirements-gui-webview2.txt && python3 gui.py
 
 Everything happens locally; the data never leaves your machine.
 
+### 4 · Android (sideload)
+
+The same analysis in an APK, no server. Releases attach
+`loop-cr-review-android.apk`. Install from the file manager (allow unknown
+sources). **Not a Play Store build.**
+
+**Works on:** devices that boot **4 KB memory pages** — Pixel 8/9/10 (16 KB
+developer option off), Lenovo Tab M11, most current phones. Built and run on
+a Pixel 8 (Android 17) and a Tab M11.
+
+**Does not work on:** a kernel with **16 KB pages** (16 KB emulator image,
+Pixel “Boot with 16KB page size”, future devices that default to 16 KB).
+Chaquopy’s numpy/matplotlib wheels are 4 KB-aligned; there is no matplotlib
+wheel built against numpy 2 to take instead. That is also why this APK cannot
+go to Play (`targetSdk` 35 requires 16 KB-capable native libs).
+
+Build locally (JDK 17 + Android SDK):
+
+```bash
+./tools/build-android-apk.sh
+# → dist/loop-cr-review-android.apk
+```
+
+Project and internals: `poc/android-chaquopy/`.
+
+Everything stays on the device; nothing is sent off it.
+
 
 ## Privacy & homelab (short)
 
@@ -296,7 +323,8 @@ loop-cr-review/
 ├── requirements-web.txt       # extra dependencies for the web front-end
 ├── requirements-gui.txt       # desktop app Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # desktop app Windows slim (WebView2)
-├── tools/                     # validation scripts (not part of the analysis)
+├── tools/                     # binaries, screenshots, Android APK, validation
+├── poc/android-chaquopy/      # Android app (sideload, 4 KB devices)
 ├── VALIDATION.md              # measured reliability of spread/stability
 ├── sim/
 │   ├── SIMULATION-SPEC.md     # method-validation spec (Phase A/B, frozen)
