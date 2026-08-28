@@ -41,6 +41,17 @@ VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo poc)"
 # Phones and tablets: one ABI. x86_64 is only useful for the emulator.
 ABI="${ANDROID_ABI:-arm64-v8a}"
 
+# Same bake as the desktop binaries: the APK has no git, so tool_version()
+# only sees _version.py. Leave the placeholder and the report prints
+# "Created with Loop-CR-Review" with nothing after it.
+cp -f _version.py build-version.bak 2>/dev/null || true
+echo "VERSION = \"$VERSION\"" > _version.py
+restore_version() {
+  if [ -f build-version.bak ]; then mv -f build-version.bak _version.py
+  else git checkout -- _version.py 2>/dev/null || true; fi
+}
+trap restore_version EXIT INT TERM
+
 echo "==> SDK $SDK"
 echo "==> version $VERSION  abi $ABI"
 echo "==> assembling debug APK (sideload, 4 KB page-size wheels)"
