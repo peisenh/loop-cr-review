@@ -3,9 +3,9 @@
 **Status: it works on a 4 KB device.** Built, installed, and a report generated
 on an API 34 emulator — roughly as fast as on a modest desktop machine, so the
 computation is not the obstacle. On a device with a 16 KB memory page size numpy
-cannot be loaded at all — the build picks up numpy 1.26.2 with a
-pre-October-2024 `libgfortran`. A newer numpy for Android exists in a separate
-index; see below for the experiment that would settle it.
+cannot be loaded at all with the wheels from Chaquopy's own index. A newer numpy
+from `pypi-upstream` settles that, but then there is no matching matplotlib to be
+had anywhere. See below.
 
 Built because the browser build could not meet the actual goal: browsers refuse
 to load WebAssembly from a `file://` path, so "download it and it runs" does not
@@ -137,7 +137,7 @@ The build did not use it. Chaquopy searches `pypi.org/simple` and its own
 `pypi-13.1` index, where the newest numpy is 1.26.2; `pypi-upstream` is a
 separate index and does not appear to be searched by default.
 
-### Now wired in, but untested
+### Tried: numpy works, matplotlib has no matching build
 
 `app/build.gradle.kts` adds that index and pins the version:
 
@@ -146,17 +146,32 @@ options("--extra-index-url", "https://chaquo.com/pypi-upstream")
 install("numpy==2.3.2")
 ```
 
-Build it and start it on a **16 KB device** — the API 37 emulator that failed
-before will do. If numpy imports, the one blocker here is gone.
+**numpy 2.3.2 installs and loads.** The `libgfortran` failure is gone, so a
+recent wheel really does settle the 16 KB question.
 
-Two things to watch, because neither has been tried:
+**matplotlib then no longer matches.** pip keeps taking it from Chaquopy's own
+index, where it is compiled against numpy 1:
 
-- **Does the index resolve at all?** If not, remove the two lines; the build
-  falls back to numpy 1.26.2, which works on a 4 KB device.
-- **Does matplotlib match?** It is left unpinned so pip can pick something
-  suitable, but matplotlib 3.8 was compiled against numpy 1 and may fail at
-  import with an ABI complaint even after installing cleanly. The build log shows
-  which version was chosen; `pypi-upstream` may carry a newer one.
+    ImportError: numpy.core.multiarray failed to import
+      at matplotlib.transforms (transforms.py:49)
+
+numpy 2 renamed that module to `numpy._core`, so an extension built against
+numpy 1 cannot load it.
+
+**And there is nowhere else to get one.** `pypi-upstream` carries
+chaquopy-openblas, numpy, pandas, scikit-learn, scipy and xgboost — no
+matplotlib. PyPI itself has no Android wheels for matplotlib at all (nor for
+numpy), across every release. So the two cannot be satisfied together today:
+
+| | numpy 1.26 (Chaquopy index) | numpy 2.3.2 (pypi-upstream) |
+|---|---|---|
+| loads on 4 KB device | yes | yes |
+| loads on 16 KB device | **no** (`libgfortran`) | yes |
+| matplotlib available | yes | **no** |
+
+The condition to watch is a single one: **a matplotlib for Android built against
+numpy 2.** Until that exists, this proof of concept runs on 4 KB devices with
+numpy 1.26 and nowhere else. To go back to that, drop the two lines above.
 
 **Verified**: on an API 34 emulator (4 KB pages) the whole chain works — Python
 starts, numpy and matplotlib import, Flask serves the form, and a report is

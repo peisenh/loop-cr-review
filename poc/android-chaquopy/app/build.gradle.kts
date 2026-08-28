@@ -91,10 +91,16 @@ chaquopy {
             options("--extra-index-url", "https://chaquo.com/pypi-upstream")
             install("numpy==2.3.2")
 
-            // Left unpinned on purpose: it has to be a build that matches
-            // numpy 2.x. matplotlib 3.8 was compiled against numpy 1 and may
-            // fail at import with an ABI complaint even though it installs -
-            // watch the build log for which version is picked.
+            // This is where it stops. With numpy 2.3.2 installed, matplotlib
+            // still comes from Chaquopy's own index, built against numpy 1:
+            //     ImportError: numpy.core.multiarray failed to import
+            // (numpy 2 renamed that module to numpy._core). And there is no
+            // other build to take: pypi-upstream has no matplotlib, and PyPI has
+            // no Android wheels for it at all.
+            //
+            // So the two pins above cannot be used yet. Remove them and this
+            // falls back to numpy 1.26 with a matching matplotlib - which works,
+            // but only on a 4 KB page size device. See the README.
             install("matplotlib")
 
             install("Flask==3.1.2")
