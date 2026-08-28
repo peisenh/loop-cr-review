@@ -113,7 +113,6 @@
     <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Force CamAPS assessment (Part 2) for Nightscout / other sources{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark-theme charts (AGP, slots, daily){% endtrans %}</label>
-    <label class="check"><input type="checkbox" name="download"> {% trans %}Download report as file (instead of displaying){% endtrans %}</label>
 
     <fieldset>
       <legend>{% trans %}Slots (time-of-day windows){% endtrans %}</legend>
@@ -166,9 +165,8 @@
       {% trans %}<b>Homelab / private.</b>
       While the analysis runs, the upload and the finished report sit in a private
       folder in the system temp area. The export itself is deleted as soon
-      as the report exists; the report follows after 15 minutes at the latest, or
-      right away if you tick "download". Until then it stays open so you can still
-      save it. No public hosting, no archive.{% endtrans %}
+      as the report exists; the report follows after 15 minutes at the latest.
+      Until then it stays open so you can still save it. No public hosting, no archive.{% endtrans %}
     </div>
   </form>
 

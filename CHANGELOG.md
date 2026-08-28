@@ -9,6 +9,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Web upload: no “download instead of displaying” checkbox. The report
+  always opens in the viewer; Save keeps a file, Open in browser opens
+  the HTML in a real browser tab.
+
+
 ### Fixed
 - Android: the GitHub link at the bottom of the page did nothing. External
   URLs now open in the system browser; only loopback stays in the WebView.

@@ -459,6 +459,7 @@ class TestResultRoutesWhileRunning(unittest.TestCase):
     def test_all_three_routes_answer_409(self):
         for path in (f"/result/{self.job_id}",
                      f"/result/{self.job_id}/body",
+                     f"/result/{self.job_id}/external",
                      f"/result/{self.job_id}/download"):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 409)

@@ -20,6 +20,7 @@ import android.widget.FrameLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -123,26 +124,33 @@ class MainActivity : Activity() {
                     return null
                 }
                 val path = uri.path ?: return null
-                if (!Regex("^/result/[0-9a-f]{32}(/download)?$").matches(path)) return null
+                if (!Regex("^/result/[0-9a-f]{32}(/download|/external)?$").matches(path)) {
+                    return null
+                }
                 return try {
                     val conn = URL(uri.toString()).openConnection() as HttpURLConnection
                     conn.connect()
                     val bytes = conn.inputStream.readBytes()
                     val disp = conn.getHeaderField("Content-Disposition") ?: ""
-                    if (disp.contains("attachment", ignoreCase = true)) {
+                    val openExternal = path.endsWith("/external")
+                    if (openExternal || disp.contains("attachment", ignoreCase = true)) {
                         val tmp = File(cacheDir, "loop-cr-review.html")
                         tmp.writeBytes(bytes)
-                        pendingSave = tmp
-                        view.post {
-                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "text/html"
-                                putExtra(Intent.EXTRA_TITLE, "loop-cr-review.html")
+                        if (openExternal) {
+                            view.post { openReportInBrowser(tmp) }
+                        } else {
+                            pendingSave = tmp
+                            view.post {
+                                val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = "text/html"
+                                    putExtra(Intent.EXTRA_TITLE, "loop-cr-review.html")
+                                }
+                                startActivityForResult(intent, SAVE_REQUEST)
+                                val home = uri.buildUpon().encodedPath("/").encodedQuery(null)
+                                    .fragment(null).build()
+                                view.loadUrl(home.toString())
                             }
-                            startActivityForResult(intent, SAVE_REQUEST)
-                            val home = uri.buildUpon().encodedPath("/").encodedQuery(null)
-                                .fragment(null).build()
-                            view.loadUrl(home.toString())
                         }
                         WebResourceResponse(
                             "text/html", "utf-8",
@@ -205,6 +213,20 @@ class MainActivity : Activity() {
         }
     }
 
+
+    private fun openReportInBrowser(file: File) {
+        val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "text/html")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { startActivity(intent) }
+            .onFailure {
+                Log.e(TAG, "no browser for report", it)
+                Toast.makeText(this, "No browser", Toast.LENGTH_LONG).show()
+            }
+    }
+
     private fun copyPickToCache(uri: Uri): Uri {
         val hinted = displayName(uri)
         val tmp = File(cacheDir, "picked.bin")
@@ -261,6 +283,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        File(cacheDir, "loop-cr-review.html").delete()
         runCatching { server?.callAttr("stop") }
         if (::webView.isInitialized) {
             webView.destroy()

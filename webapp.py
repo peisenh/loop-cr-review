@@ -541,6 +541,16 @@ def result_body(job_id):
     return Response(html, mimetype="text/html")
 
 
+@app.route("/result/<job_id>/external", methods=["GET"])
+def result_external(job_id):
+    """Bare report HTML for a real browser tab (desktop GUI / optional Android)."""
+    finished = _finished_report(job_id)
+    if finished is None:
+        return jsonify(error="report not ready"), 409
+    _job, _data, html = finished
+    return Response(html, mimetype="text/html")
+
+
 @app.route("/result/<job_id>/download", methods=["GET"])
 def result_download(job_id):
     """Same file the CLI writes; no app chrome."""
