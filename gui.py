@@ -17,8 +17,12 @@ import importlib.util
 import os
 import socket
 import sys
+import tempfile
 import threading
 import time
+import urllib.request
+import webbrowser
+from pathlib import Path
 
 import waitress
 import webview
@@ -26,6 +30,34 @@ import webview
 from webapp import app
 
 WINDOW_TITLE = "loop-cr-review"
+
+class _BrowserBridge:
+    """Open the report as a file in the system browser, not as 127.0.0.1."""
+
+    def __init__(self, port):
+        self.port = port
+        self._path = None
+
+    def open_in_browser(self, job_id):
+        token = "".join(c for c in str(job_id) if c in "0123456789abcdef")
+        if len(token) != 32:
+            return
+        url = f"http://127.0.0.1:{self.port}/result/{token}/body"
+        html = urllib.request.urlopen(url, timeout=30).read()
+        if self._path:
+            Path(self._path).unlink(missing_ok=True)
+        fd, name = tempfile.mkstemp(prefix="loop-cr-review-", suffix=".html")
+        os.close(fd)
+        Path(name).write_bytes(html)
+        self._path = name
+        webbrowser.open(Path(name).as_uri())
+
+    def drop_temp(self):
+        if self._path:
+            Path(self._path).unlink(missing_ok=True)
+            self._path = None
+
+
 
 
 def _free_port():
@@ -80,8 +112,11 @@ def main():
     webview.settings['ALLOW_DOWNLOADS'] = True
     # Footer GitHub link is target=_blank; without this Qt keeps it in-window.
     webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
-    webview.create_window(WINDOW_TITLE, f"http://127.0.0.1:{port}/",
-                          width=780, height=920)
+    bridge = _BrowserBridge(port)
+    window = webview.create_window(
+        WINDOW_TITLE, f"http://127.0.0.1:{port}/",
+        width=780, height=920, js_api=bridge)
+    window.events.closed += bridge.drop_temp
     webview.start(gui=_gui_backend())
 
 
