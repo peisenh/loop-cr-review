@@ -12,6 +12,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ### Fixed
 - Android: the GitHub link at the bottom of the page did nothing. External
   URLs now open in the system browser; only loopback stays in the WebView.
+- Android: “download report” / Save intercepts the attachment, asks where
+  to save, then returns to the upload form. The job is deleted on that GET.
 - Desktop GUI (Linux/Windows): the GitHub footer opened inside the window
   with no way back. The link is `target=_blank` and pywebview opens it in
   the system browser.

@@ -13,11 +13,13 @@ import android.view.ViewGroup
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,6 +27,8 @@ import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * Thin shell: Chaquopy starts Flask on loopback; WebView shows the existing UI.
@@ -36,6 +40,7 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var server: PyObject? = null
+    private var pendingSave: File? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,6 +111,51 @@ class MainActivity : Activity() {
                 startActivity(Intent(Intent.ACTION_VIEW, uri))
                 return true
             }
+
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: WebResourceRequest
+            ): WebResourceResponse? {
+                if (request.method != "GET") return null
+                val uri = request.url
+                val host = uri.host ?: return null
+                if (!host.equals("127.0.0.1", true) && !host.equals("localhost", true)) {
+                    return null
+                }
+                val path = uri.path ?: return null
+                if (!Regex("^/result/[0-9a-f]{32}(/download)?$").matches(path)) return null
+                return try {
+                    val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                    conn.connect()
+                    val bytes = conn.inputStream.readBytes()
+                    val disp = conn.getHeaderField("Content-Disposition") ?: ""
+                    if (disp.contains("attachment", ignoreCase = true)) {
+                        val tmp = File(cacheDir, "loop-cr-review.html")
+                        tmp.writeBytes(bytes)
+                        pendingSave = tmp
+                        view.post {
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "text/html"
+                                putExtra(Intent.EXTRA_TITLE, "loop-cr-review.html")
+                            }
+                            startActivityForResult(intent, SAVE_REQUEST)
+                            val home = uri.buildUpon().encodedPath("/").encodedQuery(null)
+                                .fragment(null).build()
+                            view.loadUrl(home.toString())
+                        }
+                        WebResourceResponse(
+                            "text/html", "utf-8",
+                            "<html></html>".byteInputStream()
+                        )
+                    } else {
+                        WebResourceResponse("text/html", "utf-8", bytes.inputStream())
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "intercept failed", e)
+                    null
+                }
+            }
         }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
@@ -138,6 +188,20 @@ class MainActivity : Activity() {
             } else null
             fileCallback?.onReceiveValue(result)
             fileCallback = null
+        } else if (requestCode == SAVE_REQUEST) {
+            val dest = data?.data
+            val src = pendingSave
+            pendingSave = null
+            if (resultCode == Activity.RESULT_OK && dest != null && src != null && src.isFile) {
+                runCatching {
+                    contentResolver.openOutputStream(dest).use { out ->
+                        requireNotNull(out)
+                        src.inputStream().use { it.copyTo(out) }
+                    }
+                }.onFailure { Log.e(TAG, "could not write saved report", it) }
+                 .onSuccess { Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show() }
+            }
+            src?.delete()
         }
     }
 
@@ -206,5 +270,6 @@ class MainActivity : Activity() {
 
     companion object {
         private const val FILE_REQUEST = 1001
+        private const val SAVE_REQUEST = 1002
     }
 }
