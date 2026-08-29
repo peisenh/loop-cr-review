@@ -14,6 +14,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ### Changed
 - Android sideload APK is signed with a shared release keystore locally and
   on GitHub Actions (not the machine debug key). The keystore is not in git.
+- Release notes and READMEs no longer call the APK unsigned / debug-signed.
+
   Installs of 0.20.x must be uninstalled first (different signature).
   versionCode is 3. Package `de.peisenh.loopcrreview` is registered for
   distribution outside Play.

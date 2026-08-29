@@ -221,7 +221,9 @@ Everything happens locally; the data never leaves your machine.
 
 The same analysis in an APK, no server. Releases attach
 `loop-cr-review-android.apk`. Install from the file manager (allow unknown
-sources). **Not a Play Store build.**
+sources). Release-signed with a project keystore (same key locally and on
+GitHub). **Not listed on Play** (16 KB native libs). Play Protect may ask
+once. Uninstall 0.20.x first — different signature.
 
 **Works on:** devices that boot **4 KB memory pages** — Pixel 8/9/10 (16 KB
 developer option off), Lenovo Tab M11, most current phones. Built and run on

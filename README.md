@@ -225,7 +225,10 @@ Alles läuft lokal; die Daten verlassen den Rechner nicht.
 
 Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
 `loop-cr-review-android.apk`. Installation über den Dateimanager
-(unbekannte Quellen erlauben). **Kein Play-Store-Build.**
+(unbekannte Quellen erlauben). Release-signiert mit dem Projekt-Keystore
+(lokal und GitHub derselbe Schlüssel). **Nicht im Play Store** (16-KB-
+Native-Libs). Play Protect fragt einmal. 0.20.x vorher deinstallieren —
+andere Signatur.
 
 **Geht:** Geräte mit **4-KB-Speicherseiten** — Pixel 8/9/10 (16-KB-Schalter
 aus), Lenovo Tab M11, die meisten aktuellen Telefone. Lokal gebaut und auf

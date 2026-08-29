@@ -32,6 +32,8 @@ from source instead (see README).
   Fails where the kernel uses **16 KB pages** (16 KB emulator image,
   Pixel with “Boot with 16KB page size” on, future devices that default
   to 16 KB): Chaquopy’s numpy/matplotlib wheels are 4 KB-aligned.
-  Install from the file manager; unsigned / debug-signed.
+  Install from the file manager (unknown sources). Release-signed with the
+  same key as local builds; Play Protect may ask once. Not listed on Play
+  (16 KB native libs). Uninstall 0.20.x first — different signature.
 
 All variants run entirely on your machine; your data never leaves it.
