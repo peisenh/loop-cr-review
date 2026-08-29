@@ -38,3 +38,5 @@ build-version.bak
 # profiling
 profile.prof
 
+# matplotlib Android wheel rebuild scratch
+.mpl-android-build/

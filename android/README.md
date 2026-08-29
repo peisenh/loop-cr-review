@@ -19,10 +19,14 @@ Android app
 
 ## Devices
 
-Works on **4 KB page-size** devices (Pixel 8 on Android 17 and Tab M11 were
-used in testing). Does **not** run on 16 KB kernels: numpy and matplotlib
-cannot be satisfied together on Chaquopy’s current wheels. Not for Play Store
-until that exists. How that was found: [docs/android-poc.md](../docs/android-poc.md).
+Works on **4 KB and 16 KB** page-size devices. The APK ships numpy **2.3.2**
+from [Chaquopy pypi-upstream](https://chaquo.com/pypi-upstream/numpy/) plus a
+matplotlib wheel committed in [`app/wheels/`](app/wheels/) (ELF `PT_LOAD`
+align `0x4000`). Play upload is no longer blocked by native-lib alignment;
+listing on Play is a separate decision.
+
+Notices for bundled third-party code: [`app/wheels/NOTICE.md`](app/wheels/NOTICE.md).
+Background: [docs/android-poc.md](../docs/android-poc.md).
 
 ## Build
 
@@ -35,7 +39,15 @@ From the **repository root**:
 ```
 
 That is the same command GitHub Actions runs on a `v*` tag. Default ABI is
-`arm64-v8a`. Both ABIs: `ANDROID_ABI=arm64-v8a,x86_64 ./tools/build-android-apk.sh`.
+`arm64-v8a`. The committed matplotlib wheel is arm64-only. numpy is
+downloaded during the build (not in git).
+
+Rebuild matplotlib (rare):
+
+```bash
+./tools/build-matplotlib-android-wheel.sh
+# replaces android/app/wheels/matplotlib-*.whl — commit that file
+```
 
 Or Android Studio: open **this directory** (`android/`), not the repo root.
 Gradle copies the analysis before every *build* (`syncAnalysis`). A project
@@ -47,7 +59,6 @@ Gradle copies the analysis before every *build* (`syncAnalysis`). A project
 ```
 
 `app/src/main/python/` except `android_server.py` is generated and gitignored.
-
 
 ## Signing
 

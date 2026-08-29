@@ -16,7 +16,7 @@ name: Build executables
 # GUI backends:
 #   Linux  → Qt WebEngine (bundled)
 #   Windows → Qt WebEngine (full) + Edge WebView2 (slim, modern Windows)
-# Android  → separate job, sideload APK (4 KB page-size wheels, not Play)
+# Android  → separate job, sideload APK (16 KB-aligned numpy 2 + committed matplotlib)
 on:
   push:
     tags: ["v*"]

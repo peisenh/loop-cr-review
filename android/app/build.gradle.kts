@@ -99,25 +99,25 @@ tasks.named("preBuild") { dependsOn(syncAnalysis) }
 tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
     .configureEach { dependsOn(syncAnalysis) }
 
+val wheelsDir = layout.projectDirectory.dir("wheels").asFile
+val mplWheels = wheelsDir.listFiles()?.filter {
+    it.isFile && it.name.startsWith("matplotlib-") && it.name.endsWith(".whl")
+} ?: emptyList()
+require(mplWheels.size == 1) {
+    "Need exactly one matplotlib-*.whl in app/wheels/ (committed). " +
+        "Rebuild: ./tools/build-matplotlib-android-wheel.sh"
+}
+
 chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            // Deliberately unpinned, and deliberately without the upstream
-            // index. This is the combination that works.
-            //
-            // chaquo.com/pypi-upstream has numpy 2.3.2, which does load on a
-            // 16 KB page size device where 1.26.2 does not. But matplotlib then
-            // comes from Chaquopy's own index, built against numpy 1, and dies
-            // with "numpy.core.multiarray failed to import" - and there is no
-            // matplotlib built against numpy 2 anywhere to take instead.
-            //
-            // To try again once there is one, add:
-            //     options("--extra-index-url", "https://chaquo.com/pypi-upstream")
-            //     install("numpy==2.3.2")
-            // See the README for the full picture.
-            install("numpy")
-            install("matplotlib")
+            // numpy 2.3.2 from pypi-upstream (16 KB). matplotlib is the
+            // committed wheel built against that numpy — see wheels/NOTICE.md.
+            options("--extra-index-url", "https://chaquo.com/pypi-upstream")
+            options("--find-links", wheelsDir.absolutePath)
+            install("numpy==2.3.2")
+            install("./wheels/${mplWheels.single().name}")
 
             install("Flask==3.1.2")
             install("Jinja2==3.1.6")

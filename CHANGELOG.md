@@ -11,6 +11,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ### Changed
 - Print: large cards (AGP, meal curves, CR table) may break across pages; small cards stay intact.
+- Android APK uses numpy 2.3.2 (Chaquopy pypi-upstream) and a matplotlib
+  wheel built against it (ELF align 0x4000). 16 KB page-size devices are
+  no longer blocked by native-lib alignment. The matplotlib wheel is
+  committed under `android/app/wheels/`; numpy is fetched at build time.
+  Third-party notices: `android/app/wheels/NOTICE.md`.
 
 ## [0.21.0] - 2026-08-29
 

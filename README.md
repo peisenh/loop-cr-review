@@ -226,19 +226,19 @@ Alles läuft lokal; die Daten verlassen den Rechner nicht.
 Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
 `loop-cr-review-android.apk`. Installation über den Dateimanager
 (unbekannte Quellen erlauben). Release-signiert mit dem Projekt-Keystore
-(lokal und GitHub derselbe Schlüssel). **Nicht im Play Store** (16-KB-
-Native-Libs). Play Protect fragt einmal. 0.20.x vorher deinstallieren —
-andere Signatur.
+(lokal und GitHub derselbe Schlüssel). Play Protect fragt einmal.
+0.20.x vorher deinstallieren — andere Signatur.
 
-**Geht:** Geräte mit **4-KB-Speicherseiten** — Pixel 8/9/10 (16-KB-Schalter
-aus), Lenovo Tab M11, die meisten aktuellen Telefone. Lokal gebaut und auf
-Pixel 8 (Android 17) und Tab M11 geprüft.
+**Geräte:** 4-KB- und 16-KB-Speicherseiten (Native-Libs `0x4000`-align:
+numpy 2.3.2 plus committetes matplotlib-Wheel). Lokal auf Pixel 8
+(Android 17) und Tab M11 geprüft.
 
-**Geht nicht:** Kernel mit **16-KB-Seiten** (16-KB-Emulator, Pixel-Schalter
-„Boot with 16KB page size“, künftige Geräte mit 16 KB als Default). Die
-numpy/matplotlib-Wheels von Chaquopy sind 4-KB-aligniert; ein zu numpy 2
-passendes matplotlib-Wheel gibt es dafür nicht. Deshalb auch kein Play-Upload
-(`targetSdk` 35 verlangt 16-KB-fähige Native-Libs).
+**Play:** Alignment blockiert nicht mehr. Die APK hängt weiter nur am
+GitHub-Release (Sideload); ein Store-Listing ist eine eigene Entscheidung.
+
+**Lizenzen in der APK:** Projektcode AGPL-3.0; übrige Bestandteile
+(AndroidX, Chaquopy, CPython, numpy, matplotlib, Flask, …) unter ihrer
+jeweiligen Lizenz. Übersicht: `android/app/wheels/NOTICE.md`.
 
 Lokal bauen (JDK 17 + Android-SDK):
 
@@ -333,7 +333,7 @@ loop-cr-review/
 ├── requirements-gui.txt       # Desktop-App Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
 ├── tools/                     # Binaries, Screenshots, Android-APK, Validierung
-├── android/                   # Android-App (Sideload, 4-KB-Geräte)
+├── android/                   # Android-App (Sideload, 16-KB-alignierte Wheels)
 ├── poc/browser-pyodide/       # Browser-Versuch (nicht der App-Weg)
 ├── VALIDATION.md              # gemessene Belastbarkeit von Streubereich/Stabilität
 ├── sim/

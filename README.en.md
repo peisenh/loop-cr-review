@@ -222,18 +222,19 @@ Everything happens locally; the data never leaves your machine.
 The same analysis in an APK, no server. Releases attach
 `loop-cr-review-android.apk`. Install from the file manager (allow unknown
 sources). Release-signed with a project keystore (same key locally and on
-GitHub). **Not listed on Play** (16 KB native libs). Play Protect may ask
-once. Uninstall 0.20.x first — different signature.
+GitHub). Play Protect may ask once. Uninstall 0.20.x first — different
+signature.
 
-**Works on:** devices that boot **4 KB memory pages** — Pixel 8/9/10 (16 KB
-developer option off), Lenovo Tab M11, most current phones. Built and run on
+**Devices:** 4 KB and 16 KB page-size kernels (native libs aligned to
+`0x4000`: numpy 2.3.2 plus a committed matplotlib wheel). Built and run on
 a Pixel 8 (Android 17) and a Tab M11.
 
-**Does not work on:** a kernel with **16 KB pages** (16 KB emulator image,
-Pixel “Boot with 16KB page size”, future devices that default to 16 KB).
-Chaquopy’s numpy/matplotlib wheels are 4 KB-aligned; there is no matplotlib
-wheel built against numpy 2 to take instead. That is also why this APK cannot
-go to Play (`targetSdk` 35 requires 16 KB-capable native libs).
+**Play:** alignment is no longer the blocker. The APK is still only on the
+GitHub release (sideload); a store listing is a separate decision.
+
+**Licenses in the APK:** project code is AGPL-3.0; everything else
+(AndroidX, Chaquopy, CPython, numpy, matplotlib, Flask, …) keeps its own
+license. Index: `android/app/wheels/NOTICE.md`.
 
 Build locally (JDK 17 + Android SDK):
 

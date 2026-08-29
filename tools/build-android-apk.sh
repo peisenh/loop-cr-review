@@ -67,7 +67,10 @@ if [ -z "${ANDROID_KEY_ALIAS:-}" ]; then ANDROID_KEY_ALIAS=loopcr; fi
 export ANDROID_KEY_ALIAS ANDROID_KEYSTORE_PASSWORD
 export ANDROID_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}"
 
-echo "==> assembling signed release APK (sideload, 4 KB page-size wheels)"
+echo "==> fetching numpy Android wheel"
+./tools/fetch-android-wheels.sh
+
+echo "==> assembling signed release APK (16 KB-aligned wheels)"
 echo "==> keystore $ANDROID_KEYSTORE  alias $ANDROID_KEY_ALIAS"
 
 "$APP/gradlew" -p "$APP" --no-daemon \

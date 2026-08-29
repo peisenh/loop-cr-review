@@ -26,14 +26,16 @@ from source instead (see README).
 **Linux:** make it executable first — `chmod +x loop-cr-review-gui-linux`.
 
 **Android (sideload)** — `loop-cr-review-android.apk`
-  Same analysis on the phone, all on-device. **Not a Play Store build.**
-  Works on devices that boot **4 KB memory pages** (Pixel 8/9/10 with the
-  16 KB developer option *off*, Lenovo Tab M11, most current phones).
-  Fails where the kernel uses **16 KB pages** (16 KB emulator image,
-  Pixel with “Boot with 16KB page size” on, future devices that default
-  to 16 KB): Chaquopy’s numpy/matplotlib wheels are 4 KB-aligned.
-  Install from the file manager (unknown sources). Release-signed with the
-  same key as local builds; Play Protect may ask once. Not listed on Play
-  (16 KB native libs). Uninstall 0.20.x first — different signature.
+  Same analysis on the phone, all on-device. Release-signed with the same
+  key as local builds. Install from the file manager (unknown sources).
+  Play Protect may ask once. Uninstall 0.20.x first — different signature.
+
+  Native libs are 16 KB-aligned (numpy 2.3.2 + a matplotlib wheel built
+  against it). That is no longer the Play-blocker; the APK is still
+  distributed only as a GitHub asset, not via Play Store.
+
+  Third-party: numpy (BSD-3-Clause) and matplotlib (Matplotlib / PSF-based
+  license) are bundled in the APK. Project code is AGPL-3.0. Texts:
+  `android/app/wheels/NOTICE.md` in the source repo.
 
 All variants run entirely on your machine; your data never leaves it.
