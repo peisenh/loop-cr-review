@@ -541,6 +541,12 @@ def result_body(job_id):
     return Response(html, mimetype="text/html")
 
 
+@app.route("/result/<job_id>/print", methods=["GET"])
+def result_print(job_id):
+    """Same HTML as the body; Android intercepts this and opens the system printer."""
+    return result_body(job_id)
+
+
 @app.route("/result/<job_id>/external", methods=["GET"])
 def result_external(job_id):
     """Bare report HTML for a real browser tab (desktop GUI / optional Android)."""

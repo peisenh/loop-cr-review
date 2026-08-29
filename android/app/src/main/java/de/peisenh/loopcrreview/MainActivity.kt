@@ -7,6 +7,8 @@ import android.database.Cursor
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.provider.OpenableColumns
 import android.util.Log
 import android.view.ViewGroup
@@ -42,6 +44,7 @@ class MainActivity : Activity() {
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var server: PyObject? = null
     private var pendingSave: File? = null
+    private var printPreview: WebView? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,6 +110,14 @@ class MainActivity : Activity() {
                 if (host.equals("localhost", ignoreCase = true)
                     || host.equals("127.0.0.1", ignoreCase = true)
                 ) {
+                    val path = uri.path ?: return false
+                    if (path.endsWith("/print")) {
+                        val body = uri.buildUpon()
+                            .encodedPath(path.removeSuffix("/print") + "/body")
+                            .build()
+                        printReport(body.toString())
+                        return true
+                    }
                     return false
                 }
                 startActivity(Intent(Intent.ACTION_VIEW, uri))
@@ -213,6 +224,24 @@ class MainActivity : Activity() {
         }
     }
 
+
+
+    private fun printReport(url: String) {
+        val preview = WebView(this)
+        printPreview = preview
+        preview.settings.javaScriptEnabled = true
+        preview.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, loaded: String) {
+                val printer = getSystemService(PRINT_SERVICE) as PrintManager
+                printer.print(
+                    "loop-cr-review",
+                    view.createPrintDocumentAdapter("loop-cr-review"),
+                    PrintAttributes.Builder().build()
+                )
+            }
+        }
+        preview.loadUrl(url)
+    }
 
     private fun openReportInBrowser(file: File) {
         val uri = FileProvider.getUriForFile(this, "$packageName.files", file)

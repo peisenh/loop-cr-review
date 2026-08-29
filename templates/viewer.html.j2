@@ -43,10 +43,15 @@
     <a class="primary" href="{{ url_for('index', lang=lang) }}">{% trans %}New report{% endtrans %}</a>
     <a class="sec" href="{{ url_for('result_download', job_id=job_id) }}" download="loop-cr-review.html">{% trans %}Save{% endtrans %}</a>
     <a class="sec" id="open-browser" href="{{ url_for('result_external', job_id=job_id) }}" target="_blank" rel="noopener noreferrer">{% trans %}Open in browser{% endtrans %}</a>
+    <a class="sec" id="print-report" href="{{ url_for('result_print', job_id=job_id) }}">{% trans %}Print{% endtrans %}</a>
   </div>
   <iframe title="loop-cr-review" src="{{ url_for('result_body', job_id=job_id) }}"></iframe>
 <script>
   (function () {
+    var printBtn = document.getElementById("print-report");
+    if (printBtn && !/Android/i.test(navigator.userAgent)) {
+      printBtn.style.display = "none";
+    }
     var a = document.getElementById("open-browser");
     if (!a) return;
     a.addEventListener("click", function (ev) {

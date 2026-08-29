@@ -9,35 +9,31 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Android viewer bar: Print opens the system print dialog (including Save as PDF).
+
 ### Changed
 - Android project lives in `android/` (was `poc/android-chaquopy/`).
-  How the PoC ran: `docs/android-poc.md`.
-
-
-### Changed
-- Web upload: no “download instead of displaying” checkbox. The report
-  always opens in the viewer; Save keeps a file, Open in browser opens
-  the HTML in a real browser tab.
-
+  How it got there: `docs/android-poc.md`.
+- Web upload no longer has “download instead of displaying”. The report always
+  opens in the viewer; Save keeps a file, Open in browser opens the HTML
+  outside the app.
 
 ### Fixed
 - Android: the GitHub link at the bottom of the page did nothing. External
-  URLs now open in the system browser; only loopback stays in the WebView.
-- Android: “download report” / Save intercepts the attachment, asks where
-  to save, then returns to the upload form. The job is deleted on that GET.
-- Desktop GUI (Linux/Windows): the GitHub footer opened inside the window
-  with no way back. The link is `target=_blank` and pywebview opens it in
-  the system browser.
-
+  URLs open in the system browser; only loopback stays in the WebView.
+- Android: Save used Content-Disposition; the WebView dropped the file. The
+  first response is intercepted and a system Save-as dialog is used.
+- Desktop GUI: the GitHub footer and Open in browser stayed on 127.0.0.1
+  inside the window. They now open in the system browser (report as a temp file).
 
 ### Security
-- Web jobs are looked up by listing the temp directory, not by joining
-  the URL token onto a path.
-- Uploads are stored as `upload.zip` / `upload.csv`; zip members are
-  written one by one after each path component is checked. The original
-  client filename is not used on disk.
-- HTTP error text no longer includes raw exception strings or filesystem
-  paths (`/span`, date fields, failed jobs).
+- Web jobs are looked up by listing the temp directory, not by joining the
+  URL token onto a path.
+- Uploads are stored as `upload.zip` / `upload.csv`; zip members are written
+  one by one after each path component is checked. The original client
+  filename is not used on disk.
+- HTTP error text no longer includes raw exception strings or filesystem paths.
 
 ## [0.20.0] - 2026-08-28
 

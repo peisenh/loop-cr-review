@@ -1513,6 +1513,15 @@ msgstr "Neuer Report"
 msgid "Save"
 msgstr "Speichern"
 
+#: templates/viewer.html.j2:45
+msgid "Open in browser"
+msgstr "Im Browser öffnen"
+
+#: templates/viewer.html.j2:46
+msgid "Print"
+msgstr "Drucken"
+
+
 #~ msgid ""
 #~ "Targets: TIR ≥70% · TBR&lt;70 &lt;4% "
 #~ "· TBR&lt;54 &lt;1% · CV ≤36%. "
