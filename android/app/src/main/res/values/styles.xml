@@ -1,7 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
-  A plain platform theme on purpose. The activity is a WebView container and
-  does not use AppCompat, so it must not inherit from Theme.AppCompat either -
-  mixing the two throws "You need to use a Theme.AppCompat theme" on start.
+  Plain platform theme on purpose. No AppCompat: mixing Theme.AppCompat
+  with Activity() throws on start.
+
+  Theme.Material.DayNight does not exist on the platform. Night is
+  values-night/ below (Theme.Material is the dark Material theme).
+  WebView reads isLightTheme from whichever style is loaded.
 -->
 <resources>
     <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">

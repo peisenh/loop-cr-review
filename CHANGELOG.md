@@ -16,6 +16,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   no longer blocked by native-lib alignment. The matplotlib wheel is
   committed under `android/app/wheels/`; numpy is fetched at build time.
   Third-party notices: `android/app/wheels/NOTICE.md`.
+- Android WebView follows the system dark/light theme so the report's
+  existing `prefers-color-scheme` styles apply (was pinned to Light).
 
 ## [0.21.0] - 2026-08-29
 
