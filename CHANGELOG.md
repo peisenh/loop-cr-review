@@ -9,6 +9,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Print: large cards (AGP, meal curves, CR table) may break across pages; small cards stay intact.
+
 ## [0.21.0] - 2026-08-29
 
 ### Changed

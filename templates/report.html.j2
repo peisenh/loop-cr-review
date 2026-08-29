@@ -43,6 +43,10 @@
 }
 @media print {
   .card { break-inside: avoid }
+  .card-break { break-inside: auto }
+  .card-break h2 { break-after: avoid }
+  .card-break thead { display: table-header-group }
+  .disclaimer, .methodbox { break-inside: avoid }
   .chart-wrap .chart-dark { display: none !important }
   .chart-wrap .chart-light { display: block !important }
   :root {
@@ -234,15 +238,15 @@ img { width: 100%; border-radius: 8px }
     <div class="gri-zones"><b>A</b> {% trans %}very low{% endtrans %} · <b>B</b> {% trans %}low{% endtrans %} · <b>C</b> {% trans %}medium{% endtrans %} · <b>D</b> {% trans %}high{% endtrans %} · <b>E</b> {% trans %}very high{% endtrans %}</div>
   </div>
 </div>
-<div class="card"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
+<div class="card card-break"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}">{% if agp_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}">{% endif %}</div></div>
 
-<div class="card"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
+<div class="card card-break"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_img }}">{% if slot_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ slot_img_dark }}">{% endif %}</div>
   <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
   <div class="note" style="margin-top: 6px">{% if lite %}{% trans %}This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below.{% endtrans %}{% else %}{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}{% endif %}</div></div>
 
-<div class="card">
+<div class="card card-break">
   <h2>{% trans %}Baseline-normalised courses by meal type{% endtrans %}</h2>
   <div class="note" style="margin-bottom: 0">{% trans %}All values relative to each meal’s own pre-meal baseline (0 = baseline). No selection, no assessment.{% endtrans %}</div>
   <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}">{% if slot_norm_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}">{% endif %}</div>
@@ -278,7 +282,7 @@ img { width: 100%; border-radius: 8px }
 {% endif %}  {% trans %}• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing instruction.{% endtrans %}
 </div>
 
-<div class="card">
+<div class="card card-break">
   <h2>{% trans %}CR assessment per slot, and what follows from it{% endtrans %}</h2>
   {% if rest %}
   <div class="note" style="margin:0 0 10px; padding:8px 10px; border-left:3px solid var(--method-b); background:var(--method-bg)">
@@ -326,7 +330,7 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 
-<div class="card">
+<div class="card card-break">
   <h2>{% trans %}Explanations &amp; limits{% endtrans %}</h2>
   <div class="note" style="margin: 6px 0 0">
     <b>{% trans %}Time windows:{% endtrans %}</b> {{ slot_defs | join(' · ') }}</div>
@@ -391,7 +395,7 @@ img { width: 100%; border-radius: 8px }
 
 
 {% if meals %}
-<div class="card">
+<div class="card card-break">
   <h2>{% trans %}Per-meal detail{% endtrans %}</h2>
   <table>
     <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th>
