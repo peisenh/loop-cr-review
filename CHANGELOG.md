@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-08-29
+
 ### Added
 - Android viewer bar: Print opens the system print dialog (including Save as PDF).
 
@@ -998,7 +1000,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.20.1...HEAD
+[0.20.1]: https://github.com/peisenh/loop-cr-review/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/peisenh/loop-cr-review/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/peisenh/loop-cr-review/compare/v0.18.3...v0.19.0
 [0.18.3]: https://github.com/peisenh/loop-cr-review/compare/v0.18.2...v0.18.3
