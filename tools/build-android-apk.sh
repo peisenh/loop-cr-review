@@ -11,7 +11,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-APP="poc/android-chaquopy"
+APP="android"
 OUT="dist/loop-cr-review-android.apk"
 
 command -v java >/dev/null || {

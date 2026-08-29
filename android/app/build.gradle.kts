@@ -47,7 +47,7 @@ android {
 // at build time. The first version of this proof of concept carried a snapshot
 // that was already several releases behind, and nothing would ever have pulled
 // it forward - two truths, one of them silently wrong.
-val repoRoot = rootProject.projectDir.resolve("../..").canonicalFile
+val repoRoot = rootProject.projectDir.resolve("..").canonicalFile
 val pythonDir = layout.projectDirectory.dir("src/main/python")
 
 val syncAnalysis by tasks.registering(Copy::class) {
@@ -65,7 +65,7 @@ val syncAnalysis by tasks.registering(Copy::class) {
     exclude("**/__pycache__/**")
     doFirst {
         require(repoRoot.resolve("loop_cr_review.py").exists()) {
-            "repository not found at $repoRoot - this project expects to sit in poc/ inside it"
+            "repository not found at $repoRoot — expected loop_cr_review.py next to android/"
         }
     }
 }

@@ -244,7 +244,7 @@ Lokal bauen (JDK 17 + Android-SDK):
 # → dist/loop-cr-review-android.apk
 ```
 
-Projekt und Technik: `poc/android-chaquopy/`.
+Projekt: `android/`. Wie es dazu kam: `docs/android-poc.md`.
 
 Alles bleibt auf dem Gerät; die Daten gehen nicht ins Netz.
 
@@ -330,7 +330,8 @@ loop-cr-review/
 ├── requirements-gui.txt       # Desktop-App Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # Desktop-App Windows schlank (WebView2)
 ├── tools/                     # Binaries, Screenshots, Android-APK, Validierung
-├── poc/android-chaquopy/      # Android-App (Sideload, 4-KB-Geräte)
+├── android/                   # Android-App (Sideload, 4-KB-Geräte)
+├── poc/browser-pyodide/       # Browser-Versuch (nicht der App-Weg)
 ├── VALIDATION.md              # gemessene Belastbarkeit von Streubereich/Stabilität
 ├── sim/
 │   ├── SIMULATION-SPEC.md     # Spezifikation der Methodenvalidierung (Phase A/B, frozen)

@@ -10,6 +10,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Android project lives in `android/` (was `poc/android-chaquopy/`).
+  How the PoC ran: `docs/android-poc.md`.
+
+
+### Changed
 - Web upload: no “download instead of displaying” checkbox. The report
   always opens in the viewer; Save keeps a file, Open in browser opens
   the HTML in a real browser tab.

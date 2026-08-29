@@ -42,7 +42,7 @@ runs" is exactly what a browser will not do here. On a phone without a server
 there is no way to open it at all.
 
 For that goal an embedded runtime is the honest answer: an app that brings its
-own Python, which is what the Chaquopy proof of concept does on Android.
+own Python, which is what the Android app (`android/`) does.
 
 ## What it is still good for
 

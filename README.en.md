@@ -240,7 +240,7 @@ Build locally (JDK 17 + Android SDK):
 # → dist/loop-cr-review-android.apk
 ```
 
-Project and internals: `poc/android-chaquopy/`.
+Project: `android/`. How it got there: `docs/android-poc.md`.
 
 Everything stays on the device; nothing is sent off it.
 
@@ -324,7 +324,8 @@ loop-cr-review/
 ├── requirements-gui.txt       # desktop app Qt (Linux + Windows full)
 ├── requirements-gui-webview2.txt  # desktop app Windows slim (WebView2)
 ├── tools/                     # binaries, screenshots, Android APK, validation
-├── poc/android-chaquopy/      # Android app (sideload, 4 KB devices)
+├── android/                   # Android app (sideload, 4 KB devices)
+├── poc/browser-pyodide/       # Browser experiment (not the app path)
 ├── VALIDATION.md              # measured reliability of spread/stability
 ├── sim/
 │   ├── SIMULATION-SPEC.md     # method-validation spec (Phase A/B, frozen)

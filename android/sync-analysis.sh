@@ -9,11 +9,11 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-REPO="$(cd ../.. && pwd)"
+REPO="$(cd .. && pwd)"
 DEST="app/src/main/python"
 
 [ -f "$REPO/loop_cr_review.py" ] || {
-  echo "repository not found at $REPO - this project expects to sit in poc/ inside it" >&2
+  echo "repository not found at $REPO - expected loop_cr_review.py in the parent folder" >&2
   exit 1; }
 
 # android_server.py belongs to the app and stays; everything else here is a copy.
