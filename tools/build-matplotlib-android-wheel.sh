@@ -40,7 +40,7 @@ export ANDROID_HOME="$SDK"
 
 # Release tag (GitHub can fetch this). Short SHAs like 8fb842c78 are not
 # remote refs — do not use them as MATPLOTLIB_REF.
-MATPLOTLIB_REF="${MATPLOTLIB_REF:-v3.9.0}"
+MATPLOTLIB_REF="${MATPLOTLIB_REF:-v3.11.1}"
 NUMPY_PIN="${NUMPY_PIN:-2.3.2}"
 ABI="${ANDROID_ABI:-arm64-v8a}"
 case "$ABI" in
