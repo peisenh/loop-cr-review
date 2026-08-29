@@ -9,10 +9,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-08-29
+
 ### Changed
 - Android sideload APK is signed with a shared release keystore locally and
   on GitHub Actions (not the machine debug key). The keystore is not in git.
-
+  Installs of 0.20.x must be uninstalled first (different signature).
+  versionCode is 3. Package `de.peisenh.loopcrreview` is registered for
+  distribution outside Play.
 
 ## [0.20.1] - 2026-08-29
 
@@ -1005,7 +1009,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.20.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/peisenh/loop-cr-review/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/peisenh/loop-cr-review/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/peisenh/loop-cr-review/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/peisenh/loop-cr-review/compare/v0.18.3...v0.19.0
