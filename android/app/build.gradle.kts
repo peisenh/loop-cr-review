@@ -31,9 +31,29 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    val keystorePath = System.getenv("ANDROID_KEYSTORE")
+        ?: rootProject.file("release.jks").takeIf { it.isFile }?.absolutePath
+    if (!keystorePath.isNullOrBlank()) {
+        signingConfigs.create("release") {
+            storeFile = file(keystorePath)
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                ?: error("ANDROID_KEYSTORE_PASSWORD is not set")
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "loopcr"
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                ?: storePassword
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
+        }
+        getByName("release") {
+            isMinifyEnabled = false
+            isDebuggable = false
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     packaging {

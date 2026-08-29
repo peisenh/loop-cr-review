@@ -54,14 +54,28 @@ trap restore_version EXIT INT TERM
 
 echo "==> SDK $SDK"
 echo "==> version $VERSION  abi $ABI"
-echo "==> assembling debug APK (sideload, 4 KB page-size wheels)"
+KS="${ANDROID_KEYSTORE:-$PWD/$APP/release.jks}"
+if [ ! -f "$KS" ]; then
+  echo "No release keystore at $KS" >&2
+  echo "Create once: ./tools/make-android-keystore.sh" >&2
+  echo "GitHub Actions needs secrets ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD." >&2
+  exit 1
+fi
+export ANDROID_KEYSTORE="$KS"
+: "${ANDROID_KEYSTORE_PASSWORD:?set ANDROID_KEYSTORE_PASSWORD}"
+if [ -z "${ANDROID_KEY_ALIAS:-}" ]; then ANDROID_KEY_ALIAS=loopcr; fi
+export ANDROID_KEY_ALIAS ANDROID_KEYSTORE_PASSWORD
+export ANDROID_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}"
+
+echo "==> assembling signed release APK (sideload, 4 KB page-size wheels)"
+echo "==> keystore $ANDROID_KEYSTORE  alias $ANDROID_KEY_ALIAS"
 
 "$APP/gradlew" -p "$APP" --no-daemon \
-  assembleDebug \
+  assembleRelease \
   -PappVersion="$VERSION" \
   -Pabi="$ABI"
 
-APK="$APP/app/build/outputs/apk/debug/app-debug.apk"
+APK="$APP/app/build/outputs/apk/release/app-release.apk"
 [ -f "$APK" ] || {
   echo "Gradle finished but $APK is missing." >&2
   exit 1

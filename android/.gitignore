@@ -21,3 +21,8 @@ app/build/
 local.properties
 *.iml
 .kotlin/
+
+# Release signing key — never commit
+release.jks
+*.jks
+keystore.properties

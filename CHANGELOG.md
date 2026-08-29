@@ -9,6 +9,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Android sideload APK is signed with a shared release keystore locally and
+  on GitHub Actions (not the machine debug key). The keystore is not in git.
+
+
 ## [0.20.1] - 2026-08-29
 
 ### Added

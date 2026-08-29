@@ -48,6 +48,35 @@ Gradle copies the analysis before every *build* (`syncAnalysis`). A project
 
 `app/src/main/python/` except `android_server.py` is generated and gitignored.
 
+
+## Signing
+
+Local builds and GitHub Releases use the **same** keystore so the Play
+package registration (`de.peisenh.loopcrreview`) stays valid.
+
+The keystore is **not** in git. Create it once on your machine:
+
+```bash
+ANDROID_KEYSTORE_PASSWORD='choose-a-password' ./tools/make-android-keystore.sh
+# → android/release.jks
+# prints ANDROID_KEYSTORE_BASE64 and a PEM for Play Console
+```
+
+Keep `android/release.jks` and the password offline (backup). Then in the
+GitHub repo: Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|--------|--------|
+| `ANDROID_KEYSTORE_BASE64` | the one-line base64 from the script |
+| `ANDROID_KEYSTORE_PASSWORD` | same password |
+| `ANDROID_KEY_ALIAS` | `loopcr` (optional; that is the default) |
+| `ANDROID_KEY_PASSWORD` | only if the key password differs |
+
+`./tools/build-android-apk.sh` signs `assembleRelease` with that file.
+Without the keystore the script stops; a debug APK from Studio still works
+but will not match the registered key.
+
+
 ## Limits
 
 - Cold start loads Python, Flask and the first matplotlib font cache together.
