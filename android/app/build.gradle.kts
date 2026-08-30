@@ -12,7 +12,7 @@ android {
         applicationId = "de.peisenh.loopcrreview"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
+        versionCode = 4
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
             val abi = findProperty("abi") as String?

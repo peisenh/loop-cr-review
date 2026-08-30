@@ -9,20 +9,19 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-08-30
+
 ### Changed
+- Android APK uses numpy 2.3.2 (Chaquopy pypi-upstream) and matplotlib 3.11.1
+  built against it (ELF align 0x4000). 16 KB page-size devices work.
+  The matplotlib wheel is committed under `android/app/wheels/`; numpy is
+  fetched at build time. Notices: `android/app/wheels/NOTICE.md`.
+- Android WebView follows the system dark/light theme (`prefers-color-scheme`).
+- Android `compileSdk` / `targetSdk` 36. `minSdk` stays 24. versionCode is 4.
 - Android WebView only loads the Flask loopback origin (scheme+host+port);
   file/content access in the WebView is off. Slot names in the derived-CR
-  HTML note are escaped (the note is marked safe because of `<br>`).
+  HTML note are escaped.
 - Print: large cards (AGP, meal curves, CR table) may break across pages; small cards stay intact.
-- Android APK uses numpy 2.3.2 (Chaquopy pypi-upstream) and a matplotlib
-  wheel built against it (ELF align 0x4000). 16 KB page-size devices are
-  no longer blocked by native-lib alignment. The matplotlib wheel is
-  committed under `android/app/wheels/`; numpy is fetched at build time.
-  Third-party notices: `android/app/wheels/NOTICE.md`.
-- Android WebView follows the system dark/light theme so the report's
-  existing `prefers-color-scheme` styles apply (was pinned to Light).
-- Android `compileSdk` / `targetSdk` 36 (Play target API from 31 Aug 2026).
-  `minSdk` stays 24.
 
 ## [0.21.0] - 2026-08-29
 
@@ -1026,7 +1025,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/peisenh/loop-cr-review/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/peisenh/loop-cr-review/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/peisenh/loop-cr-review/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/peisenh/loop-cr-review/compare/v0.19.0...v0.20.0
