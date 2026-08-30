@@ -6,6 +6,7 @@ This is what the project is about — everything else reads data, draws
 pictures or arranges them. Kept free of rendering so a change to the report
 cannot quietly change a verdict.
 """
+import html
 import warnings
 from datetime import timedelta
 
@@ -519,7 +520,8 @@ def build_cr_note(rows, by_slot):
                      "ratio than a pure correction")
         parts.append(_("%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), "
                        "pre-meal BG ~%(bg).0f %(u)s – %(hint)s")
-                     % {"slot": _slot_state()[2][slot], "scr": scr, "dir": direction,
+                     % {"slot": html.escape(_slot_state()[2][slot], quote=True),
+                        "scr": scr, "dir": direction,
                         "m": med_cr, "bg": spre, "hint": hint, "u": glucose_unit()})
     return (_("• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
               "deviations: ") + "; ".join(parts) + _(". Clarification (programmed ratio vs. "

@@ -10,6 +10,9 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Android WebView only loads the Flask loopback origin (scheme+host+port);
+  file/content access in the WebView is off. Slot names in the derived-CR
+  HTML note are escaped (the note is marked safe because of `<br>`).
 - Print: large cards (AGP, meal curves, CR table) may break across pages; small cards stay intact.
 - Android APK uses numpy 2.3.2 (Chaquopy pypi-upstream) and a matplotlib
   wheel built against it (ELF align 0x4000). 16 KB page-size devices are

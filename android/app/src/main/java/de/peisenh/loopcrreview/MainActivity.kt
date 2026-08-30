@@ -45,6 +45,7 @@ class MainActivity : Activity() {
     private var server: PyObject? = null
     private var pendingSave: File? = null
     private var printPreview: WebView? = null
+    private var loopbackPort: Int = -1
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +59,7 @@ class MainActivity : Activity() {
             val module = Python.getInstance().getModule("android_server")
             server = module
             val port = module.callAttr("start").toInt()
+            loopbackPort = port
             setupWebView(port)
         } catch (e: Exception) {
             Log.e(TAG, "Python/Flask failed to start", e)
@@ -98,18 +100,15 @@ class MainActivity : Activity() {
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = true
-        webView.settings.allowContentAccess = true
+        webView.settings.allowFileAccess = false
+        webView.settings.allowContentAccess = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
                 view: WebView,
                 request: WebResourceRequest
             ): Boolean {
                 val uri = request.url
-                val host = uri.host ?: return true
-                if (host.equals("localhost", ignoreCase = true)
-                    || host.equals("127.0.0.1", ignoreCase = true)
-                ) {
+                if (isLoopbackOrigin(uri)) {
                     val path = uri.path ?: return false
                     if (path.endsWith("/print")) {
                         val body = uri.buildUpon()
@@ -120,7 +119,9 @@ class MainActivity : Activity() {
                     }
                     return false
                 }
-                startActivity(Intent(Intent.ACTION_VIEW, uri))
+                if (uri.scheme == "http" || uri.scheme == "https") {
+                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+                }
                 return true
             }
 
@@ -130,9 +131,9 @@ class MainActivity : Activity() {
             ): WebResourceResponse? {
                 if (request.method != "GET") return null
                 val uri = request.url
-                val host = uri.host ?: return null
-                if (!host.equals("127.0.0.1", true) && !host.equals("localhost", true)) {
-                    return null
+                if (!isLoopbackOrigin(uri)) {
+                    return WebResourceResponse("text/plain", "utf-8", 403, "Forbidden",
+                        emptyMap(), ByteArray(0).inputStream())
                 }
                 val path = uri.path ?: return null
                 if (!Regex("^/result/[0-9a-f]{32}(/download|/external)?$").matches(path)) {
@@ -226,10 +227,23 @@ class MainActivity : Activity() {
 
 
 
+    private fun isLoopbackOrigin(uri: Uri): Boolean {
+        if (uri.scheme != "http") return false
+        val host = uri.host ?: return false
+        if (!host.equals("127.0.0.1", true) && !host.equals("localhost", true)) {
+            return false
+        }
+        val port = if (uri.port == -1) 80 else uri.port
+        return port == loopbackPort
+    }
+
     private fun printReport(url: String) {
         val preview = WebView(this)
         printPreview = preview
         preview.settings.javaScriptEnabled = true
+        preview.settings.allowFileAccess = false
+        preview.settings.allowContentAccess = false
+        if (!isLoopbackOrigin(Uri.parse(url))) return
         preview.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, loaded: String) {
                 val printer = getSystemService(PRINT_SERVICE) as PrintManager
