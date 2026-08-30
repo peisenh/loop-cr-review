@@ -18,6 +18,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   Third-party notices: `android/app/wheels/NOTICE.md`.
 - Android WebView follows the system dark/light theme so the report's
   existing `prefers-color-scheme` styles apply (was pinned to Light).
+- Android `compileSdk` / `targetSdk` 36 (Play target API from 31 Aug 2026).
+  `minSdk` stays 24.
 
 ## [0.21.0] - 2026-08-29
 
