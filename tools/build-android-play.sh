@@ -2,6 +2,7 @@
 # Build the Google Play Android App Bundle (same bake as the sideload APK).
 #
 # Usage:  ./tools/build-android-play.sh
+# Keystore password: android/release.env (gitignored) or a prompt.
 #
 # Needs JDK 17, Android SDK (ANDROID_HOME or ANDROID_SDK_ROOT), and the
 # release keystore (same as ./tools/build-android-apk.sh).
@@ -54,17 +55,9 @@ trap restore_version EXIT INT TERM
 
 echo "==> SDK $SDK"
 echo "==> version $VERSION  abi $ABI  (Play AAB)"
-KS="${ANDROID_KEYSTORE:-$PWD/$APP/release.jks}"
-if [ ! -f "$KS" ]; then
-  echo "No release keystore at $KS" >&2
-  echo "Create once: ./tools/make-android-keystore.sh" >&2
-  exit 1
-fi
-export ANDROID_KEYSTORE="$KS"
-: "${ANDROID_KEYSTORE_PASSWORD:?set ANDROID_KEYSTORE_PASSWORD}"
-if [ -z "${ANDROID_KEY_ALIAS:-}" ]; then ANDROID_KEY_ALIAS=loopcr; fi
-export ANDROID_KEY_ALIAS ANDROID_KEYSTORE_PASSWORD
-export ANDROID_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}"
+# Password from CI env, android/release.env, or a silent prompt — not argv.
+# shellcheck source=android-keystore-env.sh
+source "$(dirname "$0")/android-keystore-env.sh"
 
 echo "==> fetching numpy Android wheel"
 ./tools/fetch-android-wheels.sh

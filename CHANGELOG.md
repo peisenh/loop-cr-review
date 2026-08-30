@@ -9,6 +9,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Local Android APK/AAB builds read the keystore password from
+  `android/release.env` (gitignored) or a silent prompt, not from the
+  command line.
+
 ## [0.22.0] - 2026-08-30
 
 ### Changed

@@ -40,3 +40,8 @@ profile.prof
 
 # matplotlib Android wheel rebuild scratch
 .mpl-android-build/
+
+# Android signing (local only)
+android/release.jks
+android/*.jks
+android/release.env
