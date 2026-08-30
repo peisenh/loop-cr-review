@@ -1,6 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.chaquo.python")
 }
 
@@ -28,8 +28,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
     val keystorePath = System.getenv("ANDROID_KEYSTORE")
         ?: rootProject.file("release.jks").takeIf { it.isFile }?.absolutePath
@@ -70,7 +72,7 @@ android {
 val repoRoot = rootProject.projectDir.resolve("..").canonicalFile
 val pythonDir = layout.projectDirectory.dir("src/main/python")
 
-val syncAnalysis by tasks.registering(Copy::class) {
+val syncAnalysis = tasks.register<Copy>("syncAnalysis") {
     description = "Copy the current analysis from the repository into the app"
     group = "build"
     into(pythonDir)
