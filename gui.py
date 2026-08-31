@@ -15,11 +15,13 @@ Override: LOOP_CR_GUI=qt|edgechromium
 """
 import importlib.util
 import os
+import secrets
 import socket
 import sys
 import tempfile
 import threading
 import time
+import urllib.parse
 import urllib.request
 import webbrowser
 from pathlib import Path
@@ -27,6 +29,7 @@ from pathlib import Path
 import waitress
 import webview
 
+import webapp
 from webapp import app
 
 WINDOW_TITLE = "loop-cr-review"
@@ -39,11 +42,19 @@ class _BrowserBridge:
         self._path = None
 
     def open_in_browser(self, job_id):
+        """Fetch the report and hand the system browser a file, not a URL.
+
+        The browser is a different process and would ask the server for itself;
+        pointing it at 127.0.0.1 opened the app's own loopback port in it. A file
+        also survives the job being cleaned up.
+        """
         token = "".join(c for c in str(job_id) if c in "0123456789abcdef")
         if len(token) != 32:
             return
-        url = f"http://127.0.0.1:{self.port}/result/{token}/body"
-        html = urllib.request.urlopen(url, timeout=30).read()
+        url = (f"http://127.0.0.1:{self.port}/result/{token}/body"
+               f"?k={urllib.parse.quote(webapp.access_token() or '')}")
+        with urllib.request.urlopen(url, timeout=30) as response:
+            html = response.read()
         if self._path:
             Path(self._path).unlink(missing_ok=True)
         fd, name = tempfile.mkstemp(prefix="loop-cr-review-", suffix=".html")
@@ -53,6 +64,7 @@ class _BrowserBridge:
         webbrowser.open(Path(name).as_uri())
 
     def drop_temp(self):
+        """Remove the file handed to the browser, if there is one."""
         if self._path:
             Path(self._path).unlink(missing_ok=True)
             self._path = None
@@ -113,8 +125,12 @@ def main():
     # Footer GitHub link is target=_blank; without this Qt keeps it in-window.
     webview.settings['OPEN_EXTERNAL_LINKS_IN_BROWSER'] = True
     bridge = _BrowserBridge(port)
+    # Same reasoning as on Android: a loopback port is open to every other local
+    # process. The window presents the secret once and gets a cookie back.
+    token = secrets.token_urlsafe(24)
+    webapp.set_access_token(token)
     window = webview.create_window(
-        WINDOW_TITLE, f"http://127.0.0.1:{port}/",
+        WINDOW_TITLE, f"http://127.0.0.1:{port}/?k={urllib.parse.quote(token)}",
         width=780, height=920, js_api=bridge)
     window.events.closed += bridge.drop_temp
     webview.start(gui=_gui_backend())

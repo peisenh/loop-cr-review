@@ -591,3 +591,53 @@ class TestNightscoutTwoFiles(WebTestCase):
             "export": (io.BytesIO(b"[]"), "entries.json"),
         }, content_type="multipart/form-data")
         self.assertEqual(res.status_code, 400)
+
+
+class TestAccessToken(unittest.TestCase):
+    """Loopback is not private.
+
+    On Android any app holding INTERNET can reach another app's 127.0.0.1 port,
+    and on a desktop so can any other local process. Job ids are unguessable, so
+    a stranger cannot read a report — but without a token they can reach the form
+    and spend the machine's time and disk.
+    """
+
+    def setUp(self):
+        self.client = webapp.app.test_client()
+        self.addCleanup(webapp.set_access_token, None)
+
+    def test_no_token_configured_lets_everything_through(self):
+        webapp.set_access_token(None)
+        self.assertEqual(self.client.get("/").status_code, 200)
+
+    def test_a_request_without_the_token_is_refused(self):
+        webapp.set_access_token("s3cret")
+        self.assertEqual(self.client.get("/").status_code, 403)
+
+    def test_a_wrong_token_is_refused(self):
+        webapp.set_access_token("s3cret")
+        self.assertEqual(self.client.get("/?k=nope").status_code, 403)
+
+    def test_the_token_earns_a_cookie_and_then_plain_requests_work(self):
+        webapp.set_access_token("s3cret")
+        first = self.client.get("/?k=s3cret")
+        self.assertEqual(first.status_code, 200)
+        self.assertIn("lcr_access", first.headers.get("Set-Cookie", ""))
+        self.assertEqual(self.client.get("/").status_code, 200)
+
+    def test_a_client_without_cookies_can_use_the_token_every_time(self):
+        """The app fetches the report with its own HTTP client to save it.
+
+        Answering the token with a redirect to the bare path stripped it again,
+        so Save and Open in browser came back 403.
+        """
+        webapp.set_access_token("s3cret")
+        for _ in range(2):
+            fresh = webapp.app.test_client()          # no cookie jar carried over
+            self.assertEqual(fresh.get("/?k=s3cret").status_code, 200)
+
+    def test_every_route_is_behind_the_check(self):
+        webapp.set_access_token("s3cret")
+        for path in ("/", "/span", "/analyze", "/result/" + "a" * 32):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 403)

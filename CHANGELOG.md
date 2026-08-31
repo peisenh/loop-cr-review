@@ -9,6 +9,21 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Security
+- The local server now requires a secret. A loopback port is not private: on
+  Android any app holding the INTERNET permission can reach another app's
+  127.0.0.1, and on a desktop so can any other local process. Job ids are
+  unguessable, so a report could not be read by a stranger, but the form and
+  the analysis endpoints were open to anyone on the machine. The Android app
+  and the desktop window generate a token at start-up. The WebView presents it in
+  the first URL and gets a cookie back; requests the app makes with its own HTTP
+  client — saving a report, opening it in a browser — carry it in the URL each
+  time. Docker is unaffected: no token set, no check.
+- Android: the FileProvider exposed the whole cache directory. It is limited to
+  the folder the shared report is written to.
+- Android: the picked export stayed in the cache after the app was closed. Both
+  it and the shared report are removed in `onDestroy`.
+
 ### Added
 - Web upload accepts Nightscout `entries.json` and `treatments.json` together,
   without a ZIP. Glooko ZIP and LibreView/Clarity CSV stay as they were.

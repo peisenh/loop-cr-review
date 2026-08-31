@@ -12,6 +12,7 @@ import os
 import re
 import tempfile
 import stat
+import secrets
 import shutil
 import threading
 import time
@@ -19,7 +20,8 @@ import uuid
 import zipfile
 from pathlib import Path
 
-from flask import Flask, request, render_template, abort, Response, jsonify
+from flask import (Flask, Response, abort, g, jsonify, render_template,
+                   request)
 from jinja2 import select_autoescape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -71,6 +73,54 @@ def _prepare_job_root():
 _prepare_job_root()
 
 app = Flask(__name__)
+
+
+# Optional shared secret. Loopback is not private: on Android any app holding the
+# INTERNET permission can reach another app's 127.0.0.1 port, and on a desktop so
+# can any other local process. Job ids are unguessable, so a stranger cannot read
+# a report - but without this they can reach the form and spend the machine's time
+# and disk. Off by default (Docker behind its own boundary); the app and the
+# desktop window set it at start-up.
+_ACCESS_TOKEN = None
+_TOKEN_COOKIE = "lcr_access"
+
+
+def set_access_token(token):
+    """Require *token* on every request from now on. None disables the check."""
+    global _ACCESS_TOKEN            # pylint: disable=global-statement
+    _ACCESS_TOKEN = str(token) if token else None
+
+
+def access_token():
+    """The secret currently required, or None."""
+    return _ACCESS_TOKEN
+
+
+@app.before_request
+def _require_token():
+    """Let a request through only with the token, as a query value or cookie."""
+    if _ACCESS_TOKEN is None:
+        return None
+    if secrets.compare_digest(request.cookies.get(_TOKEN_COOKIE, ""), _ACCESS_TOKEN):
+        return None
+    if secrets.compare_digest(request.args.get("k", ""), _ACCESS_TOKEN):
+        # Serve it, and remember to hand back a cookie. Redirecting to the bare
+        # path would have stripped the token again for anything that does not
+        # keep cookies - the app fetches the report with its own HTTP client to
+        # save it or open it in a browser, and that got a 403.
+        g.grant_token_cookie = True
+        return None
+    abort(403)
+    return None
+
+
+@app.after_request
+def _hand_out_token_cookie(response):
+    """Set the cookie once a valid token arrived in the query."""
+    if getattr(g, "grant_token_cookie", False) and _ACCESS_TOKEN:
+        response.set_cookie(_TOKEN_COOKIE, _ACCESS_TOKEN, httponly=True,
+                            samesite="Strict", path="/")
+    return response
 app.jinja_env.add_extension("jinja2.ext.i18n")
 app.jinja_env.autoescape = select_autoescape(["html", "htm", "xml", "j2"])
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES

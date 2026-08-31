@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Only the one directory the report is written to. Sharing the whole cache
+  ("path=.") would have put the WebView's own caches and the picked export file
+  within reach of a granted URI as well.
+-->
 <paths>
-    <cache-path name="reports" path="." />
+    <cache-path name="reports" path="reports/" />
 </paths>

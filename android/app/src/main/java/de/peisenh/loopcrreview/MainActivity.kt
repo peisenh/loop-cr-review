@@ -43,6 +43,7 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var server: PyObject? = null
+    private var accessToken: String = ""
     private var pendingSave: File? = null
     private var printPreview: WebView? = null
     private var loopbackPort: Int = -1
@@ -140,13 +141,16 @@ class MainActivity : Activity() {
                     return null
                 }
                 return try {
-                    val conn = URL(uri.toString()).openConnection() as HttpURLConnection
+                    // This is the app's own HTTP client, not the WebView: it has
+                    // no cookie, so the token has to travel in the URL.
+                    val authed = uri.buildUpon().appendQueryParameter("k", accessToken).build()
+                    val conn = URL(authed.toString()).openConnection() as HttpURLConnection
                     conn.connect()
                     val bytes = conn.inputStream.readBytes()
                     val disp = conn.getHeaderField("Content-Disposition") ?: ""
                     val openExternal = path.endsWith("/external")
                     if (openExternal || disp.contains("attachment", ignoreCase = true)) {
-                        val tmp = File(cacheDir, "loop-cr-review.html")
+                        val tmp = File(File(cacheDir, "reports").apply { mkdirs() }, "loop-cr-review.html")
                         tmp.writeBytes(bytes)
                         if (openExternal) {
                             view.post { openReportInBrowser(tmp) }
@@ -195,7 +199,10 @@ class MainActivity : Activity() {
                 return true
             }
         }
-        webView.loadUrl("http://127.0.0.1:$port/")
+        // The server only answers with this secret; it hands back a cookie on the
+        // first request, so the pages loaded afterwards need nothing extra.
+        accessToken = server?.callAttr("access_token")?.toString().orEmpty()
+        webView.loadUrl("http://127.0.0.1:$port/?k=" + Uri.encode(accessToken))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -344,7 +351,14 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
-        File(cacheDir, "loop-cr-review.html").delete()
+        // The report handed to the browser and the export the user picked are
+        // both the user's data; neither has any reason to outlive the app.
+        File(File(cacheDir, "reports"), "loop-cr-review.html").delete()
+        cacheDir.listFiles()?.forEach { file ->
+            if (file.isFile && file.name != "loop-cr-review.html") {
+                file.delete()
+            }
+        }
         runCatching { server?.callAttr("stop") }
         if (::webView.isInitialized) {
             webView.destroy()
