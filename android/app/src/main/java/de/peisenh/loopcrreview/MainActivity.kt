@@ -188,6 +188,7 @@ class MainActivity : Activity() {
                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivityForResult(Intent.createChooser(intent, null), FILE_REQUEST)
@@ -200,12 +201,29 @@ class MainActivity : Activity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FILE_REQUEST) {
-            val picked = data?.data
-            val result = if (resultCode == Activity.RESULT_OK && picked != null) {
-                runCatching { arrayOf(copyPickToCache(picked)) }
-                    .onFailure { Log.e(TAG, "could not copy picked file", it) }
+            val result = if (resultCode == Activity.RESULT_OK && data != null) {
+                runCatching {
+                    val uris = mutableListOf<Uri>()
+
+                    // Android returns multiple selections in ClipData.
+                    data.clipData?.let { clipData ->
+                        for (i in 0 until clipData.itemCount) {
+                            uris += clipData.getItemAt(i).uri
+                        }
+                    }
+
+                    // Some pickers return a single file in data.data instead.
+                    if (uris.isEmpty()) {
+                        data.data?.let { uris += it }
+                    }
+
+                    require(uris.isNotEmpty()) { "no file selected" }
+                    uris.map { copyPickToCache(it) }.toTypedArray()
+                }
+                    .onFailure { Log.e(TAG, "could not copy picked files", it) }
                     .getOrNull()
             } else null
+
             fileCallback?.onReceiveValue(result)
             fileCallback = null
         } else if (requestCode == SAVE_REQUEST) {
