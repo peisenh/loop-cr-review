@@ -1,4 +1,4 @@
 # Web front-end (homelab) — install in addition to requirements.txt:
 #   pip install -r requirements.txt -r requirements-web.txt
 Flask>=3.1.3,<4.0
-gunicorn>=26.1.0
+gunicorn>=26.2.0
