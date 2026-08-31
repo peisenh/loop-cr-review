@@ -257,9 +257,11 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
     # alone. Only when neither is there do the remaining readers open files to look
     # at their headers — so pointing at a real Glooko export reads nothing else.
     ns = None
-    if is_nightscout(base):
+    if is_glooko(base):
+        pass
+    elif is_nightscout(base):
         ns = read_nightscout(base)
-    elif not is_glooko(base):
+    else:
         # Neither of the two name-based sources: only now is it worth opening
         # files to look at their headers.
         if is_libreview(base):

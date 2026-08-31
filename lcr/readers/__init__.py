@@ -102,7 +102,10 @@ def peek_span(base):
     Does not keep anything; caller owns the folder. Meals/basal are not required.
     """
     base = Path(base)
-    if is_nightscout(base):
+    if is_glooko(base):
+        times, _gluc, _n, _s = read_cgm(base)
+        source = "glooko"
+    elif is_nightscout(base):
         data = read_nightscout(base)
         times, source = data["times"], "nightscout"
     elif is_libreview(base):

@@ -19,7 +19,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   with the metrics that always run; loop CR stays CamAPS-only.
 - Local Android APK/AAB builds read the keystore password from
   `android/release.env` (gitignored) or a silent prompt, not from the
-  command line.
+   command line.
+- Changed detection of glooko/nightscout/libreview data
+
+### Fixed
+
+- Fixed messages.po
 
 ## [0.22.0] - 2026-08-30
 
