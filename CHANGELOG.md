@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- README (de/en): lead with full vs lite instead of “CamAPS only”. GRI is listed
+  with the metrics that always run; loop CR stays CamAPS-only.
 - Local Android APK/AAB builds read the keystore password from
   `android/release.env` (gitignored) or a silent prompt, not from the
   command line.

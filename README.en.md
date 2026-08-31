@@ -7,11 +7,14 @@
 
 [🇩🇪 Deutsch](README.md) · **🇬🇧 English**
 
-**Loop-aware Carb-Ratio Review** — carb-ratio assessment from real CamAPS FX data.
+**Loop-aware Carb-Ratio Review** — HTML report from CGM and, when present, pump data.
 
-**CamAPS FX (Auto Mode) only.** Other AID systems are not supported — see “Supported systems”.
+Two tiers, chosen from the export:
 
-Analyses a CamAPS/Glooko export and produces a self-contained HTML report with an Ambulatory Glucose Profile (AGP), consensus metrics, and a **loop-aware assessment of carbohydrate ratios (CR)** per time-of-day slot.
+- **Full (CamAPS FX Auto Mode** via Glooko, or Nightscout with `--assume-camaps` when that dump really is CamAPS): AGP, consensus metrics, GRI **and** a loop-aware CR assessment per time-of-day slot.
+- **Lite** (LibreView, Dexcom Clarity, Nightscout without that flag): the same glucose analysis — **without** loop extra basal, `CR_eff`, or fasting basal. Other AID systems (Control-IQ, Omnipod 5, …) belong here, not in the loop verdict.
+
+Details: “Supported systems”.
 
 ![Example report from loop-cr-review](docs/screenshot.png)
 
@@ -33,11 +36,19 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 
 ## What it does
 
+Always (full and lite):
+
 - **AGP** (percentiles 5/25/50/75/95 over 24 h) and **median postprandial curves** per slot.
 - **Consensus metrics** (Battelino 2019): mean glucose, GMI, CV, TIR/TITR/TBR/TAR, sensor wear.
+- **Glycemia Risk Index (GRI)** (Klonoff et al.).
+- Meal windows and curve shape (peak, return) — not a proof of the CR.
+
+Additionally only in **full** mode (CamAPS with a basal trace):
+
 - **Loop-aware CR assessment** per slot (breakfast / lunch / dinner) with a data-driven verdict (too weak / too strong / adequate) and a per-meal detail table.
-- **Derivations from the curve shape**: per slot, curve metrics (peak height/time, nadir, late rise) and, derived from them, candidate levers (bolus-meal interval, dose, fat/protein, hypo caution) — as hypotheses for the care team, plus a clarification of `CR_eff` as an approach rather than a target value.
-- Everything patient-related (name, device, period, interpretation) is drawn **from the data**; nothing is hard-coded.
+- **Derivations from the curve shape** as hypotheses for the care team, plus a clarification of `CR_eff` as an approach rather than a target value.
+
+Everything patient-related (name, device, period) is drawn **from the data**; nothing is hard-coded.
 
 ## Context: CamAPS FX & Glooko
 
@@ -49,9 +60,9 @@ Analyses a CamAPS/Glooko export and produces a self-contained HTML report with a
 
 The same CamAPS stream can also sit in **Nightscout** (`entries` / `treatments`). That dump is recognised and stays in **lite** mode by default: the assessment rests on the glucose course alone and the loop figures stay empty. They are added only with `--assume-camaps` or the upload checkbox.
 
-## ⚠️ Supported systems — CamAPS FX only
+## Supported systems — full vs lite
 
-> **This tool is developed and tested exclusively for CamAPS FX (Auto Mode).**
+> The **loop-CR method** is built and tested for **CamAPS FX (Auto Mode)**. Other formats are read, but they do **not** get a loop assessment.
 
 The core method relies on CamAPS delivering auto-corrections as **modulated basal**. Extra basal in the meal window is additional Auto Mode activity; it *may* fit a too-weak/too-strong CR, but on real CamAPS it is not specific to that. Other systems work differently:
 
