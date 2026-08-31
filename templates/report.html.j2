@@ -303,7 +303,7 @@ img { width: 100%; border-radius: 8px }
         {% if not lite %}<td>{{ s.exc }} U</td><td>{{ s.cre }}</td>{% endif %}<td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
-  <div class="note" style="margin-top: 6px"><span class="tag ts">{% trans %}too strong → loosen{% endtrans %}</span><span class="tag tw">{% trans %}too weak → tighten{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br></div>
+  <div class="note" style="margin-top: 6px"><span class="tag ts">{% trans %}coverage looks too strong{% endtrans %}</span><span class="tag tw">{% trans %}coverage looks too weak{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br></div>
   <div class="note">{% if selection %}
     <b>{% trans %}Selection used for the verdict:{% endtrans %}</b>
     {% for s in selection %}{{ s.label }} {{ s.used }}/{{ s.total }} ({{ s.shift }} {{ unit }}){% if not loop.last %} · {% endif %}{% endfor %}.

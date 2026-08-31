@@ -32,6 +32,17 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   (`tools/export-example-sources.py`). No real patient data.
 
 ### Changed
+- The verdicts and the derived hints no longer read as instructions. "too weak →
+  tighten" becomes "coverage looks too weak"; the hint that named a CR_eff value
+  as a "rough direction" now states what CR_eff came out at, which is what the
+  report says elsewhere it is — an approach, not a target. Same for the rest:
+  reduce the dose, secure the hypo window, leave as is. The direction is still
+  there, the imperative is not.
+- The upload page no longer presents the tool as CamAPS-only. It leads with full
+  versus glucose-only assessment, the way the README does. A LibreView user used
+  to read "tested only for CamAPS FX" and conclude the tool was useless to them,
+  although they get a complete assessment.
+
 - README (de/en): lead with full vs lite instead of “CamAPS only”. GRI is listed
   with the metrics that always run; loop CR stays CamAPS-only.
 - Local Android APK/AAB builds read the keystore password from

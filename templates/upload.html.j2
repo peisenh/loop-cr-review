@@ -74,8 +74,8 @@
     <source media="(prefers-color-scheme: dark)" srcset="{{ url_for('static', filename='logo-readme-dark.svg') }}">
     <img class="brand" src="{{ url_for('static', filename='logo-horizontal.svg') }}" alt="loop-cr-review">
   </picture>
-  <h1>{% trans %}Loop-aware Carb-Ratio Review · CR assessment from CamAPS FX data{% endtrans %}</h1>
-  <p class="hint" style="margin:0 0 14px">{% trans %}Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). Other closed-loop systems: see README.{% endtrans %}</p>
+  <h1>{% trans %}Loop-aware Carb-Ratio Review · CR assessment from CGM and pump exports{% endtrans %}</h1>
+  <p class="hint" style="margin:0 0 14px">{% trans %}<b>Full assessment</b> for CamAPS FX Auto Mode (Glooko export), where the loop's own share can be read from the modulated basal. Every other export — LibreView, Dexcom Clarity, Nightscout — is assessed <b>from the glucose course alone</b>: same verdicts, without the loop figures. Details in the README.{% endtrans %}</p>
 
   <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
     <label class="first" for="export">{% trans %}Export (ZIP, CSV or Nightscout JSON){% endtrans %}</label>
@@ -110,7 +110,7 @@
         <div class="hint" id="span-hint">{% trans %}Choose a file to see the full range. Nothing is stored on the server.{% endtrans %}</div>
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Force CamAPS assessment (Part 2) for Nightscout / other sources{% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
     <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark-theme charts (AGP, slots, daily){% endtrans %}</label>
 
@@ -157,10 +157,11 @@
       Statistical analysis of existing CGM/pump data as a basis for discussions
       with the care team — no diagnosis, no treatment decision.{% endtrans %}
       <br><br>
-      {% trans %}<b>CamAPS FX (Auto Mode) only.</b>
-      The method relies on modulated basal as the loop signal. Other AID systems
-      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) are not supported;
-      results would not be valid there.{% endtrans %}
+      {% trans %}<b>The loop figures need CamAPS FX (Auto Mode).</b>
+      They are read from modulated basal. Other AID systems
+      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) give their corrections as
+      boluses, so those figures do not apply there — the assessment from the
+      glucose course does.{% endtrans %}
       <br><br>
       {% trans %}<b>Homelab / private.</b>
       While the analysis runs, the upload and the finished report sit in a private

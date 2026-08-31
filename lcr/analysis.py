@@ -312,8 +312,8 @@ def aggregate_slot(slot_rows):
     exc, bol, d4 = med("exc"), med("bolus"), med("d4")
     rescues = sum(1 for r in slot_rows if r.get("hypo_rescue"))
     cls = verdict_class(exc, bol, d4)
-    flag = {"weak": _("too weak → tighten"),
-            "strong": _("too strong → loosen"),
+    flag = {"weak": _("coverage looks too weak"),
+            "strong": _("coverage looks too strong"),
             "ok": _("plausibly adequate")}[cls]
     # A hypo rescue means an individual meal went low enough to need treatment.
     # How that reflects on the slot depends on the verdict and on how many meals
@@ -373,11 +373,11 @@ def _weak_levers(agg, window):
                    "(contradictory signal) → possibly an outlier/small sample size "
                    "rather than a CR problem; check individual meals before tightening"))]
     out = [(_("Dose"), "cr",
-            _("underdosed → tighten CR, rough direction CR_eff %(cre)s") % {"cre": fmt_cr(agg["cre"])}
+            _("underdosed; CR_eff came out at %(cre)s here") % {"cre": fmt_cr(agg["cre"])}
             if not np.isnan(agg["cre"])
             # Without a basal trace there is no CR_eff to point at; the direction
             # is all that is left, and naming an em dash would only puzzle.
-            else _("underdosed → tighten CR; decide the size with the care team"))]
+            else _("underdosed; a topic for the care team"))]
     if agg["d4"] < 0:
         # The verdict comes solely from the loop activity; but the BG has even
         # fallen at the end of the window (the loop caught it). To the reader,
@@ -395,7 +395,7 @@ def _hypo_caution(agg, met, curve_hypo):
     nadir (curve_hypo) or on a documented rescue. When only a rescue is present
     (the median curve itself doesn't dip low), the text refers to the treated
     low rather than the median nadir value, which would understate it.
-      - no rescue (curve hypo only) -> preventive "secure the hypo window first"
+      - no rescue (curve hypo only) -> preventive "the hypo risk shapes this window"
       - rescue + too strong / systematic -> a treated hypo, reduce the dose here
       - rescue + otherwise (weak / isolated-in-ok) -> a treated hypo on one meal,
         check that meal rather than tightening the whole slot.
@@ -403,12 +403,13 @@ def _hypo_caution(agg, met, curve_hypo):
     base = {"n": met["nadir"], "t": met["nadir_t"], "u": glucose_unit()}
     if not agg.get("rescues"):
         return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min "
-                                       "→ secure the hypo window first") % base)
+                                       "— the hypo risk shapes this window") % base)
     reduce_dose = agg["cls"] == "strong" or agg.get("systematic")
     if curve_hypo:
         if reduce_dose:
             return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo "
-                                           "occurred and was treated; reduce the dose here") % base)
+                                           "occurred and was treated; the dose in "
+                                           "this window is worth discussing") % base)
         return (_("Caution"), "obs", _("nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred "
                                        "and was treated on one meal; check that meal, do not tighten "
                                        "the whole slot") % base)
@@ -424,17 +425,19 @@ def slot_levers(agg, met, window):
     """Candidate levers (tag, CSS class, text) from verdict + curve shape."""
     levers = []
     if met["peak_t"] <= PEAK_EARLY and met["peak"] - met["start"] >= g(PEAK_RISE_HIGH):
-        levers.append((_("Pre-bolus"), "sea", _("early high peak → try a longer bolus-meal interval "
-                                                  "(caps the spike without more dose)")))
+        levers.append((_("Pre-bolus"), "sea", _("early high peak — a longer bolus-meal interval is one possible "
+                                                  "explanation (it caps the spike without more dose)")))
     if agg["cls"] == "weak":
         levers.extend(_weak_levers(agg, window))
     elif agg["cls"] == "strong":
-        levers.append((_("Dose"), "cr", _("overdosed/drop → rather reduce the dose of this meal; "
+        levers.append((_("Dose"), "cr", _("overdosed/drop — the dose of this meal is the nearest candidate; "
                                            "consider pre-bolus and dose together")))
     late_rise = met["peak_t"] >= window * 0.66 and met["end"] - met["start"] > 20
     if late_rise and agg["cls"] != "ok":
-        levers.append((_("Fat/protein"), "fp", _("monotonic late rise (no turning point) → check fat/protein; "
-                                                   "possibly delayed/dual bolus instead of only tightening")))
+        levers.append((_("Fat/protein"), "fp", _("monotonic late rise (no turning "
+                                                 "point) — fat/protein comes into "
+                                                 "question; "
+                                                   "a split or extended bolus is as much in question as the ratio")))
     elif late_rise:
         levers.append((_("Observe"), "obs", _("slight late re-rise → possibly fat/protein or "
                                                 "basal rate in this window; just keep an eye on it")))
@@ -459,10 +462,10 @@ def _reference_lever(agg, levers):
         return (_("Reference"), "obs", _("CR on average fits, but a meal went low "
                                          "(hypo rescue) — check that one, do not tighten"))
     if any(c == "sea" for _, c, _ in levers):
-        return (_("Reference"), "obs", _("dose fits — leave as is; for timing see the "
+        return (_("Reference"), "obs", _("the dose fits; for timing see the "
                                          "pre-bolus note above"))
-    return (_("Reference"), "obs", _("dose & timing fit — leave as is; "
-                                     "serves as a comparison for the other slots"))
+    return (_("Reference"), "obs", _("dose and timing fit; this slot "
+                                     "serves as a comparison for the others"))
 
 
 def slot_headline(agg, met):
