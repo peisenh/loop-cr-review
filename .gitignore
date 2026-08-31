@@ -45,3 +45,4 @@ profile.prof
 android/release.jks
 android/*.jks
 android/release.env
+/android/gradle/gradle-daemon-jvm.properties
