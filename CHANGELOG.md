@@ -9,6 +9,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Synthetic Lite dumps for Nightscout, LibreView and Dexcom Clarity under
+  `example-data/`, rebuilt from the Glooko Alex-Beispiel export
+  (`tools/export-example-sources.py`). No real patient data.
+
 ### Changed
 - README (de/en): lead with full vs lite instead of “CamAPS only”. GRI is listed
   with the metrics that always run; loop CR stays CamAPS-only.

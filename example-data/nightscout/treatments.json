@@ -1,0 +1,324 @@
+[
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-01T05:22:00.000Z",
+    "carbs": 36.0,
+    "insulin": 2.73,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-01T10:48:00.000Z",
+    "carbs": 53.0,
+    "insulin": 8.71,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-01T16:49:00.000Z",
+    "carbs": 56.0,
+    "insulin": 5.19,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-02T05:36:00.000Z",
+    "carbs": 57.0,
+    "insulin": 4.02,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-02T10:53:00.000Z",
+    "carbs": 89.0,
+    "insulin": 15.14,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-02T16:57:00.000Z",
+    "carbs": 47.0,
+    "insulin": 4.56,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-03T05:10:00.000Z",
+    "carbs": 40.0,
+    "insulin": 3.17,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-03T10:15:00.000Z",
+    "carbs": 76.0,
+    "insulin": 12.99,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-03T17:03:00.000Z",
+    "carbs": 65.0,
+    "insulin": 6.22,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-04T06:08:00.000Z",
+    "carbs": 43.0,
+    "insulin": 2.85,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-04T09:55:00.000Z",
+    "carbs": 91.0,
+    "insulin": 16.14,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-04T16:41:00.000Z",
+    "carbs": 48.0,
+    "insulin": 4.25,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-05T05:33:00.000Z",
+    "carbs": 55.0,
+    "insulin": 3.6,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-05T10:26:00.000Z",
+    "carbs": 84.0,
+    "insulin": 14.57,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-05T17:15:00.000Z",
+    "carbs": 63.0,
+    "insulin": 6.1,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-05T18:30:00.000Z",
+    "carbs": 13.0,
+    "insulin": 1.4,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-06T05:07:00.000Z",
+    "carbs": 42.0,
+    "insulin": 2.81,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-06T10:11:00.000Z",
+    "carbs": 104.0,
+    "insulin": 17.84,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-06T17:18:00.000Z",
+    "carbs": 36.0,
+    "insulin": 3.3,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-07T05:29:00.000Z",
+    "carbs": 57.0,
+    "insulin": 4.24,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-07T10:09:00.000Z",
+    "carbs": 75.0,
+    "insulin": 13.26,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-07T14:58:00.000Z",
+    "carbs": 6.0,
+    "insulin": 1.4,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-07T16:38:00.000Z",
+    "carbs": 42.0,
+    "insulin": 3.56,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-08T05:04:00.000Z",
+    "carbs": 50.0,
+    "insulin": 3.69,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-08T10:10:00.000Z",
+    "carbs": 89.0,
+    "insulin": 15.2,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-08T16:32:00.000Z",
+    "carbs": 55.0,
+    "insulin": 4.74,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-09T05:03:00.000Z",
+    "carbs": 48.0,
+    "insulin": 3.54,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-09T10:33:00.000Z",
+    "carbs": 92.0,
+    "insulin": 15.87,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-09T13:49:00.000Z",
+    "carbs": 19.0,
+    "insulin": 1.7,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-09T16:30:00.000Z",
+    "carbs": 59.0,
+    "insulin": 4.99,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-10T04:52:00.000Z",
+    "carbs": 43.0,
+    "insulin": 3.49,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-10T10:09:00.000Z",
+    "carbs": 93.0,
+    "insulin": 15.82,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-10T16:37:00.000Z",
+    "carbs": 47.0,
+    "insulin": 4.3,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-11T04:31:00.000Z",
+    "carbs": 53.0,
+    "insulin": 3.87,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-11T10:02:00.000Z",
+    "carbs": 60.0,
+    "insulin": 10.42,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-11T16:26:00.000Z",
+    "carbs": 63.0,
+    "insulin": 5.91,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-12T05:09:00.000Z",
+    "carbs": 36.0,
+    "insulin": 2.55,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-12T10:26:00.000Z",
+    "carbs": 102.0,
+    "insulin": 17.95,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-12T16:57:00.000Z",
+    "carbs": 80.0,
+    "insulin": 7.14,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-12T19:28:00.000Z",
+    "carbs": 12.0,
+    "insulin": 1.0,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-13T05:30:00.000Z",
+    "carbs": 45.0,
+    "insulin": 2.76,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-13T09:49:00.000Z",
+    "carbs": 87.0,
+    "insulin": 15.25,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-13T17:54:00.000Z",
+    "carbs": 101.0,
+    "insulin": 9.52,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-14T04:21:00.000Z",
+    "carbs": 51.0,
+    "insulin": 3.36,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-14T10:07:00.000Z",
+    "carbs": 73.0,
+    "insulin": 12.56,
+    "notes": "synthetic example, not a patient"
+  },
+  {
+    "eventType": "Meal Bolus",
+    "created_at": "2026-07-14T17:22:00.000Z",
+    "carbs": 62.0,
+    "insulin": 5.75,
+    "notes": "synthetic example, not a patient"
+  }
+]

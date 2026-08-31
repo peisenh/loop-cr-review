@@ -52,3 +52,24 @@ python3 loop_cr_review.py data/juli-urlaub --slots-file slots-urlaub.json
 
 Alle Dateien nach dem Muster `slots*.json` im Projektwurzel-Verzeichnis sind per `.gitignore`
 von der Versionierung ausgenommen — nur die Beispiel-/Vorlagendatei hier ist im Repo.
+
+## Lite-Quellen (dieselbe synthetische Person)
+
+Aus dem Glooko-Demo erzeugt, **keine** echten Daten. Name bleibt „Alex Beispiel“.
+Kein Basal — der Report ist absichtlich Lite.
+
+```bash
+python3 tools/export-example-sources.py   # neu schreiben aus dem Glooko-ZIP/Ordner
+
+python3 loop_cr_review.py example-data/nightscout
+python3 loop_cr_review.py example-data/libreview
+python3 loop_cr_review.py example-data/clarity
+```
+
+Web-Upload: den jeweiligen Ordner zippen oder die einzelne CSV wählen.
+
+| Ordner | Dateien |
+|--------|---------|
+| `nightscout/` | `entries.json`, `treatments.json` |
+| `libreview/` | `Alex_Beispiel_LibreView.csv` |
+| `clarity/` | `Alex_Beispiel_Clarity.csv` |
