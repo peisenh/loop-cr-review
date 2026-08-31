@@ -21,6 +21,7 @@ import unittest
 import unittest.mock
 import zipfile
 from pathlib import Path
+from werkzeug.datastructures import MultiDict
 
 import webapp
 
@@ -571,10 +572,15 @@ class TestNightscoutTwoFiles(WebTestCase):
         treatments = ns / "treatments.json"
         if not entries.is_file() or not treatments.is_file():
             self.skipTest("synthetic Nightscout example not in tree")
-        res = self.client.post("/span", data=[
+        form_data = MultiDict([
             ("export", (io.BytesIO(entries.read_bytes()), "entries.json")),
             ("export", (io.BytesIO(treatments.read_bytes()), "treatments.json")),
-        ], content_type="multipart/form-data")
+        ])
+        res = self.client.post(
+            "/span",
+            data=form_data,
+            content_type="multipart/form-data"
+        )
         self.assertEqual(res.status_code, 200, res.get_data(as_text=True)[:400])
         body = res.get_json()
         self.assertEqual(body.get("source"), "nightscout")
