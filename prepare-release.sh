@@ -96,7 +96,7 @@ echo "--- CHANGELOG.md (excerpt) ---"
 sed -n '1,20p' CHANGELOG.md
 echo "..."
 
-git add CHANGELOG.md
+git add CHANGELOG.md android/app/build.gradle.kts
 git commit -s -m "changelog: release $VERSION"
 
 for remote in "${@:-origin}"; do
