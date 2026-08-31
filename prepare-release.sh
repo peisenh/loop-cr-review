@@ -18,6 +18,25 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 TAG="v$VERSION"
 
+# Increment the Android Play versionCode for every prepared release.
+ANDROID_GRADLE="android/app/build.gradle.kts"
+if [ ! -f "$ANDROID_GRADLE" ]; then
+  echo "Android build.gradle.kts not found: $ANDROID_GRADLE" >&2
+  exit 1
+fi
+CURRENT_VERSION_CODE=$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' "$ANDROID_GRADLE")
+if [ -z "$CURRENT_VERSION_CODE" ]; then
+  echo "Could not determine Android versionCode." >&2
+  exit 1
+fi
+if [ "$(printf '%s\n' "$CURRENT_VERSION_CODE" | wc -l)" -ne 1 ]; then
+  echo "Expected exactly one Android versionCode." >&2
+  exit 1
+fi
+NEXT_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+sed -i -E "s/^([[:space:]]*versionCode[[:space:]]*=)[[:space:]]*[0-9]+([[:space:]]*)$/\1 $NEXT_VERSION_CODE\2/" "$ANDROID_GRADLE"
+echo "Android versionCode: $CURRENT_VERSION_CODE -> $NEXT_VERSION_CODE"
+
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
   echo "Tag $TAG already exists." >&2
   exit 1
