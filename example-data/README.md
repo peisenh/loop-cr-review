@@ -66,7 +66,7 @@ python3 loop_cr_review.py example-data/libreview
 python3 loop_cr_review.py example-data/clarity
 ```
 
-Web-Upload: den jeweiligen Ordner zippen oder die einzelne CSV wählen.
+Web-Upload: Nightscout `entries.json` und `treatments.json` **gemeinsam** wählen (kein ZIP). LibreView- und Clarity-CSV einzeln. Glooko weiter als ZIP.
 
 | Ordner | Dateien |
 |--------|---------|

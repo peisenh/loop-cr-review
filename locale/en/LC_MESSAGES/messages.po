@@ -1286,18 +1286,16 @@ msgstr ""
 "Other closed-loop systems: see README."
 
 #: templates/upload.html.j2:81
-msgid "Export (ZIP or CSV)"
-msgstr "Export (ZIP or CSV)"
+msgid "Export (ZIP, CSV or Nightscout JSON)"
+msgstr "Export (ZIP, CSV or Nightscout JSON)"
 
 #: templates/upload.html.j2:83
 msgid ""
-"Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a glucose"
-" CSV from LibreView or Dexcom Clarity. Processed in memory only, then "
-"deleted"
+"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json and treatments.json) — no zip needed. Processed in memory only, then deleted"
 msgstr ""
-"Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a glucose"
-" CSV from LibreView or Dexcom Clarity. Processed in memory only, then "
-"deleted"
+"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files "
+"(entries.json and treatments.json) — no zip needed. Processed in memory only, "
+"then deleted"
 
 #: templates/upload.html.j2:87
 msgid "Language"

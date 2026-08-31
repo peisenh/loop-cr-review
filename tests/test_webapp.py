@@ -561,3 +561,27 @@ class TestSweepRunsOnATimer(unittest.TestCase):
                                      side_effect=[None, StopIteration]):
                 with self.assertRaises(StopIteration):
                     webapp._sweep_forever(interval=0)
+
+class TestNightscoutTwoFiles(WebTestCase):
+    """Nightscout dumps can be uploaded as the two JSON files, no ZIP."""
+
+    def test_two_json_files_are_accepted(self):
+        ns = ROOT / "example-data" / "nightscout"
+        entries = ns / "entries.json"
+        treatments = ns / "treatments.json"
+        if not entries.is_file() or not treatments.is_file():
+            self.skipTest("synthetic Nightscout example not in tree")
+        res = self.client.post("/span", data=[
+            ("export", (io.BytesIO(entries.read_bytes()), "entries.json")),
+            ("export", (io.BytesIO(treatments.read_bytes()), "treatments.json")),
+        ], content_type="multipart/form-data")
+        self.assertEqual(res.status_code, 200, res.get_data(as_text=True)[:400])
+        body = res.get_json()
+        self.assertEqual(body.get("source"), "nightscout")
+        self.assertGreaterEqual(body.get("days") or 0, 1)
+
+    def test_single_json_is_rejected(self):
+        res = self.client.post("/span", data={
+            "export": (io.BytesIO(b"[]"), "entries.json"),
+        }, content_type="multipart/form-data")
+        self.assertEqual(res.status_code, 400)

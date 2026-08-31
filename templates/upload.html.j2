@@ -78,9 +78,9 @@
   <p class="hint" style="margin:0 0 14px">{% trans %}Designed and tested <b>only for CamAPS FX Auto Mode</b> (Glooko export). Other closed-loop systems: see README.{% endtrans %}</p>
 
   <form class="card" action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
-    <label class="first" for="export">{% trans %}Export (ZIP or CSV){% endtrans %}</label>
-    <input id="export" type="file" name="export" accept=".zip,.csv,application/zip,text/csv" required>
-    <div class="hint">{% trans %}Glooko ZIP, Nightscout ZIP (entries.json + treatments.json), or a glucose CSV from LibreView or Dexcom Clarity. Processed in memory only, then deleted{% endtrans %}</div>
+    <label class="first" for="export">{% trans %}Export (ZIP, CSV or Nightscout JSON){% endtrans %}</label>
+    <input id="export" type="file" name="export" accept=".zip,.csv,.json,application/zip,text/csv,application/json" multiple required>
+    <div class="hint">{% trans %}Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json and treatments.json) — no zip needed. Processed in memory only, then deleted{% endtrans %}</div>
 
     <div class="row">
       <div>
@@ -309,12 +309,12 @@
     function clearRange(){ dateFrom.value = ""; dateTo.value = ""; }
 
     exportInput.addEventListener("change", function(){
-      var f = this.files && this.files[0];
+      var files = this.files;
       var hint = document.getElementById("span-hint");
       clearRange();
-      if (!f) { hint.textContent = ""; return; }
+      if (!files || !files.length) { hint.textContent = ""; return; }
       var fd = new FormData();
-      fd.append("export", f);
+      for (var i = 0; i < files.length; i++) fd.append("export", files[i]);
       hint.textContent = "...";
       submitBtn.disabled = true;
       fetch("{{ url_for('span') }}", {method:"POST", body:fd})

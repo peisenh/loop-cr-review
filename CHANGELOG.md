@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- Web upload accepts Nightscout `entries.json` and `treatments.json` together,
+  without a ZIP. Glooko ZIP and LibreView/Clarity CSV stay as they were.
 - Synthetic Lite dumps for Nightscout, LibreView and Dexcom Clarity under
   `example-data/`, rebuilt from the Glooko Alex-Beispiel export
   (`tools/export-example-sources.py`). No real patient data.

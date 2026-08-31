@@ -136,19 +136,42 @@ def _safe_extract(zf, dest):
             shutil.copyfileobj(src, out, length=1024 * 1024)
 
 
-def _unpack_upload(tmpd, upload):
+def _export_uploads():
+    """Non-empty files from the export field (one ZIP/CSV or two Nightscout JSONs)."""
+    files = [f for f in request.files.getlist("export") if f and f.filename]
+    if not files:
+        abort(400, "no export file uploaded")
+    return files
+
+
+def _unpack_upload(tmpd, files):
     """Save the upload into tmpd/export and return that folder. No keep after tmpd dies.
 
-    On disk the file is always upload.zip or upload.csv.
+    One ZIP or CSV, or entries.json + treatments.json together (no zip).
     """
+    if not isinstance(files, (list, tuple)):
+        files = [files]
+    files = [f for f in files if f and f.filename]
+    if not files:
+        abort(400, "no export file uploaded")
     extract = tmpd / "export"
-    extract.mkdir()
+    extract.mkdir(exist_ok=True)
+    if len(files) >= 2:
+        by_name = {Path(f.filename or "").name.lower(): f for f in files}
+        if "entries.json" in by_name and "treatments.json" in by_name:
+            by_name["entries.json"].save(extract / "entries.json")
+            by_name["treatments.json"].save(extract / "treatments.json")
+            return extract
+        abort(400, "Nightscout: select entries.json and treatments.json (or one ZIP)")
+    upload = files[0]
     raw = Path(upload.filename or "export").name
     suffix = Path(raw).suffix.lower()
     if suffix == ".csv":
         saved = tmpd / "upload.csv"
         upload.save(saved)
         saved.replace(extract / "upload.csv")
+    elif suffix == ".json":
+        abort(400, "Nightscout: select entries.json and treatments.json together")
     elif suffix in (".zip", ""):
         saved = tmpd / "upload.zip"
         upload.save(saved)
@@ -156,9 +179,9 @@ def _unpack_upload(tmpd, upload):
             with zipfile.ZipFile(saved) as zf:
                 _safe_extract(zf, extract)
         except zipfile.BadZipFile:
-            abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
+            abort(400, "upload a ZIP, a glucose CSV, or both Nightscout JSON files")
     else:
-        abort(400, "upload a ZIP (Glooko/Nightscout) or a LibreView/Dexcom Clarity CSV")
+        abort(400, "upload a ZIP, a glucose CSV, or both Nightscout JSON files")
     return extract
 
 
@@ -419,11 +442,9 @@ def index():
 @app.route("/span", methods=["POST"])
 def span():
     """Return CGM from/to/days for the upload, then drop the temp dir."""
-    upload = request.files.get("export")
-    if upload is None or upload.filename == "":
-        abort(400, "no export file uploaded")
+    files = _export_uploads()
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
-        extract = _unpack_upload(Path(tmp), upload)
+        extract = _unpack_upload(Path(tmp), files)
         base = _find_export_base(extract)
         try:
             info = core.peek_span(base)
@@ -438,9 +459,7 @@ def span():
 @app.route("/analyze", methods=["POST"])
 def analyze():
     """Start an asynchronous report job and return its opaque job id."""
-    upload = request.files.get("export")
-    if upload is None or upload.filename == "":
-        abort(400, "no export file uploaded")
+    files = _export_uploads()
     lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
     _sweep_stale_jobs()
     job_id = uuid.uuid4().hex
@@ -450,7 +469,7 @@ def analyze():
     result_path = job / "result.html"
     try:
         slots = _read_slots(job)
-        extract = _unpack_upload(job, upload)
+        extract = _unpack_upload(job, files)
         base = _find_export_base(extract)
         options = {
             "base": str(base), "lang": lang, "window_hours": window_hours,
@@ -574,14 +593,12 @@ def result_download(job_id):
 def report():
 
     """Build the report from the uploaded export and return it as HTML."""
-    upload = request.files.get("export")
-    if upload is None or upload.filename == "":
-        abort(400, "no export file uploaded")
+    files = _export_uploads()
     lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
-        extract = _unpack_upload(tmpd, upload)
+        extract = _unpack_upload(tmpd, files)
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
         html = _generate_or_400(base, lang, window_hours, daily, dark_charts,
