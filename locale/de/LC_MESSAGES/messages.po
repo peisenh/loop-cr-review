@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-31 15:03+0200\n"
+"POT-Creation-Date: 2026-08-31 15:58+0200\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: de\n"
@@ -1425,7 +1425,6 @@ msgstr ""
 "      Ergebnisse wären dort nicht gültig."
 
 #: templates/upload.html.j2:165
-#, fuzzy
 msgid ""
 "<b>Homelab / private.</b>\n"
 "      While the analysis runs, the upload and the finished report sit in "
@@ -1469,14 +1468,12 @@ msgid "Rendering daily charts…"
 msgstr "Tagesdiagramme werden erzeugt…"
 
 #: templates/upload.html.j2:215
-#, fuzzy
 msgid "Preparing report…"
-msgstr "Report erstellen"
+msgstr "Report vorbereiten…"
 
 #: templates/upload.html.j2:216
-#, fuzzy
 msgid "Rendering report…"
-msgstr "Report erstellen"
+msgstr "Report erstellen…"
 
 #: templates/upload.html.j2:217
 msgid "Analysis complete"

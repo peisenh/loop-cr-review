@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-08-31 15:03+0200\n"
+"POT-Creation-Date: 2026-08-31 15:58+0200\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -80,9 +80,8 @@ msgid "High risk"
 msgstr "High risk"
 
 #: lcr/analysis.py:86
-#, fuzzy
 msgid "Very high risk"
-msgstr "Very High &gt;%(v)s"
+msgstr "Very high risk"
 
 #: lcr/analysis.py:315 templates/report.html.j2:306
 msgid "too weak → tighten"
@@ -577,9 +576,8 @@ msgid "high"
 msgstr "high"
 
 #: templates/report.html.j2:238
-#, fuzzy
 msgid "very high"
-msgstr "Very High &gt;%(v)s"
+msgstr "very high"
 
 #: templates/report.html.j2:241
 msgid "AGP (percentiles 5/25/50/75/95)"
@@ -709,7 +707,6 @@ msgstr ""
 "different signal."
 
 #: templates/report.html.j2:274
-#, fuzzy
 msgid ""
 "• <b>Loop extra basal</b> in the post-meal window:\n"
 "  <code>∫ (basal rate − fasting basal) dt</code>.\n"
@@ -718,10 +715,10 @@ msgid ""
 msgstr ""
 "• <b>Loop extra basal</b> in the post-meal window:\n"
 "  <code>∫ (basal rate − fasting basal) dt</code>.\n"
-"  Positive → the loop is adding insulin (often a too-weak meal bolus/CR)."
+"  Positive → extra Auto Mode activity after the meal. It can fit a too-"
+"weak CR, but on real CamAPS it is not specific to that."
 
 #: templates/report.html.j2:277
-#, fuzzy
 msgid ""
 "• <b>Two ratios:</b>\n"
 "  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include "
@@ -742,8 +739,8 @@ msgstr ""
 "  Neither is a programmed pump setting; both are derived from the export."
 "\n"
 "  If the loop already adds or cuts a lot of insulin with no meal, that "
-"says nothing about the carb ratios. If it runs quietly, the estimated "
-"CR_eff moves a bit closer to a better ratio."
+"says nothing about the carb ratios. The less non-meal loop influence in "
+"the window, the less CR_eff is shifted by that extra Auto Mode activity."
 
 #: templates/report.html.j2:282
 msgid ""
@@ -1438,7 +1435,6 @@ msgstr ""
 "      results would not be valid there."
 
 #: templates/upload.html.j2:165
-#, fuzzy
 msgid ""
 "<b>Homelab / private.</b>\n"
 "      While the analysis runs, the upload and the finished report sit in "
@@ -1456,10 +1452,9 @@ msgstr ""
 "      folder in the system temp area. The export itself is deleted as "
 "soon\n"
 "      as the report exists; the report follows after 15 minutes at the "
-"latest, or\n"
-"      right away if you tick \"download\". Until then it stays open so "
-"you can still\n"
-"      save it. No public hosting, no archive."
+"latest.\n"
+"      Until then it stays open so you can still save it. No public "
+"hosting, no archive."
 
 #: templates/upload.html.j2:209
 msgid "Queued…"
@@ -1486,14 +1481,12 @@ msgid "Rendering daily charts…"
 msgstr "Rendering daily charts…"
 
 #: templates/upload.html.j2:215
-#, fuzzy
 msgid "Preparing report…"
-msgstr "Create report"
+msgstr "Preparing report…"
 
 #: templates/upload.html.j2:216
-#, fuzzy
 msgid "Rendering report…"
-msgstr "Create report"
+msgstr "Rendering report…"
 
 #: templates/upload.html.j2:217
 msgid "Analysis complete"
