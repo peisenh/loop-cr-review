@@ -191,6 +191,32 @@ chromium/google-chrome is installed and writes both pictures into `docs/`. Look
 at them before committing — a report that has grown past the captured height is
 cut off without any error.
 
+### Store screenshots
+
+```bash
+./tools/make-play-screenshots.sh        # -> docs/play/de/*.png, docs/play/en/*.png
+```
+
+Renders the upload form and three sections of a report at phone size — 412×915
+CSS at 2.62x, so 1080×2400, the same as a screenshot taken on a Pixel 8 — in both
+store languages. Taking them by hand on a device
+means redoing every one whenever a heading or a wording changes — and the wording
+does change.
+
+Each picture is the **whole page** scrolled to a section, not a card cut out of
+it: a lone card on empty background looks like a fragment rather than the app.
+The sections are spaced apart on purpose — a phone screen holds two or three
+cards, so neighbouring sections would show largely the same thing.
+Finding where to scroll needs no guessed offsets — a marker line in a colour the
+report never uses goes in front of the section, the page is measured once at
+scale 1, and the marker's row gives the offset. Rename a heading and the script
+says which one it could not find instead of producing a blank picture.
+
+Every shot goes through `tools/check-play-shot.py`, which flattens it — browsers
+write PNGs with an alpha channel and the store rejects those — and then checks
+the store's limits: 320–3840 px per side, longer side at most twice the shorter,
+under 8 MB. A rejected upload does not say which rule it broke.
+
 ### Proofs of concept
 
 `poc/` holds experiments that are not part of the product. Each one carries a
