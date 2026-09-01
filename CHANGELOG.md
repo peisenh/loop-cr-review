@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-09-01
+
 ### Security
 - The local server now requires a secret. A loopback port is not private: on
   Android any app holding the INTERNET permission can reach another app's
@@ -1079,7 +1081,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/peisenh/loop-cr-review/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/peisenh/loop-cr-review/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/peisenh/loop-cr-review/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/peisenh/loop-cr-review/compare/v0.20.0...v0.20.1
