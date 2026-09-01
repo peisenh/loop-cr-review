@@ -85,6 +85,25 @@ _ACCESS_TOKEN = None
 _TOKEN_COOKIE = "lcr_access"
 
 
+# Who is reading the page. The Docker deployment is run by whoever set it up, so
+# the note there is about that server; in the app and the desktop window the same
+# words ("homelab", "system temp directory") mean nothing to the person holding
+# the phone. Default is the server case, because that is the one that needs the
+# warning if nobody sets anything.
+_PLATFORM = "server"
+
+
+def set_platform(kind):
+    """"app" for the Android app and the desktop window, "server" for Docker."""
+    global _PLATFORM                # pylint: disable=global-statement
+    _PLATFORM = "app" if kind == "app" else "server"
+
+
+def platform():
+    """Either 'app' or 'server'."""
+    return _PLATFORM
+
+
 def set_access_token(token):
     """Require *token* on every request from now on. None disables the check."""
     global _ACCESS_TOKEN            # pylint: disable=global-statement
@@ -486,6 +505,7 @@ def index():
         version=core.tool_version(),
         lang=lang,
         slot_defaults=slot_defaults,
+        platform=platform(),
     )
 
 

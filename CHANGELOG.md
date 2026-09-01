@@ -9,6 +9,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The privacy note on the upload page depends on where it is read. Docker is run
+  by whoever set it up, so the note there is still about that server. In the
+  Android app and the desktop window it said "homelab" and "system temp
+  directory" to someone holding a phone, who wants to know one thing: whether
+  the data leaves the device. It now says that it does not.
 ### Added
 - `tools/make-play-screenshots.sh`: the store screenshots from the example data,
   at phone size, in both languages. They were taken by hand on a device, which

@@ -129,6 +129,7 @@ def main():
     # process. The window presents the secret once and gets a cookie back.
     token = secrets.token_urlsafe(24)
     webapp.set_access_token(token)
+    webapp.set_platform("app")
     window = webview.create_window(
         WINDOW_TITLE, f"http://127.0.0.1:{port}/?k={urllib.parse.quote(token)}",
         width=780, height=920, js_api=bridge)

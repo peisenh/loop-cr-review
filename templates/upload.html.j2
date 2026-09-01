@@ -163,11 +163,16 @@
       boluses, so those figures do not apply there — the assessment from the
       glucose course does.{% endtrans %}
       <br><br>
-      {% trans %}<b>Homelab / private.</b>
+      {% if platform == "app" %}{% trans %}<b>Everything stays on this device.</b>
+      No account, no sign-in, nothing sent to a server. The export is deleted as
+      soon as the report has been built from it, and the report itself when the app
+      is closed — at the latest a quarter of an hour later.{% endtrans %}
+      {% else %}{% trans %}<b>Homelab / private.</b>
       While the analysis runs, the upload and the finished report sit in a private
       folder in the system temp area. The export itself is deleted as soon
       as the report exists; the report follows after 15 minutes at the latest.
       Until then it stays open so you can still save it. No public hosting, no archive.{% endtrans %}
+      {% endif %}
     </div>
   </form>
 

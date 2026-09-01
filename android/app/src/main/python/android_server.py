@@ -36,6 +36,7 @@ def start():
         global _token                       # pylint: disable=global-statement
         _token = secrets.token_urlsafe(24)
         webapp.set_access_token(_token)
+        webapp.set_platform("app")
         _server = make_server("127.0.0.1", 0, app, threaded=True)
         _thread = threading.Thread(
             target=_server.serve_forever, name="loop-cr-flask", daemon=True

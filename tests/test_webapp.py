@@ -641,3 +641,42 @@ class TestAccessToken(unittest.TestCase):
         for path in ("/", "/span", "/analyze", "/result/" + "a" * 32):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 403)
+
+
+class TestPlatformWording(unittest.TestCase):
+    """The same page is read in two very different situations.
+
+    Docker is run by whoever set it up, so the note there is about that server.
+    In the app the same words — "homelab", "system temp directory" — mean nothing
+    to the person holding the phone, who wants to know whether their data leaves
+    it.
+    """
+
+    def setUp(self):
+        self.client = webapp.app.test_client()
+        self.addCleanup(webapp.set_platform, "server")
+
+    def _text(self, lang="de"):
+        page = self.client.get(f"/?lang={lang}").get_data(as_text=True)
+        return re.sub(r"<[^>]+>", " ", page)
+
+    def test_the_server_case_is_the_default(self):
+        self.assertEqual(webapp.platform(), "server")
+        self.assertIn("Homelab", self._text())
+
+    def test_the_app_says_the_data_stays_on_the_device(self):
+        webapp.set_platform("app")
+        text = self._text()
+        self.assertIn("Alles bleibt auf diesem Gerät", text)
+        self.assertNotIn("Homelab", text)
+        self.assertNotIn("Temp", text)
+
+    def test_the_app_wording_is_translated(self):
+        webapp.set_platform("app")
+        self.assertIn("Everything stays on this device", self._text("en"))
+
+    def test_anything_unknown_falls_back_to_the_server_case(self):
+        """A wrong value must not leave the page without either note."""
+        webapp.set_platform("nonsense")
+        self.assertEqual(webapp.platform(), "server")
+        self.assertIn("Homelab", self._text())
