@@ -8,13 +8,16 @@
 #
 # Usage:  ./tools/make-play-screenshots.sh [export-dir]   (default: example-data)
 #
-# Produces  docs/play/<lang>/00-upload.png     the form
-#           docs/play/<lang>/01-…  02-…  03-…  sections of the report
+# Writes    dist/play/<lang>/00-upload.png     the form
+#           dist/play/<lang>/01-…  02-…  03-…  sections of the report
+#
+# Into dist/ like the APK and the bundle: these are build output, uploaded to
+# the Play console rather than kept in the repository.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 EXPORT_DIR="${1:-example-data}"
-OUT_ROOT="docs/play"
+OUT_ROOT="dist/play"
 WORK="$(mktemp -d)"
 SERVER_PID=""
 cleanup() {

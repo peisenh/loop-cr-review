@@ -194,7 +194,7 @@ cut off without any error.
 ### Store screenshots
 
 ```bash
-./tools/make-play-screenshots.sh        # -> docs/play/de/*.png, docs/play/en/*.png
+./tools/make-play-screenshots.sh        # -> dist/play/de/*.png, dist/play/en/*.png
 ```
 
 Renders the upload form and three sections of a report at phone size — 412×915
