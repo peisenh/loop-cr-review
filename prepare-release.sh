@@ -18,7 +18,39 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 TAG="v$VERSION"
 
-# Increment the Android Play versionCode for every prepared release.
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "Tag $TAG already exists." >&2
+  exit 1
+fi
+
+# The release commit is built from exactly two files. Anything else lying around
+# would be swept into it, so the tree has to be clean before we touch a thing.
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Working tree is not clean -- commit or stash first:" >&2
+  git status --short >&2
+  exit 1
+fi
+if ! grep -q '^## \[Unreleased\]$' CHANGELOG.md; then
+  echo "No '## [Unreleased]' section found in CHANGELOG.md." >&2
+  exit 1
+fi
+UNRELEASED_BODY=$(sed -n '/^## \[Unreleased\]$/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
+if [ -z "$(echo "$UNRELEASED_BODY" | tr -d '[:space:]')" ]; then
+  echo "'## [Unreleased]' is empty -- nothing to release." >&2
+  exit 1
+fi
+
+PREV_VERSION=$(sed -nE 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/p' CHANGELOG.md | head -1)
+DATE=$(date +%Y-%m-%d)
+REPO_URL=$(sed -nE 's#^\[0\.1\.0\]: (https://.+)/releases/tag/v0\.1\.0$#\1#p' CHANGELOG.md | head -1)
+if [ -z "$REPO_URL" ]; then
+  echo "Could not read the repository URL from the [0.1.0] link in CHANGELOG.md." >&2
+  exit 1
+fi
+
+# Everything is checked by now, so it is safe to start changing files. Doing the
+# bump earlier left a raised versionCode behind whenever a later check failed,
+# and the next attempt raised it again.
 ANDROID_GRADLE="android/app/build.gradle.kts"
 if [ ! -f "$ANDROID_GRADLE" ]; then
   echo "Android build.gradle.kts not found: $ANDROID_GRADLE" >&2
@@ -36,29 +68,6 @@ fi
 NEXT_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
 sed -i -E "s/^([[:space:]]*versionCode[[:space:]]*=)[[:space:]]*[0-9]+([[:space:]]*)$/\1 $NEXT_VERSION_CODE\2/" "$ANDROID_GRADLE"
 echo "Android versionCode: $CURRENT_VERSION_CODE -> $NEXT_VERSION_CODE"
-
-if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "Tag $TAG already exists." >&2
-  exit 1
-fi
-if ! git diff --quiet -- CHANGELOG.md || ! git diff --cached --quiet -- CHANGELOG.md; then
-  echo "CHANGELOG.md already has uncommitted changes -- resolve first." >&2
-  exit 1
-fi
-if ! grep -q '^## \[Unreleased\]$' CHANGELOG.md; then
-  echo "No '## [Unreleased]' section found in CHANGELOG.md." >&2
-  exit 1
-fi
-UNRELEASED_BODY=$(sed -n '/^## \[Unreleased\]$/,/^## \[/p' CHANGELOG.md | sed '1d;$d')
-if [ -z "$(echo "$UNRELEASED_BODY" | tr -d '[:space:]')" ]; then
-  echo "'## [Unreleased]' is empty -- nothing to release." >&2
-  exit 1
-fi
-
-PREV_VERSION=$(grep -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
-DATE=$(date +%Y-%m-%d)
-REPO_URL=$(grep -oP '(?<=\[0\.1\.0\]: )https://\S+(?=/releases/tag/v0\.1\.0)' CHANGELOG.md \
-  || echo "https://github.com/OWNER/REPO")
 
 # 1) "## [Unreleased]" -> "## [Unreleased]\n\n## [X.Y.Z] - DATE" (fresh empty
 #    Unreleased section stays on top, the previous content moves into the new

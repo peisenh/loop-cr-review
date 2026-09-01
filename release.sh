@@ -7,7 +7,7 @@
 # Usage:  ./release.sh [remote ...]     (default remote: origin)
 set -euo pipefail
 
-VERSION=$(grep -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
+VERSION=$(sed -nE 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/p' CHANGELOG.md | head -1)
 
 if [ -z "${VERSION:-}" ]; then
   echo "No version found in CHANGELOG.md." >&2

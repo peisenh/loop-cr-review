@@ -42,7 +42,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   versus glucose-only assessment, the way the README does. A LibreView user used
   to read "tested only for CamAPS FX" and conclude the tool was useless to them,
   although they get a complete assessment.
-
 - README (de/en): lead with full vs lite instead of “CamAPS only”. GRI is listed
   with the metrics that always run; loop CR stays CamAPS-only.
 - Local Android APK/AAB builds read the keystore password from
@@ -52,7 +51,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 - Automatic increase of android version code if new version is released
 
 ### Fixed
-
+- `prepare-release.sh` changed files before it checked anything. A failing guard —
+  an existing tag, an empty `[Unreleased]` — left the Android `versionCode` raised
+  in the working tree, and the next attempt raised it again; a versionCode cannot
+  be taken back on Play. All checks run first now, and the whole tree has to be
+  clean, not just `CHANGELOG.md` — the release commit takes two files and anything
+  else staged would have gone in with them.
+- A repository URL that could not be read from `CHANGELOG.md` was silently replaced
+  with a placeholder that then went into the file. It stops instead.
+- Both release scripts use `sed` rather than `grep -oP`, which only exists in GNU
+  grep.
 - Fixed messages.po
 
 ## [0.22.0] - 2026-08-30
