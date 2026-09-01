@@ -2,6 +2,10 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
+<!-- Without this a phone lays the page out at about 980 px and scales down: the
+     narrow-screen rules below never take effect, and a saved report is a wall of
+     tiny text. The viewer and the upload page have had it all along. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ tool }} — {{ name }}</title>
 <style>
 :root {
@@ -105,8 +109,29 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .gri-zones b { color:var(--ink) }
 .tir-card { display:block }
 .tir-note { margin-top:5px; padding-top:5px; border-top:1px solid var(--line); font-size:10px; line-height:1.25; color:var(--muted) }
+.scroll-hint { display: none; font-size: 11px; color: var(--muted); margin: 2px 0 0 }
 @media (max-width: 680px) {
   .clinical-two-col { grid-template-columns:1fr }
+  /* Only here. On a desktop the tables fit and adding a minimum width just
+     produced a scrollbar where there had been none. On a phone they cannot fit,
+     so they scroll sideways — wide enough that the verdict column does not wrap,
+     because cramped into what was left over it dragged every row to several
+     times its height. A shadow at whichever edge still has content behind it
+     shows that there is more; the white patches scroll with the content and
+     cover the shadows at the ends, so it works without any script. */
+  .table-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background:
+      linear-gradient(to right, var(--card) 30%, rgba(255,255,255,0)) left center,
+      linear-gradient(to left, var(--card) 30%, rgba(255,255,255,0)) right center,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.14), rgba(0,0,0,0)) left center,
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.14), rgba(0,0,0,0)) right center;
+    background-repeat: no-repeat;
+    background-size: 34px 100%, 34px 100%, 12px 100%, 12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  .table-wrap table { min-width: 780px }
+  .scroll-hint { display: block }
 }
 @media print {
   .clinical-two-col { align-items: stretch !important; }
@@ -124,6 +149,11 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .track { flex: 1; height: 12px; background: var(--track); border-radius: 6px; overflow: hidden }
 .fill { height: 100% }
 table { width: 100%; border-collapse: collapse; font-size: 12px }
+/* The slot table has nine columns and does not fit a phone. Letting it scroll
+   sideways keeps every column readable instead of squeezing them all into a
+   width where nothing is. */
+@media print { .table-wrap { overflow-x: visible }
+               .table-wrap table { min-width: 0 } }
 th, td { text-align: left; padding: 5px 7px; border-bottom: 1px solid var(--line) }
 th { color: var(--muted); font-weight: 600 }
 tr.weak { background: var(--weak-bg) } tr.strong { background: var(--strong-bg) } tr.ok { background: var(--ok-bg) }
@@ -293,7 +323,8 @@ img { width: 100%; border-radius: 8px }
     {% endif %}
   </div>
   {% endif %}
-  <table>
+  <div class="table-wrap">
+  <table class="slot-table">
     <tr><th>{% trans %}Slot{% endtrans %}</th><th>{% trans %}n (clean){% endtrans %}</th><th>{% trans %}Ø CHO{% endtrans %}</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th><th>{% trans %}Bolus{% endtrans %}</th>
         {% if not lite %}<th>{% trans %}Loop{% endtrans %} {{ wlab }}</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>{% trans %}Verdict{% endtrans %}</th></tr>
     {% for s in slots %}
@@ -303,6 +334,8 @@ img { width: 100%; border-radius: 8px }
         {% if not lite %}<td>{{ s.exc }} U</td><td>{{ s.cre }}</td>{% endif %}<td>{{ s.d4 }}</td><td>{{ s.flag }}{% if s.stability %}<div class="meta{{ ' low' if s.stability.band == 'low' }}">{% trans pct=s.stability.pct %}Stability {{ pct }}{% endtrans %} % · {{ s.stability.days }} {% trans %}calendar days{% endtrans %}{% if s.stability.few_days %} <span class="fewd">{% trans %}(few){% endtrans %}</span>{% endif %}{% if s.spread and s.spread.cre %} · {% trans cre=s.spread.cre %}spread CR_eff {{ cre }}{% endtrans %}{% elif s.range and s.range.cre %} · {% trans cre=s.range.cre %}observed CR_eff {{ cre }}{% endtrans %}{% endif %}</div>{% endif %}</td></tr>
     {% endfor %}
   </table>
+  </div>
+  <div class="scroll-hint">{% trans %}Swipe the table sideways for the remaining columns.{% endtrans %}</div>
   <div class="note" style="margin-top: 6px"><span class="tag ts">{% trans %}coverage looks too strong{% endtrans %}</span><span class="tag tw">{% trans %}coverage looks too weak{% endtrans %}</span><span class="tag to">{% trans %}plausibly adequate{% endtrans %}</span><br><br></div>
   <div class="note">{% if selection %}
     <b>{% trans %}Selection used for the verdict:{% endtrans %}</b>
@@ -397,6 +430,7 @@ img { width: 100%; border-radius: 8px }
 {% if meals %}
 <div class="card card-break">
   <h2>{% trans %}Per-meal detail{% endtrans %}</h2>
+  <div class="table-wrap">
   <table>
     <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th>
         {% if not lite %}<th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
@@ -406,6 +440,8 @@ img { width: 100%; border-radius: 8px }
         <td>{% if m.low_d4 %}<b class="d4low">{{ m.d4 }}</b>{% else %}{{ m.d4 }}{% endif %}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% elif m.cgm_gap %}<span title="{% trans %}CGM gap in the window{% endtrans %}">⚠︎ G</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
+  </div>
+  <div class="scroll-hint">{% trans %}Swipe the table sideways for the remaining columns.{% endtrans %}</div>
   <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window (excluded from the clean median when enough other meals exist).{% endtrans %}
     {% trans lo=-30 %}A Δ4h below {{ lo }} is set in colour: that meal ended well below its
     starting value. Rows are deliberately not colour-coded — a single meal carries far too

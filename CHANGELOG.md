@@ -10,6 +10,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `tools/make-play-screenshots.sh`: the store screenshots from the example data,
+  at phone size, in both languages. They were taken by hand on a device, which
+  meant redoing all of them for every change of wording. Each picture is the
+  whole page scrolled to a section — a card cut out on its own looks like a
+  fragment rather than the app — and the scroll position comes from a marker the
+  script places, not from a guessed offset. Shots are flattened, because browsers
+  write PNGs with an alpha channel that the store rejects, and checked against
+  the store's limits before upload.
 - `SECURITY.md`: how to report a vulnerability. Through GitHub's private
   reporting rather than a public issue, and — since a report from this tool is
   health data — never with a real export attached; the synthetic files in
@@ -21,6 +29,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the right one — they pointed at neither.
 
 ### Fixed
+- The report is readable on a phone. It had no viewport tag, so a phone laid it
+  out at about 980 px and scaled the result down — a wall of tiny text, with none
+  of the narrow-screen rules taking effect. With the tag, the wide tables scroll
+  sideways instead of being squeezed into a width where no column can be read: a
+  shadow at the edge shows there is more, and a line under the table says so. All
+  of that applies below 680 px only; on a desktop and in print the tables are
+  exactly as before. It became obvious only while photographing the report at
+  phone width.
 - The privacy statement described the tool as reading a CamAPS or Glooko export
   only; it names all four supported sources now.
 - It also said data is removed "after the report is built or when the job
