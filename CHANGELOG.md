@@ -9,6 +9,26 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- `SECURITY.md`: how to report a vulnerability. Through GitHub's private
+  reporting rather than a public issue, and — since a report from this tool is
+  health data — never with a real export attached; the synthetic files in
+  `example-data/` are enough to describe any of it. Says what is in scope and
+  what is not: a wrong verdict is a regular issue, running the web app on the
+  public internet is not a finding.
+- `PRIVACY.en.md`: the privacy statement in English, since the store listing has
+  an English version too. Both link to each other, and both READMEs now point at
+  the right one — they pointed at neither.
+
+### Fixed
+- The privacy statement described the tool as reading a CamAPS or Glooko export
+  only; it names all four supported sources now.
+- It also said data is removed "after the report is built or when the job
+  expires", which is vaguer than what happens: the export goes as soon as the
+  report exists, the report a quarter of an hour later at the latest, and the
+  Android app clears both when it closes. That the app's local server is closed
+  to other apps was missing as well.
+
 ## [0.23.0] - 2026-09-01
 
 ### Security

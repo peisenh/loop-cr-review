@@ -58,6 +58,12 @@ catalog build.
 
 ---
 
+### Security problems
+
+Not through an issue and not through a pull request — see
+[SECURITY.md](SECURITY.md). In short: GitHub's private reporting, and never with
+a real export attached.
+
 ## Deutsch
 
 ### Developer Certificate of Origin (DCO)
@@ -105,6 +111,13 @@ mit dem Bau der Babel-Kataloge.
   Konstanten oben in `loop_cr_review.py`.
 
 ---
+
+
+### Sicherheitsprobleme
+
+Nicht über ein Issue und nicht über einen Pull Request — siehe
+[SECURITY.md](SECURITY.md). Kurz: über die private Meldefunktion von GitHub, und
+nie mit einem echten Export im Anhang.
 
 ## Developer Certificate of Origin 1.1
 

@@ -348,6 +348,8 @@ loop-cr-review/
 │   └── UPTAKE.md              # results and conclusion
 ├── README.md
 ├── CONTRIBUTING.md
+├── SECURITY.md
+├── PRIVACY.md
 ├── LICENSE
 └── .pylintrc
 ```
@@ -370,6 +372,11 @@ Bundled as named constants at the top of `loop_cr_review.py` and adjustable: slo
 ## Contributing
 
 Contributions are welcome. The project uses a **DCO sign-off** (`git commit -s`); details in the bilingual [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Privacy
+
+[PRIVACY.en.md](PRIVACY.en.md) — in short: the analysis runs on the user's
+own device, and nothing is sent to a server of ours.
 
 ## License
 

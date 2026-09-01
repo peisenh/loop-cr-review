@@ -354,6 +354,8 @@ loop-cr-review/
 │   └── UPTAKE.md              # Ergebnisse und Schluss
 ├── README.md
 ├── CONTRIBUTING.md
+├── SECURITY.md
+├── PRIVACY.md
 ├── LICENSE
 └── .pylintrc
 ```
@@ -376,6 +378,11 @@ Als benannte Konstanten oben in `loop_cr_review.py` gebündelt und anpassbar: Sl
 ## Mitwirken
 
 Beiträge sind willkommen. Das Projekt nutzt einen **DCO-Sign-off** (`git commit -s`); Details im bilingualen [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Datenschutz
+
+[PRIVACY.md](PRIVACY.md) — kurz: Die Auswertung läuft auf dem eigenen
+Gerät, es gibt keine Übertragung an einen Server von uns.
 
 ## Lizenz
 
