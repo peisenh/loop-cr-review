@@ -58,10 +58,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the data leaves the device. It now says that it does not.
 
 ### Fixed
-- The launcher icon sits in the middle of its circle. The mark was 0.9 right and
-  1.9 low on the 108 canvas — barely visible in a square, plain once a launcher
-  masks it to a circle and crops top and bottom hardest. Corrected by measuring
-  the rendered ink rather than by eye.
+- The icon sits in the middle of its circle. The mark was 1.8 low on the launcher
+  canvas — barely visible in a square, plain once a launcher masks it to a circle
+  and crops top and bottom hardest. The same lean came from the source: neither
+  `docs/logo-icon.svg` nor `docs/logo-mark.svg` had the drawing centred in its own
+  box, so everything derived from them inherited it. All three corrected by
+  measuring the rendered ink — with the arrow filled, which is what it is; taking
+  it for a stroke was what put the first attempt too far to the left.
 - Clicking "Create report" right after choosing a file does something. The
   button was disabled while the date range was read, so a click in that moment
   did nothing at all and said nothing either. Now the label says what it is

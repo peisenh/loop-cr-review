@@ -7,12 +7,13 @@
     android:viewportHeight="108">
     <!-- docs/logo-mark.svg scaled into the 66% adaptive-icon safe zone
          so a circular mask (Pixel file manager / launcher) keeps ring + arrow. -->
-    <!-- Centred by measuring the rendered ink, not by eye: at 18/20 the mark sat
-         0.9 right and 1.9 low on the 108 canvas, which shows once a launcher
-         puts a circular mask around it and crops top and bottom hardest. -->
+    <!-- Centred by measuring the rendered ink on the 108 canvas, arrow filled and
+         gradients as they really are: at 18/20 the mark sat 1.8 low, which shows
+         once a launcher masks it to a circle and crops top and bottom hardest.
+         Horizontally it was already close, so only the vertical figure moved. -->
     <group
-        android:translateX="17.15"
-        android:translateY="18.15"
+        android:translateX="18.4"
+        android:translateY="18.1"
         android:scaleX="0.62"
         android:scaleY="0.62">
         <path
