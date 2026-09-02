@@ -1539,3 +1539,11 @@ msgstr ""
 #: templates/viewer.html.j2:46
 msgid "Print"
 msgstr "Drucken"
+
+#: templates/upload.html.j2
+msgid "Forget my settings"
+msgstr "Einstellungen vergessen"
+
+#: templates/upload.html.j2
+msgid "Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device."
+msgstr "Deine letzten Einstellungen wurden wiederhergestellt — Sprache, Mahlzeitfenster, die Häkchen und eigene Slot-Zeiten. Sie bleiben auf diesem Gerät."

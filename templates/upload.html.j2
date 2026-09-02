@@ -49,6 +49,11 @@
   .foot a { color:var(--blue); text-decoration:none; }
   fieldset { border:1px solid var(--line); border-radius:10px; margin:16px 0 0; padding:12px 14px 16px; }
   legend { font-weight:600; font-size:13px; padding:0 6px; color:var(--muted); }
+  /* The note is a paragraph, the button an action — inline they wrapped around
+     each other and the button ended up mid-sentence. */
+  .prefs-note { margin: 14px 0 4px; }
+  .prefs-note .hint { margin-bottom: 8px; }
+  .prefs-note .btn-sec { display: inline-block; }
   table.slots { width:100%; border-collapse:collapse; margin-top:8px; }
   table.slots th { text-align:left; font-size:12px; color:var(--muted); font-weight:600; padding:0 6px 4px; }
   table.slots td { padding:3px 6px; }
@@ -93,7 +98,7 @@
       </div>
       <div>
         <label for="window_hours">{% trans %}Meal window (h){% endtrans %}</label>
-        <input id="window_hours" type="number" name="window_hours" value="4" min="0.5" max="12" step="0.5">
+        <input id="window_hours" type="number" name="window_hours" value="{{ prefs.get('window_hours', 4) }}" min="0.5" max="12" step="0.5">
         <div class="hint">{% trans %}Postprandial window (default 4).{% endtrans %}</div>
       </div>
     </div>
@@ -110,9 +115,9 @@
         <div class="hint" id="span-hint">{% trans %}Choose a file to see the full range. Nothing is stored on the server.{% endtrans %}</div>
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="assume_camaps"> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
-    <label class="check"><input type="checkbox" name="daily"> {% trans %}Attach daily overview{% endtrans %}</label>
-    <label class="check"><input type="checkbox" name="dark_charts"> {% trans %}Also render dark-theme charts (AGP, slots, daily){% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="assume_camaps" {% if prefs.get('assume_camaps') %}checked{% endif %}> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="daily" {% if prefs.get('daily') %}checked{% endif %}> {% trans %}Attach daily overview{% endtrans %}</label>
+    <label class="check"><input type="checkbox" name="dark_charts" {% if prefs.get('dark_charts') %}checked{% endif %}> {% trans %}Also render dark-theme charts (AGP, slots, daily){% endtrans %}</label>
 
     <fieldset>
       <legend>{% trans %}Slots (time-of-day windows){% endtrans %}</legend>
@@ -140,6 +145,11 @@
         <input id="slots" type="file" name="slots" accept=".json">
       </div>
     </fieldset>
+
+    <div class="prefs-note">
+      <div id="prefs-restored" class="hint hidden">{% trans %}Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device.{% endtrans %}</div>
+      <button type="button" class="btn-sec" onclick="forgetSettings()">{% trans %}Forget my settings{% endtrans %}</button>
+    </div>
 
     <button id="submit-btn" type="submit">{% trans %}Create report{% endtrans %}</button>
 
@@ -199,6 +209,112 @@
     DEFAULTS.forEach(function(d){ b.appendChild(row(d[0],d[1],d[2])); });
   }
 
+  // Own slot times survive a restart. Typing them again for every report is the
+  // kind of friction that makes a tool feel unfinished.
+  //
+  // A cookie, not localStorage: the app serves itself on 127.0.0.1 with a fresh
+  // port every launch, and localStorage is scoped to the origin — port included —
+  // so nothing would ever have come back there. Cookies are scoped by host only.
+  var SLOT_STORE = "lcr_slots";
+
+  function readRows(){
+    var rows = [];
+    document.querySelectorAll("#slot-rows tr").forEach(function(tr){
+      var f = tr.querySelectorAll("input");
+      var label = (f[0].value || "").trim();
+      if (label) rows.push([label, Number(f[1].value), Number(f[2].value)]);
+    });
+    return rows;
+  }
+
+  function writeSlotCookie(value, maxAge){
+    document.cookie = SLOT_STORE + "=" + value + ";path=/;max-age=" + maxAge +
+                      ";SameSite=Strict";
+  }
+
+  var PREFS_STORE = "lcr_prefs";
+
+  function writeCookie(name, value, maxAge){
+    document.cookie = name + "=" + value + ";path=/;max-age=" + maxAge +
+                      ";SameSite=Strict";
+  }
+
+  function rememberSlots(){
+    if (document.getElementById("slots_mode").value === "fields") {
+      writeSlotCookie(encodeURIComponent(JSON.stringify(readRows())), 31536000);
+    } else {
+      writeSlotCookie("", 0);
+    }
+  }
+
+  // The other choices come back the same way. The server reads this cookie and
+  // fills the fields in before the page is sent, so nothing flickers into place
+  // afterwards and the language is right from the first paint.
+  function rememberPrefs(){
+    var prefs = {
+      lang: document.getElementById("lang").value,
+      window_hours: Number(document.getElementById("window_hours").value),
+      assume_camaps: form.assume_camaps.checked,
+      daily: form.daily.checked,
+      dark_charts: form.dark_charts.checked
+    };
+    writeCookie(PREFS_STORE, encodeURIComponent(JSON.stringify(prefs)), 31536000);
+  }
+
+  function forgetPrefs(){
+    writeCookie(PREFS_STORE, "", 0);
+  }
+
+  function restoreSlots(){
+    var hit = document.cookie.split("; ").filter(function(c){
+      return c.indexOf(SLOT_STORE + "=") === 0;
+    })[0];
+    if (!hit) return;
+    var saved = null;
+    try { saved = JSON.parse(decodeURIComponent(hit.slice(SLOT_STORE.length + 1))); }
+    catch (e) { return; }
+    if (!saved || !saved.length) return;
+    var body = document.getElementById("slot-rows");
+    body.innerHTML = "";
+    saved.forEach(function(d){ body.appendChild(row(d[0], d[1], d[2])); });
+    document.getElementById("slots_mode").value = "fields";
+    slotMode("fields");
+    showRestoredNote();
+  }
+
+  function showRestoredNote(){
+    var n = document.getElementById("prefs-restored");
+    if (n) n.classList.remove("hidden");
+  }
+  function hideRestoredNote(){
+    var n = document.getElementById("prefs-restored");
+    if (n) n.classList.add("hidden");
+  }
+
+  function forgetSettings(){
+    writeSlotCookie("", 0);
+    forgetPrefs();
+    // Language, window and the checkboxes were filled in by the server, so the
+    // page has to come again to show plain defaults.
+    window.location.href = window.location.pathname;
+  }
+
+  // Flask answers an aborted request with an HTML page, not JSON. Reading only
+  // the status left the user with "could not start" while the server had said
+  // exactly what was wrong — which slots overlap, for instance.
+  function serverMessage(text) {
+    var m = text && text.match(/<p>([^<]+)<\/p>/);
+    if (m) return m[1].replace(/&#39;/g, "'").replace(/&amp;/g, "&").trim();
+    return "";
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    restoreSlots();
+    // The server has already filled these in; the note is what tells the user
+    // that the form is not showing plain defaults.
+    if (document.cookie.indexOf(PREFS_STORE + "=") >= 0) showRestoredNote();
+  });
+
   var form = document.querySelector("form.card");
   var submitBtn = document.getElementById("submit-btn");
   var progressCard = document.getElementById("progress-card");
@@ -247,6 +363,8 @@
   if (form) {
     form.addEventListener("submit", function(ev) {
       ev.preventDefault();
+      rememberSlots();
+      rememberPrefs();
       progressCard.classList.remove("hidden");
       progressError.classList.add("hidden");
       submitBtn.disabled = true;
@@ -255,8 +373,13 @@
 
       fetch(ANALYZE_URL, {method:"POST", body:new FormData(form)})
         .then(function(r) {
-          return r.json().catch(function(){ return {}; }).then(function(j) {
-            if (!r.ok) throw new Error(j.error || "{% trans %}Could not start analysis.{% endtrans %}");
+          return r.text().then(function(body) {
+            var j = {};
+            try { j = JSON.parse(body); } catch (e) { j = {}; }
+            if (!r.ok) {
+              throw new Error(j.error || serverMessage(body) ||
+                "{% trans %}Could not start analysis.{% endtrans %}");
+            }
             return j;
           });
         })

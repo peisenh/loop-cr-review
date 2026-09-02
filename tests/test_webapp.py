@@ -19,6 +19,7 @@ import threading
 import time
 import unittest
 import unittest.mock
+from urllib.parse import quote
 import zipfile
 from pathlib import Path
 from werkzeug.datastructures import MultiDict
@@ -429,11 +430,11 @@ class TestFormRecoversAfterDownload(unittest.TestCase):
         self.html = webapp.app.test_client().get("/").get_data(as_text=True)
 
     def test_the_button_is_re_enabled_after_the_result_is_requested(self):
-        after = self.html.split("window.location.href", 1)[1][:600]
+        after = self.html.split("RESULT_URL.replace", 1)[1][:600]
         self.assertIn("submitBtn.disabled = false", after)
 
     def test_the_progress_box_ends_on_done(self):
-        after = self.html.split("window.location.href", 1)[1][:600]
+        after = self.html.split("RESULT_URL.replace", 1)[1][:600]
         self.assertIn('stage: "done"', after)
 
 
@@ -680,3 +681,179 @@ class TestPlatformWording(unittest.TestCase):
         webapp.set_platform("nonsense")
         self.assertEqual(webapp.platform(), "server")
         self.assertIn("Homelab", self._text())
+
+
+class TestSlotsAreRemembered(unittest.TestCase):
+    """Own slot times survive a reload.
+
+    They are times of day, not anything from an export, and retyping them for
+    every report is the kind of friction that makes a tool feel unfinished.
+    """
+
+    def setUp(self):
+        self.page = webapp.app.test_client().get("/?lang=de").get_data(as_text=True)
+
+    def test_the_form_stores_and_restores_them(self):
+        for name in ("rememberSlots", "restoreSlots", "forgetSettings"):
+            with self.subTest(name=name):
+                self.assertIn(name, self.page)
+
+    def test_they_are_kept_in_a_cookie_not_local_storage(self):
+        """The app serves itself on a fresh port every launch.
+
+        localStorage is scoped to the origin, port included, so nothing would
+        ever have come back there. Cookies are scoped by host only.
+        """
+        self.assertIn("document.cookie", self.page)
+        self.assertNotIn("localStorage.setItem", self.page)
+
+    def test_submitting_stores_them(self):
+        after = self.page.split('form.addEventListener("submit"', 1)[1][:300]
+        self.assertIn("rememberSlots()", after)
+
+    def test_there_is_a_way_back_to_the_default(self):
+        self.assertIn("forgetSettings()", self.page)
+        self.assertIn("Einstellungen vergessen", self.page)
+
+    def test_the_page_says_where_they_are_kept(self):
+        self.assertIn("bleiben auf diesem", self.page)
+
+
+class TestOverlappingSlotsAreRefused(unittest.TestCase):
+    """The form has always promised "no overlap"; now it holds.
+
+    An overlap does not fail loudly on its own: the first match wins, so a meal
+    in the overlap counts towards the earlier slot while the report shows the
+    later slot's hours beside it.
+    """
+
+    def setUp(self):
+        shutil.rmtree(webapp._JOB_ROOT, ignore_errors=True)
+        webapp._prepare_job_root()
+        self.addCleanup(shutil.rmtree, webapp._JOB_ROOT, True)
+        self.client = webapp.app.test_client()
+
+    def _post(self, starts, ends):
+        with open(EXAMPLE_ZIP, "rb") as handle:
+            return self.client.post("/analyze", content_type="multipart/form-data", data={
+                "export": (io.BytesIO(handle.read()), "e.zip"), "lang": "de",
+                "slots_mode": "fields",
+                "slot_label": ["Frühstück", "Mittag"],
+                "slot_start": starts, "slot_end": ends,
+            })
+
+    def test_an_overlap_is_rejected_with_the_hours_named(self):
+        response = self._post(["5", "11"], ["12", "15"])
+        self.assertEqual(response.status_code, 400)
+        body = response.get_data(as_text=True)
+        self.assertIn("overlap", body)
+        self.assertIn("11", body)
+
+    def test_touching_windows_are_accepted(self):
+        self.assertEqual(self._post(["5", "11"], ["11", "15"]).status_code, 200)
+
+    def test_the_page_can_show_what_the_server_said(self):
+        """abort() answers with HTML, so the message needs digging out."""
+        page = self.client.get("/?lang=de").get_data(as_text=True)
+        self.assertIn("serverMessage", page)
+
+
+class TestRememberedPreferences(unittest.TestCase):
+    """Language, window and the three checkboxes come back too.
+
+    Read on the server rather than restored by script, so the fields are already
+    right when the page arrives — nothing flickers into place, and the language
+    is correct from the first paint.
+    """
+
+    def setUp(self):
+        self.client = webapp.app.test_client()
+
+    def _page(self, prefs=None):
+        if prefs is not None:
+            self.client.set_cookie("lcr_prefs", json.dumps(prefs))
+        return self.client.get("/").get_data(as_text=True)
+
+    def test_defaults_without_a_cookie(self):
+        page = self._page()
+        self.assertIn('name="window_hours" value="4"', page)
+        for flag in ("assume_camaps", "daily", "dark_charts"):
+            with self.subTest(flag=flag):
+                self.assertNotIn(f'name="{flag}" checked', page)
+
+    def test_the_window_comes_back(self):
+        self.assertIn('value="3.5"', self._page({"window_hours": 3.5}))
+
+    def test_the_checkboxes_come_back(self):
+        page = self._page({"assume_camaps": True, "daily": True, "dark_charts": False})
+        self.assertIn('name="assume_camaps" checked', page)
+        self.assertIn('name="daily" checked', page)
+        self.assertNotIn('name="dark_charts" checked', page)
+
+    def test_the_language_comes_back(self):
+        page = self._page({"lang": "en"})
+        self.assertIn("Language", page)
+        self.assertNotIn("Sprache", page)
+
+    def test_a_url_parameter_still_wins_over_the_cookie(self):
+        self.client.set_cookie("lcr_prefs", json.dumps({"lang": "en"}))
+        self.assertIn("Sprache", self.client.get("/?lang=de").get_data(as_text=True))
+
+    def test_a_broken_cookie_is_ignored(self):
+        """A stale or tampered value must not take the form down."""
+        self.client.set_cookie("lcr_prefs", "{not json")
+        self.assertIn('name="window_hours" value="4"', self.client.get("/").get_data(as_text=True))
+
+    def test_values_out_of_range_are_ignored(self):
+        page = self._page({"window_hours": 99, "lang": "klingon"})
+        self.assertIn('name="window_hours" value="4"', page)
+        self.assertIn("Sprache", page)
+
+    def test_the_form_writes_them_and_can_forget_them(self):
+        page = self._page()
+        self.assertIn("rememberPrefs", page)
+        self.assertIn("forgetPrefs", page)
+
+
+class TestPreferencesCookieEncoding(unittest.TestCase):
+    """The browser writes the cookie with encodeURIComponent.
+
+    Werkzeug does not undo percent-encoding for cookie values, so without
+    unquoting every preference was dropped and the form kept showing defaults —
+    silently, because a parse failure falls back to the defaults by design.
+    """
+
+    def test_a_percent_encoded_cookie_is_read(self):
+        client = webapp.app.test_client()
+        client.set_cookie("lcr_prefs", quote(json.dumps({"window_hours": 3.5})))
+        page = client.get("/").get_data(as_text=True)
+        self.assertIn('name="window_hours" value="3.5"', page)
+
+    def test_a_plain_cookie_still_works(self):
+        client = webapp.app.test_client()
+        client.set_cookie("lcr_prefs", json.dumps({"window_hours": 2.5}))
+        page = client.get("/").get_data(as_text=True)
+        self.assertIn('name="window_hours" value="2.5"', page)
+
+
+class TestForgettingIsNotSlotOnly(unittest.TestCase):
+    """The control sat inside the slots fieldset and read as if it were.
+
+    It clears the settings as well, so it belongs beside the submit button.
+    """
+
+    def setUp(self):
+        self.page = webapp.app.test_client().get("/?lang=de").get_data(as_text=True)
+
+    def test_it_sits_outside_the_slots_fieldset(self):
+        slots = self.page.index('id="slots-fields"')
+        button = self.page.index("forgetSettings()")
+        submit = self.page.index('id="submit-btn"')
+        self.assertLess(slots, button)
+        self.assertLess(button, submit)
+        self.assertGreater(self.page.index("</fieldset>"), slots)
+        self.assertLess(self.page.index("</fieldset>"), button)
+
+    def test_the_wording_covers_all_settings(self):
+        self.assertIn("Einstellungen vergessen", self.page)
+        self.assertIn("Mahlzeitfenster", self.page)

@@ -33,6 +33,15 @@ Systemdialog, liegt die Kopie dort, wo der Nutzer sie hinstellt
 (lokale Datei oder eine Cloud-App seiner Wahl). Das ist dann kein
 Upload durch uns.
 
+## Was im Browser bleibt
+
+Der Browser merkt sich in Cookies, was im Formular eingestellt war:
+Sprache, Mahlzeitfenster, die drei Häkchen und eigene Slot-Zeiten. Damit
+muss das nicht bei jedem Report neu eingetragen werden. Das sind
+Einstellungen und Tageszeiten, keine Gesundheitsdaten. Sie gehen an die Auswertung, die
+auf demselben Gerät läuft, und verlassen es nicht. Im Formular löscht
+„Zurück zum Standard“ sie wieder.
+
 ## Was wir nicht tun
 
 - keine Übertragung an Server von uns

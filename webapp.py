@@ -18,6 +18,7 @@ import threading
 import time
 import uuid
 import zipfile
+from urllib.parse import unquote
 from pathlib import Path
 
 from flask import (Flask, Response, abort, g, jsonify, render_template,
@@ -91,6 +92,41 @@ _TOKEN_COOKIE = "lcr_access"
 # the phone. Default is the server case, because that is the one that needs the
 # warning if nobody sets anything.
 _PLATFORM = "server"
+
+
+# The form options the browser is allowed to remember. Times of day and display
+# choices — nothing from an export. Kept in a cookie rather than localStorage
+# because the app serves itself on a fresh port every launch and localStorage is
+# scoped to the origin, port included.
+_PREFS_COOKIE = "lcr_prefs"
+_PREF_FLAGS = ("assume_camaps", "daily", "dark_charts")
+
+
+def _remembered_prefs():
+    """What the browser sent back, sanitised. -> dict"""
+    # The browser writes this with encodeURIComponent, and werkzeug does not undo
+    # percent-encoding for cookie values — without unquote every preference was
+    # silently dropped and the form kept showing the defaults.
+    try:
+        raw = json.loads(unquote(request.cookies.get(_PREFS_COOKIE) or "{}"))
+    except (ValueError, TypeError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    prefs = {}
+    lang = str(raw.get("lang", "")).lower()
+    if lang in ("de", "en"):
+        prefs["lang"] = lang
+    try:
+        window = float(raw.get("window_hours"))
+        if 0.5 <= window <= 12:
+            prefs["window_hours"] = window
+    except (TypeError, ValueError):
+        pass
+    for flag in _PREF_FLAGS:
+        if isinstance(raw.get(flag), bool):
+            prefs[flag] = raw[flag]
+    return prefs
 
 
 def set_platform(kind):
@@ -355,7 +391,8 @@ def _read_slots(tmpd):
 
 def _ui_lang():
     """Language for the upload form and the report (default ``de``)."""
-    lang = (request.args.get("lang") or request.form.get("lang") or "de").strip().lower()
+    lang = (request.args.get("lang") or request.form.get("lang")
+            or _remembered_prefs().get("lang") or "de").strip().lower()
     return lang if lang in ("de", "en") else "de"
 
 
@@ -506,6 +543,7 @@ def index():
         lang=lang,
         slot_defaults=slot_defaults,
         platform=platform(),
+        prefs=_remembered_prefs(),
     )
 
 

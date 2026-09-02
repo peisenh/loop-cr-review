@@ -32,6 +32,14 @@ when it is closed. If the user saves the report through the system
 dialog, that copy sits wherever the user puts it — a local file, or a
 cloud app of their choosing. That is not an upload by us.
 
+## What stays in the browser
+
+The browser keeps what was set in the form in cookies: language, meal
+window, the three checkboxes and any custom slot times, so none of it has
+to be entered again for every report. Those are settings and times of day,
+not health data. They go to the analysis running on the same device
+and do not leave it. "Back to default" in the form removes them.
+
 ## What we do not do
 
 - no transfer to servers of ours
