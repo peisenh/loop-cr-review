@@ -45,6 +45,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the right one — they pointed at neither.
 
 ### Changed
+- The app is built for arm64-v8a only. numpy and matplotlib have to be 16 KB
+  aligned to load on current devices, and that alignment is a toolchain default
+  for arm64 and nothing else — an x86_64 slice would ship libraries it cannot
+  load. Emulators run arm64 translated, and `-Pabi=` still overrides it. The
+  release scripts already passed arm64 explicitly, so only builds started from
+  Android Studio change.
+
 - The privacy note on the upload page depends on where it is read. Docker is run
   by whoever set it up, so the note there is still about that server. In the
   Android app and the desktop window it said "homelab" and "system temp

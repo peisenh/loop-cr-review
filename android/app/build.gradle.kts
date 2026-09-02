@@ -15,11 +15,17 @@ android {
         versionCode = 5
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
+            // arm64 only. numpy and matplotlib have to be 16 KB aligned to load on
+            // current devices, and that alignment is a toolchain default for arm64
+            // and nothing else — every attempt to get an aligned x86_64 wheel
+            // failed, see poc/android-x86_64-16k/. Shipping an x86_64 slice that
+            // cannot load its own libraries would be worse than not shipping one.
+            // The emulator runs arm64 translated; -Pabi= still overrides this.
             val abi = findProperty("abi") as String?
             if (!abi.isNullOrBlank()) {
                 abiFilters += abi.split(',').map { it.trim() }.filter { it.isNotEmpty() }
             } else {
-                abiFilters += listOf("arm64-v8a", "x86_64")
+                abiFilters += listOf("arm64-v8a")
             }
         }
     }

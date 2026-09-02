@@ -38,9 +38,16 @@ From the **repository root**:
 # → dist/loop-cr-review-android.apk
 ```
 
-That is the same command GitHub Actions runs on a `v*` tag. Default ABI is
-`arm64-v8a`. The committed matplotlib wheel is arm64-only. numpy is
-downloaded during the build (not in git).
+That is the same command GitHub Actions runs on a `v*` tag.
+
+**arm64-v8a only.** numpy and matplotlib have to be 16 KB aligned to load on
+current devices, and that alignment turns out to be a toolchain default for arm64
+and nothing else — no combination of linker flags produced an aligned x86_64
+wheel, which `poc/android-x86_64-16k/` records. Shipping an x86_64 slice that
+cannot load its own libraries would be worse than shipping none. The emulator
+runs arm64 translated; `-Pabi=` still overrides the default for anyone who wants
+to try. The committed matplotlib wheel is arm64-only, and numpy is downloaded
+during the build (not in git).
 
 Rebuild matplotlib (rare):
 
