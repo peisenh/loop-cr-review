@@ -10,6 +10,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- `poc/android-x86_64-16k/`: an attempt to build numpy and matplotlib for x86_64
+  with 16 KB ELF alignment, so the emulator could run a 16 KB image. It does not
+  work, and the README says why: that alignment is a toolchain default for arm64
+  and only for arm64, which is the one Android ABI where devices use 16 KB pages.
+  Neither LDFLAGS, nor a meson cross file, nor a -D option changed it. The
+  emulator runs a 4 KB image instead; real devices are arm64, where everything is
+  already aligned. Includes the wheel alignment checker that produced the finding.
 - The form remembers what was set: language, meal window, the three checkboxes
   and own slot times, so none of it has to be entered again for every report. The
   settings are read on the server from a cookie, so the fields are already right
