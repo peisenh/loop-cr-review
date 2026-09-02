@@ -395,6 +395,20 @@ def build_slots(raw, source="Slots"):
     if catchall != 1:
         raise LoopCRError(f"{source}: exactly one catch-all entry (start=-1, end=-1) "
                           f"required, found: {catchall}.")
+    # Overlapping windows do not fail, they mislead: the first match wins, so a
+    # meal in the overlap is counted in the earlier slot while the report shows
+    # the later slot's hours next to it. The form says "no overlap"; this is what
+    # makes that true.
+    timed = [(label, start, end) for _key, label, start, end in slots if start >= 0]
+    for i, (label_a, start_a, end_a) in enumerate(timed):
+        for label_b, start_b, end_b in timed[i + 1:]:
+            lo, hi = max(start_a, start_b), min(end_a, end_b)
+            if lo < hi:
+                raise LoopCRError(
+                    f"{source}: '{label_a}' ({start_a}-{end_a}) and '{label_b}' "
+                    f"({start_b}-{end_b}) overlap between {lo} and {hi}. A meal "
+                    f"there would count towards '{label_a}', which is not what the "
+                    f"hours next to '{label_b}' would suggest.")
     return slots
 
 

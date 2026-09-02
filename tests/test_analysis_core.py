@@ -505,3 +505,42 @@ class TestSlotHeadline(unittest.TestCase):
         head = core.slot_headline({"cls": "strong", "exc": 1.08}, met)
         self.assertIn("baseline", head.lower())
         self.assertNotIn("throttl", head.lower())
+
+
+class TestSlotsMustNotOverlap(unittest.TestCase):
+    """Overlapping windows do not fail loudly, they mislead.
+
+    The first match wins, so a meal in the overlap counts towards the earlier
+    slot while the report prints the later slot's hours beside it. The web form
+    has always said "no overlap"; nothing enforced it.
+    """
+
+    @staticmethod
+    def _raw(rows):
+        out = [{"key": f"k{i}", "label": label, "start": start, "end": end}
+               for i, (label, start, end) in enumerate(rows)]
+        out.append({"key": "other", "label": "Other", "start": -1, "end": -1})
+        return out
+
+    def test_overlapping_windows_are_refused(self):
+        with self.assertRaises(core.LoopCRError) as caught:
+            core.build_slots(self._raw([("Breakfast", 5, 12), ("Lunch", 11, 15)]))
+        message = str(caught.exception)
+        self.assertIn("overlap", message)
+        self.assertIn("11", message)          # names the hours, so it can be fixed
+
+    def test_one_window_inside_another_is_refused(self):
+        with self.assertRaises(core.LoopCRError):
+            core.build_slots(self._raw([("Day", 6, 20), ("Lunch", 11, 15)]))
+
+    def test_touching_windows_are_fine(self):
+        slots = core.build_slots(self._raw([("Breakfast", 5, 11), ("Lunch", 11, 15)]))
+        self.assertEqual(len(slots), 3)
+
+    def test_a_gap_between_windows_is_fine(self):
+        """Hours nobody assigned fall to the catch-all, which is the point of it."""
+        slots = core.build_slots(self._raw([("Breakfast", 5, 10), ("Lunch", 11, 15)]))
+        self.assertEqual(len(slots), 3)
+
+    def test_the_catch_all_does_not_count_as_overlapping(self):
+        core.build_slots(self._raw([("Breakfast", 5, 10), ("Dinner", 17, 22)]))
