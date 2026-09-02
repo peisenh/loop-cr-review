@@ -317,6 +317,10 @@
 
   var form = document.querySelector("form.card");
   var submitBtn = document.getElementById("submit-btn");
+  var SUBMIT_LABEL = submitBtn ? submitBtn.textContent : "";
+  var spanPending = false;
+  var submitQueued = false;
+  var analysisRunning = false;
   var progressCard = document.getElementById("progress-card");
   var progressBar = document.getElementById("progress-bar");
   var progressStage = document.getElementById("progress-stage");
@@ -363,6 +367,11 @@
   if (form) {
     form.addEventListener("submit", function(ev) {
       ev.preventDefault();
+      if (spanPending) { submitQueued = true; return; }
+      // requestSubmit() and Enter both bypass a disabled button, so the guard is
+      // here rather than only on the button: ten impatient clicks start one run.
+      if (analysisRunning) { return; }
+      analysisRunning = true;
       rememberSlots();
       rememberPrefs();
       progressCard.classList.remove("hidden");
@@ -415,12 +424,15 @@
           // the analysis is running and the button would stay disabled.
           window.setTimeout(function() {
             showProgress({percent: 100, stage: "done"});
+            analysisRunning = false;
             submitBtn.disabled = false;
             submitBtn.textContent = "{% trans %}Create report{% endtrans %}";
           }, 1500);
         })
         .catch(function(err) {
           showError(err.message);
+          // Without this a failed run would leave the form blocked for good.
+          analysisRunning = false;
           submitBtn.disabled = false;
           submitBtn.textContent = "{% trans %}Create report{% endtrans %}";
         });
@@ -440,12 +452,22 @@
     exportInput.addEventListener("change", function(){
       var files = this.files;
       var hint = document.getElementById("span-hint");
+      // A click made for the previous file must not carry over to this one.
+      submitQueued = false;
       clearRange();
       if (!files || !files.length) { hint.textContent = ""; return; }
       var fd = new FormData();
       for (var i = 0; i < files.length; i++) fd.append("export", files[i]);
       hint.textContent = "...";
-      submitBtn.disabled = true;
+      // Reading the range takes a moment. Disabling the button without saying so
+      // made a click during that moment do nothing at all, with no hint why —
+      // so the label says what it is waiting for, and a click made meanwhile is
+      // remembered and carried out as soon as the range is in.
+      // The button stays clickable on purpose. Disabling it made a click during
+      // this moment do nothing at all, with no hint why; now the label says what
+      // is happening and a click is carried out as soon as the range is in.
+      spanPending = true;
+      submitBtn.textContent = "{% trans %}Reading date range…{% endtrans %}";
       fetch("{{ url_for('span') }}", {method:"POST", body:fd})
         .then(function(r){
           return r.text().then(function(t){
@@ -464,7 +486,13 @@
           hint.textContent = x.j.source + ": " + x.j.days + " d";
         })
         .catch(function(err){ hint.textContent = "error: " + (err && err.message ? err.message : "network"); })
-        .then(function(){ submitBtn.disabled = false; });
+        .then(function(){
+          spanPending = false;
+          if (submitBtn.textContent === "{% trans %}Reading date range…{% endtrans %}") {
+            submitBtn.textContent = SUBMIT_LABEL;
+          }
+          if (submitQueued) { submitQueued = false; form.requestSubmit(); }
+        });
     });
 
     // Coming back with the browser restores the form from the cache, including

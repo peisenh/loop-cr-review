@@ -45,6 +45,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the data leaves the device. It now says that it does not.
 
 ### Fixed
+- Clicking "Create report" right after choosing a file does something. The
+  button was disabled while the date range was read, so a click in that moment
+  did nothing at all and said nothing either. Now the label says what it is
+  waiting for and the click is carried out as soon as the range is in — and
+  clicking ten times still starts one run, since Enter and the queued submit
+  both bypass a disabled button. Choosing another file drops a click made for
+  the previous one.
 - Overlapping slot windows are refused instead of quietly misassigning meals.
   With breakfast 5–12 and lunch 11–15 the first match wins, so a meal at 11:30
   counted towards breakfast while the report printed "lunch 11–15" beside it —

@@ -1561,3 +1561,7 @@ msgstr "Forget my settings"
 #: templates/upload.html.j2
 msgid "Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device."
 msgstr "Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device."
+
+#: templates/upload.html.j2
+msgid "Reading date range…"
+msgstr "Reading date range…"

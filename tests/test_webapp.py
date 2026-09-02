@@ -708,7 +708,7 @@ class TestSlotsAreRemembered(unittest.TestCase):
         self.assertNotIn("localStorage.setItem", self.page)
 
     def test_submitting_stores_them(self):
-        after = self.page.split('form.addEventListener("submit"', 1)[1][:300]
+        after = self.page.split('form.addEventListener("submit"', 1)[1][:600]
         self.assertIn("rememberSlots()", after)
 
     def test_there_is_a_way_back_to_the_default(self):
@@ -857,3 +857,33 @@ class TestForgettingIsNotSlotOnly(unittest.TestCase):
     def test_the_wording_covers_all_settings(self):
         self.assertIn("Einstellungen vergessen", self.page)
         self.assertIn("Mahlzeitfenster", self.page)
+
+
+class TestImpatientClicking(unittest.TestCase):
+    """Clicking before the date range has been read must do something.
+
+    The button used to be disabled while the range was fetched, so a click in
+    that moment did nothing at all and said nothing either.
+    """
+
+    def setUp(self):
+        self.page = webapp.app.test_client().get("/?lang=de").get_data(as_text=True)
+
+    def test_the_button_says_what_it_is_waiting_for(self):
+        self.assertIn("Zeitraum wird gelesen", self.page)
+
+    def test_a_click_during_that_moment_is_carried_out_afterwards(self):
+        self.assertIn("submitQueued = true", self.page)
+        self.assertIn("form.requestSubmit()", self.page)
+
+    def test_ten_clicks_start_one_run(self):
+        """requestSubmit and Enter both bypass a disabled button."""
+        self.assertIn("if (analysisRunning) { return; }", self.page)
+
+    def test_the_guard_is_released_on_both_paths(self):
+        """A failed run must not block the form for good."""
+        self.assertEqual(self.page.count("analysisRunning = false"), 3)
+
+    def test_choosing_another_file_drops_a_queued_click(self):
+        after = self.page.split('var files = this.files', 1)[1][:300]
+        self.assertIn("submitQueued = false", after)
