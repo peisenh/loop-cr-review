@@ -12,6 +12,7 @@ import android.print.PrintManager
 import android.provider.OpenableColumns
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -348,6 +349,15 @@ class MainActivity : Activity() {
             @Suppress("DEPRECATION")
             super.onBackPressed()
         }
+    }
+
+    override fun onPause() {
+        // Android writes cookies to disk lazily. Without this the slot times a
+        // user just entered can be lost when the process is killed, and the app
+        // serves itself on a fresh port every launch, so there is nothing else
+        // holding them.
+        CookieManager.getInstance().flush()
+        super.onPause()
     }
 
     override fun onDestroy() {

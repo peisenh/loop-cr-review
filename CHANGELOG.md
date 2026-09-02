@@ -9,13 +9,16 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
-### Changed
-- The privacy note on the upload page depends on where it is read. Docker is run
-  by whoever set it up, so the note there is still about that server. In the
-  Android app and the desktop window it said "homelab" and "system temp
-  directory" to someone holding a phone, who wants to know one thing: whether
-  the data leaves the device. It now says that it does not.
 ### Added
+- The form remembers what was set: language, meal window, the three checkboxes
+  and own slot times, so none of it has to be entered again for every report. The
+  settings are read on the server from a cookie, so the fields are already right
+  when the page arrives rather than flickering into place, and the language is
+  correct from the first paint. A URL parameter still wins, values out of range
+  are ignored, and "Forget my settings" — next to the submit button, not inside
+  the slots box — clears everything. A cookie rather than localStorage: the app
+  serves itself on a fresh port every launch, and localStorage is scoped to the
+  origin, port included, so nothing would ever have come back there.
 - `tools/make-play-screenshots.sh`: the store screenshots from the example data,
   at phone size, in both languages. They were taken by hand on a device, which
   meant redoing all of them for every change of wording. Each picture is the
@@ -34,7 +37,22 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   an English version too. Both link to each other, and both READMEs now point at
   the right one — they pointed at neither.
 
+### Changed
+- The privacy note on the upload page depends on where it is read. Docker is run
+  by whoever set it up, so the note there is still about that server. In the
+  Android app and the desktop window it said "homelab" and "system temp
+  directory" to someone holding a phone, who wants to know one thing: whether
+  the data leaves the device. It now says that it does not.
+
 ### Fixed
+- Overlapping slot windows are refused instead of quietly misassigning meals.
+  With breakfast 5–12 and lunch 11–15 the first match wins, so a meal at 11:30
+  counted towards breakfast while the report printed "lunch 11–15" beside it —
+  the form had promised "no overlap" all along, and nothing enforced it. The
+  message names both slots and the hours they share.
+- The upload page shows what the server said when a request is refused. Flask
+  answers an aborted request with an HTML page, and reading only the status left
+  "could not start analysis" on screen while the reason was in the body.
 - The report is readable on a phone. It had no viewport tag, so a phone laid it
   out at about 980 px and scaled the result down — a wall of tiny text, with none
   of the narrow-screen rules taking effect. With the tag, the wide tables scroll
