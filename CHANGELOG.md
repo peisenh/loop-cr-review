@@ -51,7 +51,6 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   load. Emulators run arm64 translated, and `-Pabi=` still overrides it. The
   release scripts already passed arm64 explicitly, so only builds started from
   Android Studio change.
-
 - The privacy note on the upload page depends on where it is read. Docker is run
   by whoever set it up, so the note there is still about that server. In the
   Android app and the desktop window it said "homelab" and "system temp
@@ -59,6 +58,10 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   the data leaves the device. It now says that it does not.
 
 ### Fixed
+- The launcher icon sits in the middle of its circle. The mark was 0.9 right and
+  1.9 low on the 108 canvas — barely visible in a square, plain once a launcher
+  masks it to a circle and crops top and bottom hardest. Corrected by measuring
+  the rendered ink rather than by eye.
 - Clicking "Create report" right after choosing a file does something. The
   button was disabled while the date range was read, so a click in that moment
   did nothing at all and said nothing either. Now the label says what it is
