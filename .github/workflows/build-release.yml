@@ -238,7 +238,11 @@ jobs:
           packageName: de.peisenh.loopcrreview
           releaseFiles: dist/loop-cr-review-play.aab
           track: internal
-          status: draft
+          # Published rather than draft. The internal track reaches nobody but
+          # the people listed for it, so there is nothing to hold back — and a
+          # draft cannot be promoted to another track until it has been
+          # published, which is a manual step for no gain.
+          status: completed
           whatsNewDirectory: android/whatsnew
 
   release:

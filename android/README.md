@@ -40,8 +40,10 @@ From the **repository root**:
 
 That is the same command GitHub Actions runs on a `v*` tag. The workflow also
 builds the Play bundle and, when `PLAY_SERVICE_ACCOUNT_JSON` is configured,
-uploads it to the **internal** track as a draft — no review, nobody outside the
-internal tester list, and the closed test stays where it is. Without the secret
+uploads it to the **internal** track and publishes it there — no review, nobody
+outside the internal tester list, and the closed test stays where it is. A draft
+would have to be published by hand before it could be promoted to another track,
+which is a step for no gain when the track reaches nobody else anyway. Without the secret
 the step is skipped and the tag still produces its artifacts.
 
 ### Release notes for the store
