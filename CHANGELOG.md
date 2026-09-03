@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-09-03
+
 ### Added
 - Release notes for the store live in `android/whatsnew/`, one file per language,
   and go up with the bundle. Written by hand, not generated from the changelog:
@@ -1186,7 +1188,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.24.1...HEAD
+[0.24.1]: https://github.com/peisenh/loop-cr-review/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/peisenh/loop-cr-review/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/peisenh/loop-cr-review/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/peisenh/loop-cr-review/compare/v0.21.0...v0.22.0

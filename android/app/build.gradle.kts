@@ -12,7 +12,7 @@ android {
         applicationId = "de.peisenh.loopcrreview"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
+        versionCode = 7
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
             // arm64 only. numpy and matplotlib have to be 16 KB aligned to load on
