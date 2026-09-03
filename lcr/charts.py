@@ -1,41 +1,35 @@
 # SPDX-FileCopyrightText: 2026 Peter Eisenhauer <github@peter-e.de>
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""All matplotlib rendering. Pure presentation: takes data, returns base64 PNGs."""
-import os
-from pathlib import Path
-import base64
-import io
-import logging
+"""All chart rendering. Pure presentation: takes data, returns inline SVG.
+
+This was matplotlib, and dropping it is what lets numpy go too — between them
+they are the only compiled code in the app, the reason for a hand-built wheel,
+and the source of every Android problem this project has had. What they were
+asked to draw is bands, lines, a few labels and a pair of axes.
+
+Charts are returned as SVG markup rather than a base64 PNG. They stay sharp at
+any size, weigh a fraction of the bytes, and follow the light or dark theme
+through a stylesheet inside the file — so there is no second rendering pass and
+no dark variant to generate.
+
+The ``dark`` argument is kept on every function so callers need not change, and
+ignored: one chart now serves both themes.
+"""
 import warnings
 from collections import defaultdict
 from datetime import datetime
-from contextlib import contextmanager
 
 import numpy as np
 
-# Put the font cache in a fixed location (otherwise rebuilt on every start in the
-# onefile binary) and silence the "building font cache" message — both must happen
-# before matplotlib is imported.
-os.environ.setdefault("MPLCONFIGDIR", str(Path.home() / ".cache" / "loop-cr-review-mpl"))
-logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
-
-import matplotlib  # noqa: E402  pylint: disable=wrong-import-position
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402  pylint: disable=wrong-import-position
-from matplotlib.lines import Line2D  # noqa: E402  pylint: disable=wrong-import-position
-from matplotlib.patches import Patch  # noqa: E402  pylint: disable=wrong-import-position
-
-from lcr.common import (  # noqa: E402  pylint: disable=wrong-import-position
-    DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_MIN_GAP, DAILY_ROW, WEEKDAYS, _, _slot_state,
+from lcr.common import (
+    DAILY_MIN_GAP, WEEKDAYS, _, _slot_state,
     fmt_delta, g, glucose_unit, select_slot_rows, slot_median_curve, slot_norm_bands,
     slot_norm_curve, slot_of)
+from lcr.svg import Chart, band_d, clip_halfplane, path_d, polygon_d
 
 __all__ = [
-    "_draw_day_events",
     "_day_title",
-    "fig_to_b64",
-    "_chart_theme",
-    "_chart_palette",
+    "PALETTE",
     "gri_grid_chart",
     "agp_chart",
     "slot_curves_chart",
@@ -44,37 +38,58 @@ __all__ = [
     "daily_charts",
 ]
 
+# Colour roles as (light, dark). The light values are the ones the PNG theme
+# used; the dark ones come from what was a separate rendering pass. A role
+# ending in -s is a stroke, everything else a fill.
+PALETTE = {
+    "tir":        ("#dff0df", "#1e3a28"),
+    "p5":         ("#bcd4ff", "#2a4060"),
+    "p25":        ("#5b8def", "#3a6aaa"),
+    "median-s":   ("#0b2e6b", "#9ec0ff"),
+    "cgm-s":      ("#0b2e6b", "#7eb0ff"),
+    "basal":      ("#5b8def", "#6a90c0"),
+    "bolus":      ("#0b2e6b", "#9ec0ff"),
+    "bolus-s":    ("#0b2e6b", "#9ec0ff"),
+    "carb":       ("#c0392b", "#f0a090"),
+    "carb-s":     ("#c0392b", "#f0a090"),
+    "grid-s":     ("#8a97a8", "#5a6577"),
+    # The axis frame: near-black on light, as matplotlib drew it. A pale one
+    # let the daily panels run into each other.
+    "frame-s":    ("#1a2233", "#8a97a8"),
+    # The small charts inside the normalised grid keep the pale frame; a
+    # strong one there would compete with each card's own border.
+    "frame-soft-s": ("#d8dee8", "#3a4556"),
+    "edge-s":     ("#c5cdd9", "#4a5568"),
+    "target-s":   ("#55aa55", "#4a8a4a"),
+    "p5-s":       ("#bcd4ff", "#2a4060"),
+    "p25-s":      ("#5b8def", "#3a6aaa"),
+    "zero-s":     ("#888888", "#8a97a8"),
+    "ink":        ("#45516b", "#a0aab8"),
+    # Tick marks are lines and need a stroke of their own; the fill role
+    # of the same name only colours the label text.
+    "ink-s":      ("#45516b", "#a0aab8"),
+    "title":      ("#1a2233", "#e8ecf2"),
+    "sub":        ("#5a6577", "#a0aab8"),
+    "legend-bg":  ("#ffffff", "#1c2330"),
+    "dot":        ("#17202d", "#ffffff"),
+    "dot-ring-s": ("#ffffff", "#17202d"),
+}
 
-def _draw_labels(axg, items, base_y, color, bold=False):
-    """Place labels (hour, text) of one kind; stagger into rows only on real proximity."""
-    lanes = []
-    for hour, text in sorted(items):
-        lane = next((i for i, last in enumerate(lanes) if hour - last >= DAILY_MIN_GAP), None)
-        if lane is None:
-            lane = len(lanes)
-            lanes.append(hour)
-        else:
-            lanes[lane] = hour
-        axg.axvline(hour, color=color, lw=.4, alpha=.18)
-        axg.text(hour, base_y - lane * DAILY_ROW, text, fontsize=5.5,
-                 color=color, ha="center", va="top", fontweight="bold" if bold else "normal")
+WIDE, WIDE_HEIGHT = 1000, 392
+GRI_SIDE = 240
+DAY_W, DAY_H = 1100, 250
+CARD_W, CARD_H, CARD_COLS, CARD_GAP, LEGEND_H = 496, 280, 2, 8, 40
+ZONE_COLOURS = ("#69a84f", "#f4cf2e", "#ef8a0c", "#e43d3d", "#8f3434")
+ZONE_LEVELS = (0, 20, 40, 60, 80, 100)
 
-
-def _draw_day_events(axg, events, pal):
-    """All bolus entries (top) and carb entries (below) of a day."""
-    def hour(event):
-        return event["time"].hour + event["time"].minute / 60
-    _draw_labels(axg, [(hour(e), f"{e['bolus']:.1f} U") for e in events if e["bolus"] > 0],
-                 DAILY_BOLUS_Y, pal["bolus"], bold=True)
-    _draw_labels(axg, [(hour(e), f"{e['cho']:.0f} g") for e in events if e["cho"] > 0],
-                 DAILY_CARB_Y, pal["carb"])
 
 def _day_title(day, tdd, cho=None):
     """Panel title: weekday + date, then TDD and the day's carbs if known.
 
     The carbs sit next to the insulin because that is the pair a reader wants:
-    a day with a high TDD says little on its own, next to what was eaten it says
-    something. Only counted meals appear here, so it matches the labels below.
+    a day with a high TDD says little on its own, next to what was eaten it
+    says something. Only counted meals appear here, so it matches the labels
+    below.
     """
     title = f"{_(WEEKDAYS[day.weekday()])}, {day:%d.%m.%Y}"
     if day in tdd:
@@ -87,159 +102,150 @@ def _day_title(day, tdd, cho=None):
     return title
 
 
-def fig_to_b64(fig):
-    """Matplotlib figure -> base64 PNG string (keeps figure facecolor for dark charts)."""
-    buf = io.BytesIO()
-    fig.tight_layout()
-    fig.savefig(buf, format="png", dpi=120, facecolor=fig.get_facecolor(),
-                edgecolor="none")
-    plt.close(fig)
-    return base64.b64encode(buf.getvalue()).decode()
+def _wide_chart():
+    """A page-wide chart with room for axis labels. -> (chart, sx, sy) later."""
+    return Chart(WIDE, WIDE_HEIGHT, margins=(64, 20, 48, 18), palette=PALETTE)
 
-@contextmanager
-def _chart_theme(dark=False):
-    """Temporary matplotlib rc for light or dark embedded charts."""
-    if dark:
-        params = {
-            "figure.facecolor": "#1c2330",
-            "axes.facecolor": "#1c2330",
-            "axes.edgecolor": "#8a97a8",
-            "axes.labelcolor": "#e8ecf2",
-            "xtick.color": "#c0c8d4",
-            "ytick.color": "#c0c8d4",
-            "text.color": "#e8ecf2",
-            "grid.color": "#5a6b82",
-            "legend.facecolor": "#243044",
-            "legend.edgecolor": "#3a4556",
-        }
-    else:
-        params = {
-            "figure.facecolor": "#ffffff",
-            "axes.facecolor": "#ffffff",
-            "axes.edgecolor": "#1a2233",
-            "axes.labelcolor": "#1a2233",
-            "xtick.color": "#1a2233",
-            "ytick.color": "#1a2233",
-            "text.color": "#1a2233",
-            "grid.color": "#b0b8c4",
-            "legend.facecolor": "#ffffff",
-            "legend.edgecolor": "#dde3ee",
-        }
-    with plt.rc_context(params):
-        yield
 
-def _chart_palette(dark=False):
-    """Fill/band colours readable on light or dark chart backgrounds."""
-    if dark:
-        return {
-            "tir": "#1e3a28", "p5": "#2a4060", "p25": "#3a6aaa", "median": "#9ec0ff",
-            "bolus": "#9ec0ff", "carb": "#f0a090", "cgm": "#7eb0ff", "basal": "#6a90c0",
-        }
-    return {
-        "tir": "#dff0df", "p5": "#bcd4ff", "p25": "#5b8def", "median": "#0b2e6b",
-        "bolus": "#0b2e6b", "carb": "#c0392b", "cgm": "#0b2e6b", "basal": "#5b8def",
-    }
+# Font sizes converted from what matplotlib drew rather than copied. It measured
+# in points at 120 dpi on a figure of a given width in inches; the SVG measures
+# in units on a viewBox. Ten points on a ten-inch figure is 13.9 units on a
+# thousand-unit box, not ten — carried over unchanged, every label came out
+# roughly a third too small.
+TICK_SIZE, LABEL_SIZE, LEGEND_SIZE = 13.9, 13.9, 11.1
 
-# --- Charts -----------------------------------------------------------------
+
+def _axes(chart, sx, sy, x_ticks, y_ticks, x_label, y_label, size=TICK_SIZE):
+    """Frame, ticks and the two axis captions, in one place.
+
+    Captions sit where matplotlib put them: the y one turned on its side and
+    centred on the axis, the x one centred below it.
+    """
+    chart.frame("frame")
+    chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=size)
+    chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{v:.0f}", size=size)
+    chart.text((chart.left + chart.right) / 2, chart.height - 5, x_label, "ink",
+               size=LABEL_SIZE, anchor="middle")
+    chart.add(f'<text transform="translate(13,{(chart.top + chart.bottom) / 2}) '
+              f'rotate(-90)" class="ink" font-size="{LABEL_SIZE}" '
+              f'text-anchor="middle">{y_label}</text>')
+
+
 def gri_grid_chart(gri, dark=False):
-    """Compact square GRI grid using the published diagonal risk zones."""
-    hypo = float(gri["hypo"])
-    hyper = float(gri["hyper"])
-    with _chart_theme(dark):
-        fig, ax = plt.subplots(figsize=(2.35, 2.35))
-        ax.set_facecolor("#ffffff" if not dark else "#1c2330")
+    """Compact square GRI grid using the published diagonal risk zones.
 
-        # Compact report view: focus the grid on the clinically relevant
-        # component range around the observed point. The GRI calculation and
-        # zone boundaries remain unchanged; only the displayed axes are
-        # cropped so the high-risk Zone E does not dominate the small card.
-        xmax = max(15.0, min(20.0, float(np.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
-        ymax = max(30.0, min(40.0, float(np.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
-        x = np.linspace(0, xmax, 500)
-        y = np.linspace(0, ymax, 500)
-        xs, ys = np.meshgrid(x, y)
-        score = 3.0 * xs + 1.6 * ys
+    The zones are bands of 3*hypo + 1.6*hyper, which is linear — so they are
+    straight stripes, and clipping the plot rectangle against two lines gives
+    them exactly. matplotlib contoured a 500x500 grid to find the same shapes.
+    """
+    del dark
+    hypo, hyper = float(gri["hypo"]), float(gri["hyper"])
+    # Same crop as before: focus on the clinically relevant range around the
+    # observed point so the high-risk zone does not dominate a small card.
+    xmax = max(15.0, min(20.0, float(np.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
+    ymax = max(30.0, min(40.0, float(np.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
 
-        # Conventional GRI progression: A best/green → E worst/brown.
-        zone_colors = ["#69a84f", "#f4cf2e", "#ef8a0c", "#e43d3d", "#8f3434"]
-        levels = [0, 20, 40, 60, 80, 100]
-        # Use the published zone colours without separator lines. A slightly
-        # softer fill keeps Zone E from visually dominating the compact card.
-        ax.contourf(xs, ys, np.clip(score, 0, 100), levels=levels,
-                    colors=zone_colors, alpha=0.88, antialiased=False)
-        # Zone names are given in the compact legend below the grid. Do not
-        # place A–E letters at arbitrary coordinates inside the cropped plot.
+    chart = Chart(GRI_SIDE, GRI_SIDE, margins=(30, 8, 26, 8), palette=PALETTE)
+    sx, sy = chart.scales((0, xmax), (0, ymax))
+    rect = [(0, 0), (xmax, 0), (xmax, ymax), (0, ymax)]
 
-        ax.scatter([hypo], [hyper], s=22,
-                   color="#17202d" if not dark else "#ffffff",
-                   edgecolor="#ffffff" if not dark else "#17202d",
-                   linewidth=0.7, zorder=5)
+    for i, colour in enumerate(ZONE_COLOURS):
+        low, high = ZONE_LEVELS[i], ZONE_LEVELS[i + 1]
+        poly = clip_halfplane(rect, 3.0, 1.6, high)
+        if low > 0:
+            poly = clip_halfplane(poly, -3.0, -1.6, -low)
+        data = polygon_d(poly, sx, sy)
+        if data:
+            chart.add(f'<path d="{data}" fill="{colour}" fill-opacity="0.88"/>')
 
-        ax.set_xlim(0, xmax)
-        ax.set_ylim(0, ymax)
-        ax.set_xlabel(_("Hypoglycemia component (%)"), fontsize=6.2, labelpad=1)
-        ax.set_ylabel(_("Hyperglycemia component (%)"), fontsize=6.2, labelpad=1)
-        ax.tick_params(labelsize=5.2, pad=1)
-        ax.set_box_aspect(1)
-        ax.grid(alpha=0.08)
-        for spine in ax.spines.values():
-            spine.set_color("#d8dee8" if not dark else "#3a4556")
-        fig.tight_layout(pad=0.12)
-        return fig_to_b64(fig)
+    x_ticks = list(range(0, int(xmax) + 1, 2))
+    y_ticks = list(range(0, int(ymax) + 1, 5))
+    chart.grid_x(sx, x_ticks, "grid", 0.10)
+    chart.grid_y(sy, y_ticks, "grid", 0.10)
+    chart.frame("frame")
+
+    # The observed point, ringed so it stays legible on any zone colour.
+    px, py = sx(hypo), sy(hyper)
+    chart.add(f'<circle cx="{px}" cy="{py}" r="3.4" class="dot"/>')
+    chart.add(f'<circle cx="{px}" cy="{py}" r="3.4" class="dot-ring-s" fill="none" '
+              f'stroke-width="1.1"/>')
+
+    chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=7.4)
+    chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{int(v)}", size=7.4)
+    chart.text(GRI_SIDE / 2, GRI_SIDE - 2, _("Hypoglycemia component (%)"),
+               "ink", size=8.8, anchor="middle")
+    chart.add(f'<text transform="translate(8,{GRI_SIDE / 2}) rotate(-90)" '
+              f'class="ink" font-size="8.8" text-anchor="middle">'
+              f'{_("Hyperglycemia component (%)")}</text>')
+    return chart.to_svg("GRI")
+
 
 def agp_chart(times, gluc, dark=False):
-    """AGP percentile chart as base64 PNG (light or dark theme)."""
+    """AGP percentile chart."""
+    del dark
     minute = np.array([t.hour * 60 + t.minute for t in times])
     bins = np.arange(0, 1441, 15)
     idx = np.digitize(minute, bins) - 1
     xs, perc = [], {q: [] for q in (5, 25, 50, 75, 95)}
-    for b in range(len(bins) - 1):
-        vals = gluc[idx == b]
+    for bin_index in range(len(bins) - 1):
+        vals = gluc[idx == bin_index]
         if len(vals) >= 5:
-            xs.append((bins[b] + 7.5) / 60)
+            xs.append((bins[bin_index] + 7.5) / 60)
             for q in perc:
                 perc[q].append(np.percentile(vals, q))
-    xs = np.array(xs)
-    pal = _chart_palette(dark)
-    with _chart_theme(dark):
-        fig, ax = plt.subplots(figsize=(10, 3.6))
-        ax.axhspan(g(70), g(180), color=pal["tir"])
-        ax.axhline(g(70), color="#5a5", lw=.7)
-        ax.axhline(g(180), color="#5a5", lw=.7)
-        ax.fill_between(xs, perc[5], perc[95], color=pal["p5"], alpha=.6, label="5–95 %")
-        ax.fill_between(xs, perc[25], perc[75], color=pal["p25"], alpha=.55, label="25–75 %")
-        ax.plot(xs, perc[50], color=pal["median"], lw=2, label="Median")
-        ax.set_xlim(0, 24)
-        ax.set_xticks(range(0, 25, 3))
-        ax.set_ylim(g(40), g(300))
-        ax.set_xlabel("Uhrzeit")
-        ax.set_ylabel(glucose_unit())
-        ax.legend(fontsize=8, ncol=3, loc="upper right")
-        ax.grid(alpha=.25)
-        return fig_to_b64(fig)
+
+    chart = _wide_chart()
+    sx, sy = chart.scales((0, 24), (g(40), g(300)))
+    y_ticks = [g(v) for v in (50, 100, 150, 200, 250, 300)]
+    x_ticks = list(range(0, 25, 3))
+
+    chart.hspan(sy, g(70), g(180), "tir")
+    chart.grid_y(sy, y_ticks, "grid")
+    chart.grid_x(sx, x_ticks, "grid")
+    for bound in (70, 180):
+        y = sy(g(bound))
+        chart.add(f'<line x1="{chart.left}" y1="{y}" x2="{chart.right}" y2="{y}" '
+                  f'class="target-s" stroke-width="0.9"/>')
+
+    chart.band(band_d(xs, perc[5], perc[95], sx, sy), "p5", 0.6)
+    chart.band(band_d(xs, perc[25], perc[75], sx, sy), "p25", 0.55)
+    chart.line(path_d(xs, perc[50], sx, sy), "median", 2)
+
+    _axes(chart, sx, sy, x_ticks, y_ticks, _("Time of day"), glucose_unit())
+    chart.legend([("p5", "5–95 %", True), ("p25", "25–75 %", True),
+                  ("median", _("Median"), False)], "ink", size=LEGEND_SIZE)
+    return chart.to_svg("AGP")
 
 
 def slot_curves_chart(meals, window, val_at, dark=False):
-    """Median postprandial curves per slot as base64 PNG (light or dark theme)."""
-    grid = np.arange(0, window + 1, 10)
-    pal = _chart_palette(dark)
-    with _chart_theme(dark):
-        fig, ax = plt.subplots(figsize=(10, 3.6))
-        ax.axhspan(g(70), g(180), color=pal["tir"])
-        for slot in _slot_state()[1]:
-            curve = slot_median_curve(meals, slot, window, val_at)
-            if curve is not None:
-                n = sum(1 for meal in meals if slot_of(meal["time"].hour) == slot)
-                ax.plot(grid, curve, color=_slot_state()[3][slot], lw=2,
-                        label=f"{_slot_state()[2][slot]} (n={n})")
-        ax.set_xlim(0, window)
-        ax.set_ylim(g(60), g(240))
-        ax.set_xlabel(_("Minutes after meal"))
-        ax.set_ylabel(glucose_unit())
-        if ax.get_legend_handles_labels()[1]:
-            ax.legend(fontsize=8)
-        ax.grid(alpha=.25)
-        return fig_to_b64(fig)
+    """Median postprandial curves per slot."""
+    del dark
+    grid = list(np.arange(0, window + 1, 10))
+    chart = _wide_chart()
+    sx, sy = chart.scales((0, window), (g(60), g(240)))
+    y_ticks = [g(v) for v in range(60, 241, 20)]
+    x_ticks = list(range(0, int(window) + 1, 50))
+
+    chart.hspan(sy, g(70), g(180), "tir")
+    chart.grid_y(sy, y_ticks, "grid")
+    chart.grid_x(sx, x_ticks, "grid")
+
+    entries = []
+    for slot in _slot_state()[1]:
+        curve = slot_median_curve(meals, slot, window, val_at)
+        if curve is None:
+            continue
+        count = sum(1 for meal in meals if slot_of(meal["time"].hour) == slot)
+        # Slot colours come from the slot configuration, which the user can
+        # change, so they are registered as rules rather than fixed roles.
+        colour = _slot_state()[3][slot]
+        role = chart.role(f"slot-{slot}", colour, colour)
+        chart.line(path_d(grid, curve, sx, sy), role, 2)
+        entries.append((role, f"{_slot_state()[2][slot]} (n={count})", False))
+
+    _axes(chart, sx, sy, x_ticks, y_ticks, _("Minutes after meal"), glucose_unit())
+    chart.legend(entries, "ink", size=LEGEND_SIZE)
+    return chart.to_svg("Postprandial")
 
 
 def selection_effect(meals, by_slot, window, val_at):
@@ -271,131 +277,117 @@ def selection_effect(meals, by_slot, window, val_at):
 
 
 def slot_norm_curves_chart(meals, window, val_at, dark=False):
-    """One figure: legend + one framed card per meal (title + plot inside).
-
-    Layout matches the design mock: nothing outside its box, no label clipping.
-    """
-
+    """One chart: a shared legend and one framed card per meal type."""
+    del dark
     bands = []
     for slot in _slot_state()[1]:
-        b = slot_norm_bands(meals, slot, window, val_at, None)
-        if b is not None:
-            bands.append((slot, b))
+        band = slot_norm_bands(meals, slot, window, val_at, None)
+        if band is not None:
+            bands.append((_slot_state()[2][slot], band))
     if not bands:
-        with _chart_theme(dark):
-            fig, ax = plt.subplots(figsize=(10, 2))
-            ax.text(0.5, 0.5, "—", ha="center", va="center")
-            ax.axis("off")
-            return fig_to_b64(fig)
+        empty = Chart(WIDE, 60, margins=(0, 0, 0, 0), palette=PALETTE)
+        empty.text(WIDE / 2, 34, "—", "ink", size=16, anchor="middle")
+        return empty.to_svg()
 
-    n = len(bands)
-    ncols = 2
-    nrows = (n + ncols - 1) // ncols
-    # Fixed Δ range; curves may clip outside −100…+150
+    rows = (len(bands) + CARD_COLS - 1) // CARD_COLS
+    width = CARD_COLS * CARD_W + (CARD_COLS - 1) * CARD_GAP
+    height = LEGEND_H + rows * CARD_H + (rows - 1) * CARD_GAP
+    chart = Chart(width, height, margins=(0, 0, 0, 0), palette=PALETTE)
+    # Fixed delta range; curves may run outside -100…+150 and are clipped there.
     y_lo, y_hi = -g(100), g(150)
 
-    pal = _chart_palette(dark)
-    band90 = "#bcd4ff" if not dark else "#2a4060"
-    band75 = "#5b8def" if not dark else "#3a6aaa"
-    med_c = pal["median"]
-    zero_c = "#888" if not dark else "#8a97a8"
-    title_c = "#1a2233" if not dark else "#e8ecf2"
-    edge = "#c5cdd9" if not dark else "#4a5568"
-    face = "#ffffff" if not dark else "#1c2330"
-    box_bg = face  # same white as plot; no grey fill around the chart
-    fig_bg = face
+    chart.legend([("median", _("Median"), False), ("p25", "25–75 %", True),
+                  ("p5", "10–90 %", True)], "title",
+                 x=width / 2 - 110, y=1, size=10.2)
 
-    with _chart_theme(dark):
-        # Extra top row for the legend strip
-        fig = plt.figure(figsize=(10.2, 0.12 + 2.85 * nrows))
-        fig.patch.set_facecolor(fig_bg)
-        # gridspec: row 0 = legend, then meal rows
-        height_ratios = [0.09] + [2.5] * nrows
-        gs = fig.add_gridspec(
-            1 + nrows, ncols,
-            height_ratios=height_ratios,
-            hspace=0.16, wspace=0.04,
-            left=0.03, right=0.97, top=0.995, bottom=0.03,
-        )
+    for index, (label, band) in enumerate(bands):
+        row, col = divmod(index, CARD_COLS)
+        x = col * (CARD_W + CARD_GAP)
+        y = LEGEND_H + row * (CARD_H + CARD_GAP)
+        _norm_card(chart, x, y, label, band, window, (y_lo, y_hi))
+    return chart.to_svg("Baseline-normalised")
 
-        # Legend centered across both columns
-        leg_ax = fig.add_subplot(gs[0, :])
-        leg_ax.set_axis_off()
-        leg_ax.set_xlim(0, 1)
-        leg_ax.set_ylim(0, 1)
-        handles = [
-            Line2D([0], [0], color=med_c, lw=2.2, label=_("Median")),
-            Patch(facecolor=band75, edgecolor="none", alpha=0.85, label=_("25–75 %")),
-            Patch(facecolor=band90, edgecolor="none", alpha=0.75, label=_("10–90 %")),
-        ]
-        leg = leg_ax.legend(
-            handles=handles, loc="center", ncol=3, frameon=False,
-            fontsize=7.5, handlelength=1.6, columnspacing=1.0,
-            borderaxespad=0.0, handletextpad=0.35, borderpad=0.0,
-        )
-        for text in leg.get_texts():
-            text.set_color(title_c)
 
-        for i, (slot, b) in enumerate(bands):
-            r, c = divmod(i, ncols)
-            outer = fig.add_subplot(gs[1 + r, c])
-            outer.set_xticks([])
-            outer.set_yticks([])
-            outer.set_xlim(0, 1)
-            outer.set_ylim(0, 1)
-            outer.set_facecolor(box_bg)
-            for spine in outer.spines.values():
-                spine.set_visible(True)
-                spine.set_color(edge)
-                spine.set_linewidth(1.5)
+def _norm_card(chart, x, y, label, band, window, y_range):
+    """One framed card of the normalised-curves grid."""
+    chart.add(f'<rect x="{x}" y="{y}" width="{CARD_W}" height="{CARD_H}" rx="4" '
+              f'fill="none" class="edge-s" stroke-width="1.5"/>')
+    chart.text(x + CARD_W / 2, y + 22, label, "title", size=15,
+               anchor="middle", weight="bold")
+    chart.text(x + CARD_W / 2, y + 40, f"n = {band['n']}", "sub", size=12.3,
+               anchor="middle")
 
-            outer.text(
-                0.5, 0.97,
-                f"{_slot_state()[2][slot]}",
-                transform=outer.transAxes, ha="center", va="top",
-                fontsize=11, color=title_c, fontweight="bold",
-            )
-            outer.text(
-                0.5, 0.90,
-                f"n = {b['n']}",
-                transform=outer.transAxes, ha="center", va="top",
-                fontsize=9, color="#5a6577" if not dark else "#a0aab8",
-            )
-            # Leave clear margins so axis labels never touch the outer frame
-            ax = outer.inset_axes([0.15, 0.16, 0.76, 0.64])
-            grid = b["grid"]
-            ax.set_facecolor(face)
-            ax.fill_between(grid, b["p10"], b["p90"], color=band90, alpha=.55, lw=0)
-            ax.fill_between(grid, b["p25"], b["p75"], color=band75, alpha=.45, lw=0)
-            ax.plot(grid, b["p50"], color=med_c, lw=2)
-            ax.axhline(0, color=zero_c, lw=.8, ls="--")
-            ax.set_xlim(0, window)
-            ax.set_ylim(y_lo, y_hi)
-            ax.set_xlabel(_("Minutes after meal"), fontsize=7, labelpad=2)
-            ax.set_ylabel(
-                _("Δ %(u)s vs. meal start") % {"u": glucose_unit()},
-                fontsize=7, labelpad=2,
-            )
-            ax.tick_params(labelsize=6.5, pad=1)
-            ax.grid(alpha=.2)
-            for spine in ax.spines.values():
-                spine.set_color("#d8dee8" if not dark else "#3a4556")
+    panel = chart.panel(x, y + 50, CARD_W, CARD_H - 50, margins=(74, 8, 34, 16))
+    sx, sy = panel.scales((0, window), y_range)
+    y_ticks = list(range(int(y_range[0] // 50) * 50, int(y_range[1]) + 1, 50))
+    x_ticks = list(range(0, int(window) + 1, 50))
+    panel.grid_y(sy, y_ticks, "grid", 0.2)
+    panel.grid_x(sx, x_ticks, "grid", 0.2)
 
-        for j in range(len(bands), nrows * ncols):
-            r, c = divmod(j, ncols)
-            blank = fig.add_subplot(gs[1 + r, c])
-            blank.axis("off")
-            blank.set_facecolor(fig_bg)
+    grid = band["grid"]
+    panel.band(band_d(grid, band["p10"], band["p90"], sx, sy), "p5", 0.55)
+    panel.band(band_d(grid, band["p25"], band["p75"], sx, sy), "p25", 0.45)
+    panel.line(path_d(grid, band["p50"], sx, sy), "median", 2)
+    zero = sy(0)
+    panel.add(f'<line x1="{panel.left}" y1="{zero}" x2="{panel.right}" y2="{zero}" '
+              f'class="zero-s" stroke-width="0.9" stroke-dasharray="4 3"/>')
 
-        buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=120, facecolor=fig.get_facecolor(),
-                    edgecolor="none", bbox_inches="tight", pad_inches=0.06)
-        plt.close(fig)
-        return base64.b64encode(buf.getvalue()).decode()
+    panel.frame("frame-soft")
+    panel.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=8.9)
+    panel.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{int(v)}", size=8.9)
+    panel.text((panel.left + panel.right) / 2, y + CARD_H - 6,
+               _("Minutes after meal"), "ink", size=9.5, anchor="middle")
+    caption = _("Δ %(u)s vs. meal start") % {"u": glucose_unit()}
+    chart.add(f'<text transform="translate({x + 22},{y + 44 + (CARD_H - 44) / 2}) '
+              f'rotate(-90)" class="ink" font-size="9.5" text-anchor="middle">'
+              f'{caption}</text>')
+
+
+def _day_labels(chart, sx, items, base_y, role, bold=False):
+    """Labels of one kind; stagger into rows only on real proximity."""
+    lanes = []
+    for hour, text in sorted(items):
+        lane = next((i for i, last in enumerate(lanes)
+                     if hour - last >= DAILY_MIN_GAP), None)
+        if lane is None:
+            lane = len(lanes)
+            lanes.append(hour)
+        else:
+            lanes[lane] = hour
+        x = sx(hour)
+        chart.add(f'<line x1="{x}" y1="{chart.top}" x2="{x}" y2="{chart.bottom}" '
+                  f'class="{role}-s" stroke-opacity="0.18" stroke-width="0.5"/>')
+        # Row spacing in SVG units, not in glucose units: DAILY_ROW is 18 mg/dL,
+        # which on this axis is about eight pixels — less than a line of type
+        # at this size, so stacked labels ran into each other.
+        chart.text(x, base_y + lane * 10, text, role, size=7.6, anchor="middle",
+                   weight="bold" if bold else None)
+
+
+def _day_basal(chart, sx, series, gmax):
+    """Basal rate as steps on its own scale, behind the glucose curve."""
+    if not series:
+        return
+    top = gmax * 2.2 or 1.0
+    height = chart.bottom - chart.top
+    points = [(sx(hour), round(chart.bottom - (value / top) * height, 2))
+              for hour, value in series]
+    steps = [f"M{points[0][0]},{chart.bottom}"]
+    previous = points[0][1]
+    for x, y in points:
+        steps.append(f"L{x},{previous}L{x},{y}")
+        previous = y
+    steps.append(f"L{points[-1][0]},{chart.bottom}Z")
+    chart.add(f'<path d="{"".join(steps)}" class="basal" fill-opacity="0.35"/>')
+    chart.text(chart.right + 6, chart.top + 8, "U/h", "basal", size=6)
+    chart.text(chart.right + 6, chart.bottom, "0", "basal", size=6)
+    chart.text(chart.right + 6, chart.top + height * (1 - 1 / 2.2),
+               f"{gmax:.1f}", "basal", size=6)
 
 
 def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
     """One page-wide panel per day (CGM + bolus/carb + optional basal + TDD)."""
+    del dark
     if basal is None:
         rate, t0, minutes, gmax = None, None, 0, 1.0
     else:
@@ -406,41 +398,47 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
         cgm_by[time.date()].append((time.hour + time.minute / 60, value))
     for event in events:
         ev_by[event["time"].date()].append(event)
-    pal = _chart_palette(dark)
+
     out = []
     days = sorted(cgm_by)
-    total_days = len(days)
-    with _chart_theme(dark):
-        for day_index, day in enumerate(days, 1):
-            fig, axg = plt.subplots(figsize=(11, 2.5))
-            axg.axhspan(g(70), g(180), color=pal["tir"])
-            axg.plot([x for x, _ in cgm_by[day]], [y for _, y in cgm_by[day]],
-                     color=pal["cgm"], lw=1.0)
-            axg.set_xlim(0, 24)
-            axg.set_ylim(g(40), g(470))
-            axg.set_xticks(range(0, 25, 3))
-            axg.set_yticks([g(70), g(180), g(300)])
-            axg.tick_params(labelsize=7)
-            axg.grid(axis="x", alpha=.15)
-            title_color = "#e8ecf2" if dark else "#1a2233"
-            day_cho = sum(e["cho"] for e in ev_by.get(day, []) if e["cho"] > 0)
-            axg.set_title(_day_title(day, tdd, day_cho), fontsize=8,
-                          loc="left", color=title_color)
-            if rate is not None:
-                i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
-                bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]
-                byy = [rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0
-                       for mnt in range(0, 24 * 60, 5)]
-                ax2 = axg.twinx()
-                ax2.fill_between(bxx, byy, step="pre", color=pal["basal"], alpha=.35, lw=0)
-                ax2.set_ylim(0, gmax * 2.2)
-                ax2.set_xlim(0, 24)
-                ax2.set_yticks([0, round(gmax, 1)])
-                spine = "#8bb4ff" if dark else "#3a63a8"
-                ax2.set_ylabel("U/h", fontsize=6, color=spine)
-                ax2.tick_params(labelsize=6, colors=spine)
-            _draw_day_events(axg, ev_by.get(day, []), pal)
-            out.append({"img": fig_to_b64(fig)})
-            if progress is not None and total_days:
-                progress(day_index, total_days)
+    for day_index, day in enumerate(days, 1):
+        chart = Chart(DAY_W, DAY_H, margins=(46, 30, 26, 40), palette=PALETTE)
+        sx, sy = chart.scales((0, 24), (g(40), g(470)))
+        chart.hspan(sy, g(70), g(180), "tir")
+        chart.grid_x(sx, range(0, 25, 3), "grid", 0.15)
+
+        series = []
+        if rate is not None:
+            i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
+            series = [(mnt / 60, rate[i0 + mnt] if 0 <= i0 + mnt < minutes else 0.0)
+                      for mnt in range(0, 24 * 60, 5)]
+        _day_basal(chart, sx, series, gmax)
+
+        chart.line(path_d([h for h, _v in cgm_by[day]],
+                          [v for _h, v in cgm_by[day]], sx, sy), "cgm", 1.0)
+
+        day_events = ev_by.get(day, [])
+        hours = {id(e): e["time"].hour + e["time"].minute / 60 for e in day_events}
+        _day_labels(chart, sx,
+                    [(hours[id(e)], f"{e['bolus']:.1f} U")
+                     for e in day_events if e["bolus"] > 0],
+                    chart.top + 12, "bolus", bold=True)
+        _day_labels(chart, sx,
+                    [(hours[id(e)], f"{e['cho']:.0f} g")
+                     for e in day_events if e["cho"] > 0],
+                    chart.top + 42, "carb")
+
+        chart.frame("frame")
+        chart.ticks_x(sx, range(0, 25, 3), "ink", fmt=lambda v: f"{int(v)}", size=9.5)
+        chart.ticks_y(sy, [g(70), g(180), g(300)], "ink",
+                      fmt=lambda v: f"{v:.0f}", size=9.5)
+        day_cho = sum(e["cho"] for e in day_events if e["cho"] > 0)
+        # Sizes converted from what matplotlib drew: 8 pt at 120 dpi on a
+        # 1320 px figure is 11 units on a 1100 unit viewBox. Carried over as
+        # they were, the title and the axes came out a fifth too small.
+        chart.text(chart.left, 15, _day_title(day, tdd, day_cho), "title", size=11)
+
+        out.append({"img": chart.to_svg()})
+        if progress is not None and days:
+            progress(day_index, len(days))
     return out

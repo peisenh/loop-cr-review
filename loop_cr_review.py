@@ -41,8 +41,8 @@ from lcr.readers import (  # pylint: disable=unused-import
     parse_day, peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
     read_libreview, read_meals, read_nightscout, read_tdd)
 from lcr.charts import (  # pylint: disable=unused-import
-    _chart_palette, _chart_theme, _day_title, _draw_day_events, agp_chart, daily_charts,
-    fig_to_b64, gri_grid_chart, selection_effect, slot_curves_chart, slot_norm_curves_chart)
+    PALETTE, _day_title, agp_chart, daily_charts, gri_grid_chart, selection_effect,
+    slot_curves_chart, slot_norm_curves_chart)
 from lcr.analysis import (  # pylint: disable=unused-import
     _hypo_caution, _reference_lever, _scan_minors, _weak_levers, aggregate_slot,
     analyze_meals, build_cr_note, cgm_gap_in_window, consensus_metrics, curve_metrics,
@@ -224,7 +224,7 @@ def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, t
     tdd = read_tdd(base) if tdd is None else tdd
     # The daily charts are one of the dominant report-generation costs. Report
     # progress once per completed day so the UI does not sit at one percentage
-    # while matplotlib renders a large multi-day report.
+    # while a large multi-day report is being drawn.
     daily_progress = progress
     light = daily_charts(times, gluc, events, basal, tdd, dark=False,
                          progress=(lambda done, total: daily_progress("daily",
@@ -312,7 +312,7 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
 
     # Chart rendering dominates report generation for larger exports. Keep the
     # progress range reserved for the actual rendering work instead of jumping
-    # to 90% before matplotlib starts.
+    # to 90% before the charts start.
     _progress("charts", 71)
     chart_state = {"step": 0}
 

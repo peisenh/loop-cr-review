@@ -9,6 +9,23 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- Charts are inline SVG, drawn without matplotlib. That was the only reason
+  numpy had to be in the app at all, the only dependency needing a hand-built
+  wheel, and the source of every Android problem this project has had — the
+  16 KB alignment, the version coupling, the x86_64 dead end. What it drew is
+  bands, lines, a few labels and a pair of axes.
+
+  A report with daily panels went from 951 KB to about 310 KB, the APK from
+  44 MB to 27, and 90 days with daily charts now render in a few seconds. One
+  chart serves both themes through a stylesheet inside it, so the second
+  rendering pass is gone; the `dark_charts` option no longer does anything and
+  will be removed separately.
+
+  The GRI grid comes out better than before rather than merely smaller: its
+  zones are bands of a linear score, so they are straight stripes, clipped as
+  exact polygons instead of contoured from a 500x500 grid.
+
 ### Fixed
 - The Play bundle no longer lands in the GitHub release. The release job attaches
   every artifact, and an AAB is a trap there: nobody can install one, while the

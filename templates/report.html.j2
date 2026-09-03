@@ -37,22 +37,15 @@
   }
 }
 .chart-wrap { margin: 0 }
-.chart-wrap img { width: 100%; border-radius: 8px; display: block }
-.chart-wrap .chart-dark { display: none }
-@media (prefers-color-scheme: dark) {
-  .chart-wrap .chart-light { display: none }
-  .chart-wrap .chart-dark { display: block }
-  /* No dark PNG (default): keep light charts visible in dark UI */
-  .chart-wrap:not(:has(.chart-dark)) .chart-light { display: block }
-}
+/* Charts are inline SVG: one file that follows the theme through its own
+   stylesheet, rather than a light and a dark PNG toggled by CSS. */
+.chart-wrap svg { width: 100%; height: auto; border-radius: 8px; display: block }
 @media print {
   .card { break-inside: avoid }
   .card-break { break-inside: auto }
   .card-break h2 { break-after: avoid }
   .card-break thead { display: table-header-group }
   .disclaimer, .methodbox { break-inside: avoid }
-  .chart-wrap .chart-dark { display: none !important }
-  .chart-wrap .chart-light { display: block !important }
   :root {
     --ink:#1a2233; --muted:#5a6b82; --line:#dde3ee; --bg:#fff; --card:#fff;
     --gen:#8a97a8; --link:#5b8def; --track:#eef1f6; --slot-bg:#fafbfd;
@@ -104,7 +97,9 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .gri-risk { font-size:9.5px; color:var(--muted); margin-top:2px; line-height:1.2 }
 .gri-components { display:grid; grid-template-columns:1fr; gap:5px; margin-top:8px; padding-top:0; border-top:0; font-size:9px; color:var(--muted) }
 .gri-components b { display:block; color:var(--ink); font-size:8.7px; margin-bottom:1px }
-.gri-card .chart-wrap { width:min(100%, 128px); margin:0 auto }
+/* max-width as well as min(): an SVG has no intrinsic size to fall back on,
+   so a renderer that does not know min() would let it fill the card. */
+.gri-card .chart-wrap { width:min(100%, 128px); max-width:128px; margin:0 auto }
 .gri-zones { margin-top:4px; padding-top:4px; border-top:1px solid var(--line); font-size:8.5px; line-height:1.25; color:var(--muted); text-align:center; white-space:normal }
 .gri-zones b { color:var(--ink) }
 .tir-card { display:block }
@@ -136,7 +131,8 @@ h2 { font-size: 14px; margin: 0 0 10px }
 @media print {
   .clinical-two-col { align-items: stretch !important; }
   .gri-card { overflow: hidden !important; }
-  .gri-card .chart-wrap { width: min(100%, 112px) !important; }
+  .gri-card .chart-wrap { width: min(100%, 112px) !important;
+                          max-width: 112px !important; }
   .gri-components { gap: 2px !important; margin-top: 5px !important; }
   .gri-zones {
     margin-top: 3px !important;
@@ -185,8 +181,15 @@ tr.lowconf td:last-child { color: var(--lowconf-ink); font-weight: 600 }
 .methodbox code { font-family: monospace; background: var(--code-bg); color: var(--ink); padding: 1px 4px; border-radius: 4px; font-size: 11px }
 .eff b { color: var(--method-b) }
 .eff code { font-family: monospace; background: var(--code-bg); color: var(--ink); padding: 1px 4px; border-radius: 4px }
-.dailyrow { margin: 3px 0 }
-.dailyrow img { width: 100%; border-radius: 6px; display: block }
+/* Days need to read as separate panels. The old PNGs carried a dark frame of
+   their own and a little air between them; an SVG that only draws its axes
+   would otherwise run into the next day. */
+/* Enough to tell the days apart, no more: the rule does the separating, so
+   the spacing can stay close to what the old PNGs had. At 90 days every extra
+   pixel per row is 90 pixels of page. */
+.dailyrow { margin: 4px 0 }
+.dailyrow svg { width: 100%; height: auto; border-radius: 6px; display: block }
+.dailyrow + .dailyrow { border-top: 1px solid var(--line); padding-top: 4px }
 @media print { .dailyrow { break-inside: avoid } }
 img { width: 100%; border-radius: 8px }
 .note { font-size: 11.5px; color: #5a6b82; line-height: 1.5 }
@@ -262,24 +265,24 @@ img { width: 100%; border-radius: 8px }
         </div>
       </div>
       <div class="chart-wrap">
-        <img class="chart-light" src="data:image/png;base64,{{ gri.img }}">{% if gri.img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ gri.img_dark }}">{% endif %}
+        {{ gri.img|safe }}
       </div>
     </div>
     <div class="gri-zones"><b>A</b> {% trans %}very low{% endtrans %} · <b>B</b> {% trans %}low{% endtrans %} · <b>C</b> {% trans %}medium{% endtrans %} · <b>D</b> {% trans %}high{% endtrans %} · <b>E</b> {% trans %}very high{% endtrans %}</div>
   </div>
 </div>
 <div class="card card-break"><h2>{% trans %}AGP (percentiles 5/25/50/75/95){% endtrans %}</h2>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ agp_img }}">{% if agp_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ agp_img_dark }}">{% endif %}</div></div>
+  <div class="chart-wrap">{{ agp_img|safe }}</div></div>
 
 <div class="card card-break"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_img }}">{% if slot_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ slot_img_dark }}">{% endif %}</div>
+  <div class="chart-wrap">{{ slot_img|safe }}</div>
   <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
   <div class="note" style="margin-top: 6px">{% if lite %}{% trans %}This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below.{% endtrans %}{% else %}{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}{% endif %}</div></div>
 
 <div class="card card-break">
   <h2>{% trans %}Baseline-normalised courses by meal type{% endtrans %}</h2>
   <div class="note" style="margin-bottom: 0">{% trans %}All values relative to each meal’s own pre-meal baseline (0 = baseline). No selection, no assessment.{% endtrans %}</div>
-  <div class="chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ slot_norm_img }}">{% if slot_norm_img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ slot_norm_img_dark }}">{% endif %}</div>
+  <div class="chart-wrap">{{ slot_norm_img|safe }}</div>
   <div class="note" style="margin-top: 6px">
     {% trans %}The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below.{% endtrans %}
     {% trans %}Baseline = glucose near meal start (individual). n = number of meals of this type with a usable start value.{% endtrans %}
@@ -457,7 +460,7 @@ img { width: 100%; border-radius: 8px }
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
     blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>
 {% for d in daily_days %}
-<div class="dailyrow chart-wrap"><img class="chart-light" src="data:image/png;base64,{{ d.img }}">{% if d.img_dark %}<img class="chart-dark" src="data:image/png;base64,{{ d.img_dark }}">{% endif %}</div>
+<div class="dailyrow chart-wrap">{{ d.img|safe }}</div>
 {% endfor %}
 {% endif %}
 
