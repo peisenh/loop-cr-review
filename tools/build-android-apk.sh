@@ -31,7 +31,7 @@ if [ -z "$SDK" ]; then
 fi
 [ -n "$SDK" ] && [ -d "$SDK" ] || {
   echo "Android SDK not found. Set ANDROID_HOME to the SDK directory." >&2
-  echo "  sdkmanager \"platforms;android-35\" \"build-tools;35.0.0\" \"platform-tools\"" >&2
+  echo "  sdkmanager \"platforms;android-36\" \"build-tools;36.0.0\" \"platform-tools\"" >&2
   exit 1
 }
 

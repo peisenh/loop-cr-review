@@ -38,7 +38,17 @@ From the **repository root**:
 # → dist/loop-cr-review-android.apk
 ```
 
-That is the same command GitHub Actions runs on a `v*` tag.
+That is the same command GitHub Actions runs on a `v*` tag. The workflow also
+builds the Play bundle and, when `PLAY_SERVICE_ACCOUNT_JSON` is configured,
+uploads it to the **internal** track as a draft — no review, nobody outside the
+internal tester list, and the closed test stays where it is. Without the secret
+the step is skipped and the tag still produces its artifacts.
+
+Setting that up: create a service account in Google Cloud, invite it in the Play
+Console under Users and permissions with "Manage testing track releases", and put
+its JSON key in the repository secret. The link takes a while to become
+effective, so the first attempt often fails on permissions with nothing actually
+misconfigured.
 
 **arm64-v8a only.** numpy and matplotlib have to be 16 KB aligned to load on
 current devices, and that alignment turns out to be a toolchain default for arm64

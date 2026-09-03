@@ -10,6 +10,15 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Added
+- The release workflow builds the Play bundle and uploads it to the internal
+  track as a draft, when a service account is configured. The internal track
+  needs no review and reaches nobody outside its own tester list, so a broken
+  pipeline costs nothing there — which is why it is worth wiring up now rather
+  than once the app has real users. Without the secret the step is skipped, so a
+  tag still produces its artifacts.
+- The workflow installs SDK platform 36, matching `compileSdk`. It asked for 35
+  and Gradle quietly fetched the difference mid-build; the sideload script named
+  35 too while the Play script named 36.
 - `poc/android-x86_64-16k/`: an attempt to build numpy and matplotlib for x86_64
   with 16 KB ELF alignment, so the emulator could run a 16 KB image. It does not
   work, and the README says why: that alignment is a toolchain default for arm64

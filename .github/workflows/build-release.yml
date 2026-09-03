@@ -158,7 +158,10 @@ jobs:
           python-version: "3.13"
       - uses: android-actions/setup-android@v4
       - name: SDK platforms
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        # Has to match compileSdk in android/app/build.gradle.kts. With an older
+        # platform Gradle downloads the right one mid-build, which works but hides
+        # the mismatch until something else depends on it.
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -179,6 +182,50 @@ jobs:
         with:
           name: loop-cr-review-android.apk
           path: dist/loop-cr-review-android.apk
+
+      # The bundle for the store, signed with the same key as the sideload APK.
+      # versionCode comes from build.gradle.kts, which prepare-release.sh bumps
+      # before the tag — so a tagged build carries the number that was reviewed,
+      # and nothing here has to guess one.
+      - name: Build Play bundle
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./tools/build-android-play.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: loop-cr-review-play.aab
+          path: dist/loop-cr-review-play.aab
+
+      # Internal track, and as a draft: it needs no review, reaches nobody who is
+      # not listed for it, and leaves the closed test where it is. Switch the
+      # track once this has arrived cleanly a few times.
+      #
+      # Skipped rather than failed when the secret is absent, so a tag still
+      # produces its artifacts on a fork or before the service account exists.
+      # A step's own env is not available in its if, so the check goes in front.
+      - name: Are Play credentials configured?
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "have=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "have=no" >> "$GITHUB_OUTPUT"
+            echo "No PLAY_SERVICE_ACCOUNT_JSON — skipping the store upload." >&2
+          fi
+
+      - name: Upload to Play (internal)
+        if: startsWith(github.ref, 'refs/tags/') && steps.play.outputs.have == 'yes'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: de.peisenh.loopcrreview
+          releaseFiles: dist/loop-cr-review-play.aab
+          track: internal
+          status: draft
 
   release:
     needs: [build, android]
