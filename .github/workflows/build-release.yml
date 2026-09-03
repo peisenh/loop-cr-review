@@ -237,7 +237,8 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.peisenh.loopcrreview
           releaseFiles: dist/loop-cr-review-play.aab
-          track: internal
+          # 'tracks', plural: the singular is deprecated and warns on every run.
+          tracks: internal
           # Published rather than draft. The internal track reaches nobody but
           # the people listed for it, so there is nothing to hold back — and a
           # draft cannot be promoted to another track until it has been

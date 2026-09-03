@@ -10,6 +10,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- The Play upload uses `tracks` rather than the deprecated `track`, which warned
+  on every run.
 - The internal upload is published rather than left as a draft. That track
   reaches nobody outside its own tester list, so there is nothing to hold back —
   and a draft cannot be promoted to another track until it has been published by
