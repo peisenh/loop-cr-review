@@ -9,6 +9,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Fixed
+- The Play bundle no longer lands in the GitHub release. The release job attaches
+  every artifact, and an AAB is a trap there: nobody can install one, while the
+  APK they came for sits right beside it. It goes straight to Play from the
+  workflow; `./tools/build-android-play.sh` still makes one locally.
+
 ### Added
 - Each daily panel names the carbs of that day next to its TDD. A high total
   daily dose says little on its own; beside what was eaten it says something.

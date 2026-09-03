@@ -187,17 +187,17 @@ jobs:
       # versionCode comes from build.gradle.kts, which prepare-release.sh bumps
       # before the tag — so a tagged build carries the number that was reviewed,
       # and nothing here has to guess one.
+      # Not kept as an artifact: the release job attaches every artifact, and an
+      # AAB in a GitHub release is a trap — nobody can install one, while the
+      # APK that they want sits right beside it. It goes straight to Play from
+      # here; if one is ever needed by hand, ./tools/build-android-play.sh makes
+      # it locally.
       - name: Build Play bundle
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./tools/build-android-play.sh
-      - uses: actions/upload-artifact@v7
-        with:
-          name: loop-cr-review-play.aab
-          path: dist/loop-cr-review-play.aab
-
       # Internal track, and as a draft: it needs no review, reaches nobody who is
       # not listed for it, and leaves the closed test where it is. Switch the
       # track once this has arrived cleanly a few times.
