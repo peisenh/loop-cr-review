@@ -204,6 +204,19 @@ jobs:
       #
       # Skipped rather than failed when the secret is absent, so a tag still
       # produces its artifacts on a fork or before the service account exists.
+      # Play truncates at 500 characters per language without saying so, and the
+      # cut lands mid-sentence. Better to fail here than to publish half a note.
+      - name: Check release notes
+        run: |
+          fail=0
+          for f in android/whatsnew/whatsnew-*; do
+            n=$(wc -m < "$f")
+            printf '  %-24s %s/500\n' "$(basename "$f")" "$n"
+            [ "$n" -le 500 ] || { echo "    too long" >&2; fail=1; }
+            [ "$n" -gt 1 ] || { echo "    empty" >&2; fail=1; }
+          done
+          exit $fail
+
       # A step's own env is not available in its if, so the check goes in front.
       - name: Are Play credentials configured?
         id: play
@@ -226,6 +239,7 @@ jobs:
           releaseFiles: dist/loop-cr-review-play.aab
           track: internal
           status: draft
+          whatsNewDirectory: android/whatsnew
 
   release:
     needs: [build, android]

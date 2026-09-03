@@ -44,6 +44,18 @@ uploads it to the **internal** track as a draft — no review, nobody outside th
 internal tester list, and the closed test stays where it is. Without the secret
 the step is skipped and the tag still produces its artifacts.
 
+### Release notes for the store
+
+`android/whatsnew/whatsnew-<locale>` — one file per store language, uploaded with
+the bundle. Written by hand rather than generated from the changelog: that one is
+for whoever reads the code, and a tester wants to know what changed for them, in
+their language. They have to be committed before the tag, since the workflow
+reads them out of it.
+
+Play silently truncates at 500 characters and the cut lands mid-sentence, so the
+workflow counts first and fails rather than publishing half a sentence. Umlauts
+count as one each, as does the trailing newline.
+
 Setting that up: create a service account in Google Cloud, invite it in the Play
 Console under Users and permissions with "Manage testing track releases", and put
 its JSON key in the repository secret. The link takes a while to become

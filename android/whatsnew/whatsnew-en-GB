@@ -1,0 +1,5 @@
+The report is readable on a phone: normal text size, key figures in one column, wide tables swipe sideways. The page used to lay itself out at desktop width and scale everything down.
+
+The form remembers language, meal window, the checkboxes and your own slot times. All of it stays on the device; "Forget my settings" clears it.
+
+Overlapping slot times are now refused. Before, a meal in the overlap counted towards the earlier slot while the report showed the later slot's hours.

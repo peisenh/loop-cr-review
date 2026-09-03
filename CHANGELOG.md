@@ -9,6 +9,13 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Release notes for the store live in `android/whatsnew/`, one file per language,
+  and go up with the bundle. Written by hand, not generated from the changelog:
+  that one is for whoever reads the code. The workflow counts the characters
+  first, because Play truncates at 500 without saying so and the cut lands
+  mid-sentence.
+
 ## [0.24.0] - 2026-09-03
 
 ### Added
