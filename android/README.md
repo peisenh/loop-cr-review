@@ -46,6 +46,21 @@ would have to be published by hand before it could be promoted to another track,
 which is a step for no gain when the track reaches nobody else anyway. Without the secret
 the step is skipped and the tag still produces its artifacts.
 
+### The 16 KB check
+
+`build-android-apk.sh` runs `zipalign -c -P 16` on the finished APK. The wheels
+are checked one by one when they are built, but only the package shows what a
+device actually loads: Chaquopy's own libraries and the Python runtime arrive
+here too, and none of them pass through that earlier check.
+
+The two checks look at different things and both matter. `zipalign` checks where
+a library sits **inside the archive**; the wheel check reads the **ELF headers**
+to see what alignment the library itself declares. A library can satisfy one and
+fail the other.
+
+It is skipped rather than failed when no build-tools are installed, so the build
+still works on a machine that only has the SDK platform.
+
 ### Release notes for the store
 
 `android/whatsnew/whatsnew-<locale>` — one file per store language, uploaded with

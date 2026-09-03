@@ -69,12 +69,21 @@ def _draw_day_events(axg, events, pal):
     _draw_labels(axg, [(hour(e), f"{e['cho']:.0f} g") for e in events if e["cho"] > 0],
                  DAILY_CARB_Y, pal["carb"])
 
-def _day_title(day, tdd):
-    """Panel title: weekday + date, plus TDD (bolus/basal) if available."""
+def _day_title(day, tdd, cho=None):
+    """Panel title: weekday + date, then TDD and the day's carbs if known.
+
+    The carbs sit next to the insulin because that is the pair a reader wants:
+    a day with a high TDD says little on its own, next to what was eaten it says
+    something. Only counted meals appear here, so it matches the labels below.
+    """
     title = f"{_(WEEKDAYS[day.weekday()])}, {day:%d.%m.%Y}"
     if day in tdd:
         bolus, total, basal_u = tdd[day]
         title += f"   ·   TDD {total:.1f} U (Bolus {bolus:.1f} / Basal {basal_u:.1f})"
+    if cho:
+        # "CHO" rather than a translated word: the report writes it that way
+        # everywhere else, down to the column header in the slot table.
+        title += f"   ·   CHO {cho:.0f} g"
     return title
 
 
@@ -414,7 +423,9 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
             axg.tick_params(labelsize=7)
             axg.grid(axis="x", alpha=.15)
             title_color = "#e8ecf2" if dark else "#1a2233"
-            axg.set_title(_day_title(day, tdd), fontsize=8, loc="left", color=title_color)
+            day_cho = sum(e["cho"] for e in ev_by.get(day, []) if e["cho"] > 0)
+            axg.set_title(_day_title(day, tdd, day_cho), fontsize=8,
+                          loc="left", color=title_color)
             if rate is not None:
                 i0 = int((datetime(day.year, day.month, day.day) - t0).total_seconds() // 60)
                 bxx = [mnt / 60 for mnt in range(0, 24 * 60, 5)]

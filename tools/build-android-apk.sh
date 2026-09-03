@@ -77,3 +77,25 @@ APK="$APP/app/build/outputs/apk/release/app-release.apk"
 }
 cp -f "$APK" "$OUT"
 echo "==> $OUT  ($(wc -c < "$OUT") bytes)"
+
+# The wheels are checked one by one when they are built, but only the finished
+# package shows what a device actually loads — Chaquopy's own libraries and the
+# Python runtime come in here too. zipalign -P 16 checks that every library sits
+# on a 16 KB boundary inside the archive; a device with 16 KB pages refuses to
+# map one that does not, naming the library and nothing else.
+# Newest build-tools, sorted by version rather than by name: 9.0.0 sorts after
+# 36.0.0 alphabetically.
+ZIPALIGN="$(ls -1d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1)zipalign"
+[ -x "$ZIPALIGN" ] || ZIPALIGN=""
+if [ -z "$ZIPALIGN" ]; then
+  echo "==> no zipalign in $SDK/build-tools — skipping the alignment check" >&2
+else
+  echo "==> checking 16 KB alignment"
+  if ! "$ZIPALIGN" -c -P 16 4 "$OUT"; then
+    echo "The APK has libraries that are not 16 KB aligned. They will not load on" >&2
+    echo "a device with 16 KB pages. Check the wheels in android/app/wheels/ with" >&2
+    echo "  python3 poc/android-x86_64-16k/check-wheel-alignment.py android/app/wheels/*.whl" >&2
+    exit 1
+  fi
+  echo "    all libraries 16 KB aligned"
+fi

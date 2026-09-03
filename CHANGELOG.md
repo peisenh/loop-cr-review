@@ -9,6 +9,17 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Added
+- Each daily panel names the carbs of that day next to its TDD. A high total
+  daily dose says little on its own; beside what was eaten it says something.
+  Only counted meals are summed, so the figure matches the labels below the
+  curve, and a day without meals says nothing rather than "0 g".
+- The APK build checks 16 KB alignment with `zipalign -c -P 16`. The wheels are
+  checked when they are built, but only the finished package shows what a device
+  loads — Chaquopy's libraries and the Python runtime arrive at assembly and pass
+  through no earlier check. The two look at different things: `zipalign` at where
+  a library sits in the archive, the wheel check at what the ELF headers declare.
+
 ### Changed
 - The Play upload uses `tracks` rather than the deprecated `track`, which warned
   on every run.

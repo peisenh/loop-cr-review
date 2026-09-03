@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 import loop_cr_review as core
+from lcr import charts
 
 
 def _basal(rate_per_min, fasting, t0=None):
@@ -544,3 +545,31 @@ class TestSlotsMustNotOverlap(unittest.TestCase):
 
     def test_the_catch_all_does_not_count_as_overlapping(self):
         core.build_slots(self._raw([("Breakfast", 5, 10), ("Dinner", 17, 22)]))
+
+
+class TestDayTitleCarbs(unittest.TestCase):
+    """The day's carbs stand next to its insulin on each daily panel.
+
+    A high TDD says little on its own; next to what was eaten it says something.
+    """
+
+    DAY = datetime(2026, 7, 1).date()
+    TDD = {DAY: (16.6, 36.7, 20.1)}
+
+    def test_carbs_follow_the_insulin(self):
+        title = charts._day_title(self.DAY, self.TDD, 145)
+        self.assertIn("TDD 36.7 U", title)
+        self.assertIn("CHO 145 g", title)
+        self.assertLess(title.index("TDD"), title.index("CHO"))
+
+    def test_a_day_without_meals_says_nothing_about_carbs(self):
+        self.assertNotIn("CHO", charts._day_title(self.DAY, self.TDD, 0))
+
+    def test_carbs_show_without_insulin_figures(self):
+        """Lite sources have no TDD, and the carbs are still worth having."""
+        title = charts._day_title(self.DAY, {}, 145)
+        self.assertIn("CHO 145 g", title)
+        self.assertNotIn("TDD", title)
+
+    def test_carbs_are_whole_grams(self):
+        self.assertIn("CHO 146 g", charts._day_title(self.DAY, {}, 145.7))
