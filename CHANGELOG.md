@@ -9,6 +9,8 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-09-04
+
 ### Added
 - Each daily panel names the carbs of that day next to its TDD. A high total
   daily dose says little on its own; beside what was eaten it says something.
@@ -1260,7 +1262,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.24.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/peisenh/loop-cr-review/compare/v0.24.1...v0.25.0
 [0.24.1]: https://github.com/peisenh/loop-cr-review/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/peisenh/loop-cr-review/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/peisenh/loop-cr-review/compare/v0.22.0...v0.23.0
