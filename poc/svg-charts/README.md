@@ -128,3 +128,10 @@ Report diffing does not help here — every image changes by definition. The
 check is looking at them, which is why each prototype was rendered and compared
 before being called done. What can be checked mechanically is that the numbers
 behind the curves are untouched: the analysis is not being changed in this step.
+
+## What was left behind
+
+The wheel build script that carried the app until now is kept in
+[`../matplotlib-android-wheel/`](../matplotlib-android-wheel/) rather than
+only in git history — it worked, and the problem it solved is still real for
+anyone shipping matplotlib on Android.

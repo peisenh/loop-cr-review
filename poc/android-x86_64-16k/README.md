@@ -71,3 +71,11 @@ Alongside that, `android/app/build.gradle.kts` installs the matplotlib wheel by
 while only arm64 wheels are kept, but it is why a second wheel in the folder
 would not be picked up. Installing by name and version instead lets pip choose by
 platform tag.
+
+## Since then
+
+The APK ships no matplotlib at all: the charts are drawn as SVG, which is
+what made the wheel — and this whole line of enquiry — unnecessary. The
+build script that did work, for arm64, is kept in
+[`../matplotlib-android-wheel/`](../matplotlib-android-wheel/); what
+replaced it is in [`../svg-charts/`](../svg-charts/).

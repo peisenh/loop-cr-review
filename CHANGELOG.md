@@ -10,6 +10,14 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- The Android matplotlib wheel build script is kept in
+  `poc/matplotlib-android-wheel/` rather than only in git history. It is retired
+  — the app ships no matplotlib — but it worked, took a while to get right, and
+  the problem it solves is still real for anyone building matplotlib for a
+  16 KB page-size device. The 10 MB wheel itself is not kept; the script rebuilds
+  it.
+
+### Changed
 - The basal axis on the right of a daily panel is labelled at the size it used
   to be — the last font size that had been carried over rather than converted.
 - The legend above the normalised cards no longer overlaps the first row. The
