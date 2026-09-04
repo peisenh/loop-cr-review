@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed
+- Bolus and carb labels on a daily panel no longer land on top of each other.
+  They were stacked from fixed rows twelve and forty-two, so the fourth bolus
+  in a short span sat exactly on the carb row and the two read as one number.
+  The carbs now start below however many rows the boluses needed.
+- A day with an implausible number of entries no longer writes labels into
+  nowhere. Fifty entries within an hour produced a hundred labels, seventy-nine
+  of them below the panel — drawn, counted in the file size, and never seen.
+  Stacking stops after six rows and a count says how many are left out; the mark
+  on the axis stays, since the event did happen. Marks that fall on the same
+  position are drawn once, which bounds a panel at about 330 KB however many
+  entries an export contains.
+
 ### Added
 - The GMI is given in both units: per cent and, in brackets beside it, mmol/mol.
   Which one a clinic speaks follows its HbA1c convention rather than the glucose

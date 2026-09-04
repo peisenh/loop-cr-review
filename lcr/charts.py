@@ -80,6 +80,13 @@ PALETTE = {
 WIDE, WIDE_HEIGHT = 1000, 392
 GRI_SIDE = 240
 DAY_W, DAY_H = 1100, 250
+# Row spacing for the event labels, in SVG units rather than glucose ones:
+# DAILY_ROW is 18 mg/dL, about eight pixels on this axis and less than a
+# line of type at this size.
+LABEL_ROW = 10
+# At most this many stacked rows per kind. Six covers what real days do;
+# beyond it the labels would leave the panel.
+MAX_LABEL_ROWS = 6
 CARD_W, CARD_H, CARD_COLS, CARD_GAP = 496, 280, 2, 8
 # The strip above the cards has to hold the legend box, which is as tall as
 # its rows make it: three at 10.2 plus padding is about 53. Reserved less
@@ -371,8 +378,21 @@ def _norm_card(chart, x, y, label, band, window, y_range):
 
 
 def _day_labels(chart, sx, items, base_y, role, bold=False):
-    """Labels of one kind; stagger into rows only on real proximity."""
+    """Labels of one kind; stagger into rows only on real proximity.
+
+    -> the number of rows used, so the next group can start below them. With
+    fixed starting rows the boluses grew downwards into the carbs: a fourth one
+    close in time landed exactly on the carb row and the two read as one number.
+
+    Stacking is capped. A day with dozens of entries within an hour — a pump
+    correcting in small steps, or an export that logs every fragment — would
+    otherwise put labels far below the panel, drawn where nobody can see them.
+    Past the cap the mark on the axis stays, since the event happened, and a
+    count says how many are not written out.
+    """
     lanes = []
+    hidden = 0
+    drawn_lines = set()
     for hour, text in sorted(items):
         lane = next((i for i, last in enumerate(lanes)
                      if hour - last >= DAILY_MIN_GAP), None)
@@ -382,13 +402,25 @@ def _day_labels(chart, sx, items, base_y, role, bold=False):
         else:
             lanes[lane] = hour
         x = sx(hour)
-        chart.add(f'<line x1="{x}" y1="{chart.top}" x2="{x}" y2="{chart.bottom}" '
-                  f'class="{role}-s" stroke-opacity="0.18" stroke-width="0.5"/>')
-        # Row spacing in SVG units, not in glucose units: DAILY_ROW is 18 mg/dL,
-        # which on this axis is about eight pixels — less than a line of type
-        # at this size, so stacked labels ran into each other.
-        chart.text(x, base_y + lane * 10, text, role, size=7.6, anchor="middle",
-                   weight="bold" if bold else None)
+        # One mark per position, not per event: at this width two events less
+        # than half a unit apart are the same line, and an export that logs a
+        # fragment every few seconds would otherwise write thousands of them
+        # into a panel a thousand units wide.
+        if round(x * 2) not in drawn_lines:
+            drawn_lines.add(round(x * 2))
+            chart.add(f'<line x1="{x}" y1="{chart.top}" x2="{x}" y2="{chart.bottom}" '
+                      f'class="{role}-s" stroke-opacity="0.18" stroke-width="0.5"/>')
+        if lane >= MAX_LABEL_ROWS:
+            hidden += 1
+            continue
+        chart.text(x, base_y + lane * LABEL_ROW, text, role, size=7.6,
+                   anchor="middle", weight="bold" if bold else None)
+    rows = min(len(lanes), MAX_LABEL_ROWS)
+    if hidden:
+        chart.text(chart.left + 4, base_y + rows * LABEL_ROW, f"+{hidden}",
+                   role, size=7.6, weight="bold" if bold else None)
+        rows += 1
+    return rows
 
 
 def _day_basal(chart, sx, series, gmax):
@@ -448,14 +480,18 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
 
         day_events = ev_by.get(day, [])
         hours = {id(e): e["time"].hour + e["time"].minute / 60 for e in day_events}
-        _day_labels(chart, sx,
-                    [(hours[id(e)], f"{e['bolus']:.1f} U")
-                     for e in day_events if e["bolus"] > 0],
-                    chart.top + 12, "bolus", bold=True)
+        bolus_rows = _day_labels(chart, sx,
+                                 [(hours[id(e)], f"{e['bolus']:.1f} U")
+                                  for e in day_events if e["bolus"] > 0],
+                                 chart.top + 12, "bolus", bold=True)
+        # Carbs start below whatever the boluses needed, with a line of air
+        # between the two groups. A fixed row could not know how many there
+        # would be, and a day with several boluses close together overran it.
+        carb_top = chart.top + 12 + (max(bolus_rows, 1) + 1) * LABEL_ROW
         _day_labels(chart, sx,
                     [(hours[id(e)], f"{e['cho']:.0f} g")
                      for e in day_events if e["cho"] > 0],
-                    chart.top + 42, "carb")
+                    carb_top, "carb")
 
         chart.frame("frame")
         chart.ticks_x(sx, range(0, 25, 3), "ink", fmt=lambda v: f"{int(v)}", size=9.5)
