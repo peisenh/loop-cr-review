@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- The GMI is given in both units: per cent and, in brackets beside it, mmol/mol.
+  Which one a clinic speaks follows its HbA1c convention rather than the glucose
+  one — per cent under DCCT/NGSP, mmol/mol under IFCC — so a reader outside
+  Germany would otherwise have to convert. Both formulas come from the same
+  paper (Bergenstal 2018) and agree with each other.
+
 ## [0.25.1] - 2026-09-04
 
 ### Fixed

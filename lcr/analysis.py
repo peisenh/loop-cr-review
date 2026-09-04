@@ -65,7 +65,13 @@ def consensus_metrics(times, gluc):
         return 100.0 * sum(1 for v in gluc if test(v)) / len(gluc)
 
     return {
-        "mean": mean, "cv": sd / mean * 100, "gmi": 3.31 + 0.02392 * mean_mgdl, "days": days,
+        "mean": mean, "cv": sd / mean * 100, "days": days,
+        # Both units of the GMI, from the same paper (Bergenstal 2018). Which
+        # one a clinic speaks follows its HbA1c convention, not the glucose one:
+        # per cent under DCCT/NGSP, mmol/mol under IFCC. Reporting both saves
+        # guessing, and the reader takes the one they know.
+        "gmi": 3.31 + 0.02392 * mean_mgdl,
+        "gmi_mmol": 12.71 + 4.70587 * (mean_mgdl / MGDL_PER_MMOL),
         "wear": 100 * len(gluc) / (days * 24 * 60 / step) if step else float("nan"),
         "tir": share(lambda v: g(70) <= v <= g(180)),
         "titr": share(lambda v: g(70) <= v <= g(140)),
