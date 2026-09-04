@@ -40,6 +40,12 @@
 /* Charts are inline SVG: one file that follows the theme through its own
    stylesheet, rather than a light and a dark PNG toggled by CSS. */
 .chart-wrap svg { width: 100%; height: auto; border-radius: 8px; display: block }
+/* A margin of our own, because the report cannot rely on the print dialogue
+   for one. Chrome on Android defaults to none, so text sat flush against the
+   sheet edge — where no printer can put ink, and a PDF looks wrong even on
+   screen. 14 mm clears the unprintable border of every common printer. */
+@page { margin: 14mm 12mm }
+
 @media print {
   .card { break-inside: avoid }
   .card-break { break-inside: auto }

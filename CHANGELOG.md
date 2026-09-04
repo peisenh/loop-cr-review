@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- The report brings its own page margin. Without one it depended on whatever
+  the print dialogue defaulted to, and Chrome on Android defaults to none — so
+  text sat flush against the sheet edge, where no printer can put ink. 14 mm top
+  and bottom, 12 mm at the sides, which clears the unprintable border of every
+  common printer.
 - A part heading no longer strands at the foot of a printed page while the card
   it introduces starts on the next one. It is kept with what follows, and
   paragraphs keep two lines either side of a break. The same for the appendix:
