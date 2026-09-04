@@ -99,7 +99,7 @@ Positives Loop-Mehrbasal kann zu einer zu schwachen CR passen, ist bei CamAPS ab
 Debian/Ubuntu über Systempakete (empfohlen, z. B. im Homelab):
 
 ```bash
-sudo apt install python3-numpy python3-jinja2
+sudo apt install python3-jinja2
 ```
 
 Oder plattformunabhängig über pip (ggf. in einem venv):
@@ -239,17 +239,17 @@ Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
 (lokal und GitHub derselbe Schlüssel). Play Protect fragt einmal.
 0.20.x vorher deinstallieren — andere Signatur.
 
-**Geräte:** 4-KB- und 16-KB-Speicherseiten. numpy 2.3.2 ist die einzige
-Native-Lib und `0x4000`-ausgerichtet; die Charts sind SVG, matplotlib und
-das handgebaute Wheel entfallen. Lokal auf Pixel 8 (Android 17) und
-Tab M11 geprüft.
+**Geräte:** 4-KB- und 16-KB-Speicherseiten. Die App enthält keinen
+kompilierten Code mehr — Charts als SVG, Rechnung in reinem Python —,
+womit sich die Frage nach Ausrichtung und ABI erübrigt. Lokal auf
+Pixel 8 (Android 17) und Tab M11 geprüft.
 
 **Play:** Alignment blockiert nicht mehr. Die APK hängt weiter nur am
 GitHub-Release (Sideload); ein Store-Listing ist eine eigene Entscheidung.
 
 **Lizenzen in der APK:** Projektcode AGPL-3.0; übrige Bestandteile
-(AndroidX, Chaquopy, CPython, numpy, Flask, …) unter ihrer
-jeweiligen Lizenz. Übersicht: `android/app/wheels/NOTICE.md`.
+(AndroidX, Chaquopy, CPython, Flask, …) unter ihrer
+jeweiligen Lizenz. Übersicht: `android/NOTICE.md`.
 
 Lokal bauen (JDK 17 + Android-SDK):
 

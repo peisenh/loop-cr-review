@@ -19,7 +19,9 @@ import warnings
 from collections import defaultdict
 from datetime import datetime
 
-import numpy as np
+import math
+
+from lcr import pure
 
 from lcr.common import (
     DAILY_MIN_GAP, WEEKDAYS, _, _slot_state,
@@ -150,8 +152,8 @@ def gri_grid_chart(gri, dark=False):
     hypo, hyper = float(gri["hypo"]), float(gri["hyper"])
     # Same crop as before: focus on the clinically relevant range around the
     # observed point so the high-risk zone does not dominate a small card.
-    xmax = max(15.0, min(20.0, float(np.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
-    ymax = max(30.0, min(40.0, float(np.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
+    xmax = max(15.0, min(20.0, float(math.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
+    ymax = max(30.0, min(40.0, float(math.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
 
     # Room for axis captions. They matter here more than on other charts: the
     # card names both components above the picture, but only the axes say
@@ -200,16 +202,21 @@ def gri_grid_chart(gri, dark=False):
 def agp_chart(times, gluc, dark=False):
     """AGP percentile chart."""
     del dark
-    minute = np.array([t.hour * 60 + t.minute for t in times])
-    bins = np.arange(0, 1441, 15)
-    idx = np.digitize(minute, bins) - 1
+    bins = pure.arange(0, 1441, 15)
+    # One bucket per quarter of an hour, filled by walking the trace once —
+    # the array version indexed the whole trace with a mask per bin.
+    buckets = [[] for _ in range(len(bins) - 1)]
+    for time, value in zip(times, gluc):
+        index = pure.digitize(time.hour * 60 + time.minute, bins) - 1
+        if 0 <= index < len(buckets):
+            buckets[index].append(value)
     xs, perc = [], {q: [] for q in (5, 25, 50, 75, 95)}
     for bin_index in range(len(bins) - 1):
-        vals = gluc[idx == bin_index]
+        vals = buckets[bin_index]
         if len(vals) >= 5:
             xs.append((bins[bin_index] + 7.5) / 60)
             for q in perc:
-                perc[q].append(np.percentile(vals, q))
+                perc[q].append(pure.percentile(vals, q))
 
     chart = _wide_chart()
     sx, sy = chart.scales((0, 24), (g(40), g(300)))
@@ -237,7 +244,7 @@ def agp_chart(times, gluc, dark=False):
 def slot_curves_chart(meals, window, val_at, dark=False):
     """Median postprandial curves per slot."""
     del dark
-    grid = list(np.arange(0, window + 1, 10))
+    grid = pure.arange(0, window + 1, 10)
     chart = _wide_chart()
     sx, sy = chart.scales((0, window), (g(60), g(240)))
     y_ticks = [g(v) for v in range(60, 241, 20)]
@@ -287,9 +294,10 @@ def selection_effect(meals, by_slot, window, val_at):
             continue
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
-            shift = float(np.nanmax(np.abs(np.array(curve_all) - np.array(curve_sel))))
+            shift = float(pure.nanmax([abs(a - b) for a, b in zip(curve_all, curve_sel)
+                                       if not (pure.is_nan(a) or pure.is_nan(b))]))
         out.append({"label": _slot_state()[2][slot], "used": n_sel, "total": n_all,
-                    "shift": "—" if np.isnan(shift) else fmt_delta(shift).lstrip("+")})
+                    "shift": "—" if pure.is_nan(shift) else fmt_delta(shift).lstrip("+")})
     return out
 
 
@@ -413,7 +421,7 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
         rate, t0, minutes, gmax = None, None, 0, 1.0
     else:
         rate, t0, minutes = basal[:3]
-        gmax = float(np.nanmax(rate)) or 1.0
+        gmax = float(pure.nanmax(rate)) or 1.0
     cgm_by, ev_by = defaultdict(list), defaultdict(list)
     for time, value in zip(times, gluc):
         cgm_by[time.date()].append((time.hour + time.minute / 60, value))

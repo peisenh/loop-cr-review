@@ -30,11 +30,10 @@ from source instead (see README).
   key as local builds. Install from the file manager (unknown sources).
   Play Protect may ask once. Uninstall 0.20.x first — different signature.
 
-  numpy 2.3.2 is the only native library and is 16 KB-aligned. The charts
-  are SVG, so matplotlib is no longer bundled. Alignment is not a
-  Play-blocker.
+  The APK carries no compiled code: charts as SVG, arithmetic in plain
+  Python. Alignment and ABI no longer arise.
 
-  Third-party: numpy (BSD-3-Clause) is bundled in the APK. Project code is
-  AGPL-3.0. Texts: `android/app/wheels/NOTICE.md` in the source repo.
+  Third-party: Flask, Jinja2 and waitress, all pure Python. Project code is
+  AGPL-3.0. Texts: `android/NOTICE.md` in the source repo.
 
 All variants run entirely on your machine; your data never leaves it.

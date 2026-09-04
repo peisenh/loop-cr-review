@@ -59,9 +59,6 @@ echo "==> version $VERSION  abi $ABI"
 # shellcheck source=android-keystore-env.sh
 source "$(dirname "$0")/android-keystore-env.sh"
 
-echo "==> fetching numpy Android wheel"
-./tools/fetch-android-wheels.sh
-
 echo "==> assembling signed release APK (16 KB-aligned wheels)"
 echo "==> keystore $ANDROID_KEYSTORE  alias $ANDROID_KEY_ALIAS"
 
@@ -93,8 +90,8 @@ else
   echo "==> checking 16 KB alignment"
   if ! "$ZIPALIGN" -c -P 16 4 "$OUT"; then
     echo "The APK has libraries that are not 16 KB aligned. They will not load on" >&2
-    echo "a device with 16 KB pages. Check the wheels in android/app/wheels/ with" >&2
-    echo "  python3 poc/android-x86_64-16k/check-wheel-alignment.py android/app/wheels/*.whl" >&2
+    echo "a device with 16 KB pages. Nothing here is compiled any more, so this" >&2
+    echo "would mean something in the Chaquopy runtime itself." >&2
     exit 1
   fi
   echo "    all libraries 16 KB aligned"

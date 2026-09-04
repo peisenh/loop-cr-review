@@ -21,8 +21,6 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import numpy as np
-
 from lcr.readers.glooko import (
     is_glooko, numbered_csvs, read_basal_timeline, read_bolus_events, read_cgm, read_meals,
     read_tdd)
@@ -139,10 +137,11 @@ def clip_by_days(times, gluc, meals, minors, events, date_from, date_to, window_
     t_lo = datetime.combine(d0, datetime.min.time())
     t_meal_hi = datetime.combine(d1, datetime.min.time()) + timedelta(days=1)
     t_cgm_hi = t_meal_hi + timedelta(minutes=int(window_min))
-    mask = np.array([(t_lo <= ts < t_cgm_hi) for ts in times])
-    if not mask.any():
+    kept = [(ts, value) for ts, value in zip(times, gluc) if t_lo <= ts < t_cgm_hi]
+    if not kept:
         raise LoopCRError("no CGM samples in the chosen date range")
-    times, gluc = times[mask], gluc[mask]
+    times = [ts for ts, _v in kept]
+    gluc = [v for _ts, v in kept]
     def keep(items):
         if not items:
             return items

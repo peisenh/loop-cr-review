@@ -99,7 +99,7 @@ Positive loop extra basal may fit a too-weak CR, but on CamAPS it is not specifi
 Debian/Ubuntu via system packages (recommended, e.g. in a homelab):
 
 ```bash
-sudo apt install python3-numpy python3-jinja2
+sudo apt install python3-jinja2
 ```
 
 Or platform-independently via pip (in a venv if desired):
@@ -236,16 +236,16 @@ GitHub). Play Protect may ask once. Uninstall 0.20.x first — different
 signature.
 
 **Devices:** 4 KB and 16 KB page-size kernels (native libs aligned to
-`0x4000`: numpy 2.3.2, the only one left — the charts are SVG, so there is
-no matplotlib and no hand-built wheel). Built and run on
+no native libraries at all: the charts are SVG and the arithmetic is plain
+Python, so alignment and ABI no longer arise). Built and run on
 a Pixel 8 (Android 17) and a Tab M11.
 
 **Play:** alignment is no longer the blocker. The APK is still only on the
 GitHub release (sideload); a store listing is a separate decision.
 
 **Licenses in the APK:** project code is AGPL-3.0; everything else
-(AndroidX, Chaquopy, CPython, numpy, Flask, …) keeps its own
-license. Index: `android/app/wheels/NOTICE.md`.
+(AndroidX, Chaquopy, CPython, Flask, …) keeps its own
+license. Index: `android/NOTICE.md`.
 
 Build locally (JDK 17 + Android SDK):
 

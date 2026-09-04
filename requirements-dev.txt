@@ -1,3 +1,6 @@
 pylint
 debugpy
 snakeviz
+# Only for the tests: lcr/pure.py and lcr/pcg64.py are checked against the
+# numpy calls they replace, which needs the original present to compare to.
+numpy>=2.0

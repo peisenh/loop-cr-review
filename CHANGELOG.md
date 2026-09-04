@@ -10,6 +10,30 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 ## [Unreleased]
 
 ### Changed
+- Nothing in the app is compiled any more. numpy is gone, and with it the last
+  wheel, the last ABI question and the last reason a build could fail on one
+  platform and not another. What it was doing here was elementary — medians,
+  means, percentiles, a sorted search — and `lcr/pure.py` does it in about 250
+  lines, checked against numpy call by call in `tests/test_pure.py`.
+
+  Every step was verified by regenerating the report and comparing it character
+  for character against the previous one. Not a single figure moved.
+
+  That included the bootstrap, which resamples two thousand times using numpy's
+  random generator: any other stream would have given a statistically equivalent
+  answer and a different printed one, so `lcr/pcg64.py` reproduces PCG64, its
+  seeding and its bounded-integer method exactly rather than replacing them.
+
+  Speed did not suffer and in places improved: numpy's per-call overhead
+  dominates on the small arrays this report actually uses — an AGP bin holds one
+  value per day — where plain Python is about five times faster.
+- The matplotlib wheel, its licence file and the build script were still in the
+  tree: those deletions never reached the repository, because a change delivered
+  as an archive cannot express a removed file. 10 MB less.
+- Third-party notices move from `android/app/wheels/NOTICE.md` to
+  `android/NOTICE.md`; there are no wheels left to have a folder for.
+
+### Changed
 - The Android matplotlib wheel build script is kept in
   `poc/matplotlib-android-wheel/` rather than only in git history. It is retired
   — the app ships no matplotlib — but it worked, took a while to get right, and
