@@ -777,7 +777,7 @@ class TestRememberedPreferences(unittest.TestCase):
     def test_defaults_without_a_cookie(self):
         page = self._page()
         self.assertIn('name="window_hours" value="4"', page)
-        for flag in ("assume_camaps", "daily", "dark_charts"):
+        for flag in ("assume_camaps", "daily"):
             with self.subTest(flag=flag):
                 self.assertNotIn(f'name="{flag}" checked', page)
 
@@ -785,10 +785,9 @@ class TestRememberedPreferences(unittest.TestCase):
         self.assertIn('value="3.5"', self._page({"window_hours": 3.5}))
 
     def test_the_checkboxes_come_back(self):
-        page = self._page({"assume_camaps": True, "daily": True, "dark_charts": False})
+        page = self._page({"assume_camaps": True, "daily": False})
         self.assertIn('name="assume_camaps" checked', page)
-        self.assertIn('name="daily" checked', page)
-        self.assertNotIn('name="dark_charts" checked', page)
+        self.assertNotIn('name="daily" checked', page)
 
     def test_the_language_comes_back(self):
         page = self._page({"lang": "en"})

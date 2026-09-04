@@ -117,7 +117,6 @@
     </div>
     <label class="check"><input type="checkbox" name="assume_camaps" {% if prefs.get('assume_camaps') %}checked{% endif %}> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily" {% if prefs.get('daily') %}checked{% endif %}> {% trans %}Attach daily overview{% endtrans %}</label>
-    <label class="check"><input type="checkbox" name="dark_charts" {% if prefs.get('dark_charts') %}checked{% endif %}> {% trans %}Also render dark-theme charts (AGP, slots, daily){% endtrans %}</label>
 
     <fieldset>
       <legend>{% trans %}Slots (time-of-day windows){% endtrans %}</legend>
@@ -255,8 +254,7 @@
       lang: document.getElementById("lang").value,
       window_hours: Number(document.getElementById("window_hours").value),
       assume_camaps: form.assume_camaps.checked,
-      daily: form.daily.checked,
-      dark_charts: form.dark_charts.checked
+      daily: form.daily.checked
     };
     writeCookie(PREFS_STORE, encodeURIComponent(JSON.stringify(prefs)), 31536000);
   }

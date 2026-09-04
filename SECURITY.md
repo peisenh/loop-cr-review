@@ -53,7 +53,7 @@ knowing and is not held against anyone.
 - **Running the web app on the public internet.** It is not built for that: no
   authentication between users, no multi-tenancy, no rate limiting. Exposing it
   is out of scope rather than a finding.
-- **Third-party components** (Chaquopy, numpy, matplotlib, Flask, …). Report
+- **Third-party components** (Chaquopy, numpy, Flask, …). Report
   those upstream. Do tell us if a known one is exploitable *through* this
   software — the wheel versions are pinned here and can be moved.
 

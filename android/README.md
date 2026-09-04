@@ -20,10 +20,10 @@ Android app
 ## Devices
 
 Works on **4 KB and 16 KB** page-size devices. The APK ships numpy **2.3.2**
-from [Chaquopy pypi-upstream](https://chaquo.com/pypi-upstream/numpy/) plus a
-matplotlib wheel committed in [`app/wheels/`](app/wheels/) (ELF `PT_LOAD`
-align `0x4000`). Play upload is no longer blocked by native-lib alignment;
-listing on Play is a separate decision.
+from [Chaquopy pypi-upstream](https://chaquo.com/pypi-upstream/numpy/), the only
+compiled dependency left (ELF `PT_LOAD` align `0x4000`) — the charts are SVG, so
+matplotlib and the wheel that had to be built by hand are gone. Play upload is
+not blocked by native-lib alignment; listing on Play is a separate decision.
 
 Notices for bundled third-party code: [`app/wheels/NOTICE.md`](app/wheels/NOTICE.md).
 Background: [docs/android-poc.md](../docs/android-poc.md).
@@ -79,21 +79,13 @@ its JSON key in the repository secret. The link takes a while to become
 effective, so the first attempt often fails on permissions with nothing actually
 misconfigured.
 
-**arm64-v8a only.** numpy and matplotlib have to be 16 KB aligned to load on
-current devices, and that alignment turns out to be a toolchain default for arm64
-and nothing else — no combination of linker flags produced an aligned x86_64
-wheel, which `poc/android-x86_64-16k/` records. Shipping an x86_64 slice that
-cannot load its own libraries would be worse than shipping none. The emulator
-runs arm64 translated; `-Pabi=` still overrides the default for anyone who wants
-to try. The committed matplotlib wheel is arm64-only, and numpy is downloaded
-during the build (not in git).
-
-Rebuild matplotlib (rare):
-
-```bash
-./tools/build-matplotlib-android-wheel.sh
-# replaces android/app/wheels/matplotlib-*.whl — commit that file
-```
+**arm64-v8a only.** numpy has to be 16 KB aligned to load on current devices,
+and that alignment turns out to be a toolchain default for arm64 and nothing else
+— no combination of linker flags produced an aligned x86_64 wheel, which
+`poc/android-x86_64-16k/` records. Shipping an x86_64 slice that cannot load its
+own libraries would be worse than shipping none. The emulator runs arm64
+translated; `-Pabi=` still overrides the default for anyone who wants to try.
+numpy is downloaded during the build (not in git).
 
 Or Android Studio: open **this directory** (`android/`), not the repo root.
 Gradle copies the analysis before every *build* (`syncAnalysis`). A project
@@ -136,7 +128,7 @@ but will not match the registered key.
 
 ## Limits
 
-- Cold start loads Python, Flask and the first matplotlib font cache together.
+- Cold start loads Python, Flask and numpy together.
 - A long report with the app in the background may be killed (no foreground
   service).
 - Save and “open in browser” are explicit; the raw export is deleted as soon

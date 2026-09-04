@@ -99,7 +99,7 @@ _PLATFORM = "server"
 # because the app serves itself on a fresh port every launch and localStorage is
 # scoped to the origin, port included.
 _PREFS_COOKIE = "lcr_prefs"
-_PREF_FLAGS = ("assume_camaps", "daily", "dark_charts")
+_PREF_FLAGS = ("assume_camaps", "daily")
 
 
 def _remembered_prefs():
@@ -321,7 +321,7 @@ def _find_export_base(root):
 
 
 def _read_options():
-    """Validate and return (lang, window_hours, daily, dark_charts) from the form."""
+    """Validate and return (lang, window_hours, daily) and the rest from the form."""
     lang = _ui_lang()
     try:
         window_hours = float(request.form.get("window_hours", "4"))
@@ -330,7 +330,6 @@ def _read_options():
     if not 0.5 <= window_hours <= 12:
         abort(400, "window must be between 0.5 and 12 hours")
     daily = request.form.get("daily") == "on"
-    dark_charts = request.form.get("dark_charts") == "on"
     assume_camaps = request.form.get("assume_camaps") == "on"
     date_from = request.form.get("date_from") or None
     date_to = request.form.get("date_to") or None
@@ -339,7 +338,7 @@ def _read_options():
         date_to = core.parse_day(date_to)
     except LoopCRError as exc:
         abort(400, _client_message(exc, "invalid date"))
-    return lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to
+    return lang, window_hours, daily, assume_camaps, date_from, date_to
 
 
 def _slots_from_fields():
@@ -502,7 +501,7 @@ def _do_job(status_path, result_path, options):
         _job_progress(status_path, "analysis", 1)
         html, _ctx = core.generate_report(
             options["base"], lang=options["lang"], window_hours=options["window_hours"],
-            daily=options["daily"], dark_charts=options["dark_charts"],
+            daily=options["daily"],
             assume_camaps=options["assume_camaps"], date_from=options["date_from"],
             date_to=options["date_to"], slots=options["slots"],
             progress=lambda stage, pct: _job_progress(status_path, stage, pct))
@@ -568,7 +567,7 @@ def span():
 def analyze():
     """Start an asynchronous report job and return its opaque job id."""
     files = _export_uploads()
-    lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
+    lang, window_hours, daily, assume_camaps, date_from, date_to = _read_options()
     _sweep_stale_jobs()
     job_id = uuid.uuid4().hex
     job = _JOB_ROOT / job_id
@@ -581,7 +580,7 @@ def analyze():
         base = _find_export_base(extract)
         options = {
             "base": str(base), "lang": lang, "window_hours": window_hours,
-            "daily": daily, "dark_charts": dark_charts, "assume_camaps": assume_camaps,
+            "daily": daily, "assume_camaps": assume_camaps,
             "date_from": date_from, "date_to": date_to, "slots": slots,
             "download": request.form.get("download") == "on",
         }
@@ -702,14 +701,14 @@ def report():
 
     """Build the report from the uploaded export and return it as HTML."""
     files = _export_uploads()
-    lang, window_hours, daily, dark_charts, assume_camaps, date_from, date_to = _read_options()
+    lang, window_hours, daily, assume_camaps, date_from, date_to = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
         extract = _unpack_upload(tmpd, files)
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
-        html = _generate_or_400(base, lang, window_hours, daily, dark_charts,
+        html = _generate_or_400(base, lang, window_hours, daily,
                                 assume_camaps, date_from, date_to, slots)
 
     headers = {}
@@ -727,7 +726,7 @@ def _load_slots_or_400(path):
     return None                          # pragma: no cover
 
 
-def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps,
+def _generate_or_400(base, lang, window_hours, daily, assume_camaps,
                      date_from, date_to, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
@@ -739,7 +738,7 @@ def _generate_or_400(base, lang, window_hours, daily, dark_charts, assume_camaps
     try:
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily,
-            dark_charts=dark_charts, assume_camaps=assume_camaps,
+            assume_camaps=assume_camaps,
             date_from=date_from, date_to=date_to, slots=slots)
         return html
     except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)

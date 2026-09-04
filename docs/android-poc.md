@@ -39,6 +39,13 @@ new apps targeting API 35).
 `app/build.gradle.kts` stays on the pair that runs. The extra-index pin is
 left as a comment.
 
+**Since then:** a matplotlib wheel was built by hand against numpy 2, which
+carried the app for several releases — and was then dropped altogether. The
+charts are drawn as SVG now, so numpy is the only compiled dependency and the
+question above no longer arises. What that cost and what it bought is in
+[`poc/svg-charts/`](../poc/svg-charts/); the x86_64 attempt that failed is in
+[`poc/android-x86_64-16k/`](../poc/android-x86_64-16k/).
+
 ## Fixed while bringing it up
 
 - `Activity` instead of `AppCompatActivity` (plain platform theme).

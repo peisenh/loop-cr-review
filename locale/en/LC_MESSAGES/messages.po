@@ -1341,9 +1341,6 @@ msgstr "Read Nightscout as CamAPS (adds the loop figures)"
 msgid "Attach daily overview"
 msgstr "Attach daily overview"
 
-#: templates/upload.html.j2:115
-msgid "Also render dark-theme charts (AGP, slots, daily)"
-msgstr "Also render dark-theme charts (AGP, slots, daily)"
 
 #: templates/upload.html.j2:118
 msgid "Slots (time-of-day windows)"
@@ -1565,3 +1562,11 @@ msgstr "Your last settings were restored — language, meal window, the checkbox
 #: templates/upload.html.j2
 msgid "Reading date range…"
 msgstr "Reading date range…"
+
+#: lcr/charts.py
+msgid "Hypoglycemia (%)"
+msgstr "Hypoglycemia (%)"
+
+#: lcr/charts.py
+msgid "Hyperglycemia (%)"
+msgstr "Hyperglycemia (%)"

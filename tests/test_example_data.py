@@ -132,23 +132,21 @@ class TestGenerateReportExample(unittest.TestCase):
         self.assertGreaterEqual(len(ctx["daily_days"]), 1)
         for day in ctx["daily_days"]:
             self.assertTrue(day["img"])
-            self.assertFalse(day["img_dark"])
-        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=True, dark_charts=True)
-        for day in ctx["daily_days"]:
-            self.assertTrue(day["img"])
-            self.assertTrue(day["img_dark"])
 
-    def test_dark_charts_optional_for_all(self):
-        """AGP/slot/norm dark PNGs only with dark_charts (same flag as daily)."""
+    def test_one_chart_serves_both_themes(self):
+        """No second rendering pass: the dark variant is a rule inside the SVG.
+
+        This replaces a pair of tests that checked a dark copy was produced only
+        when asked for. There is nothing to ask for now — every chart carries
+        its dark colours in its own stylesheet.
+        """
         _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False)
-        self.assertTrue(ctx["agp_img"])
-        self.assertFalse(ctx["agp_img_dark"])
-        self.assertFalse(ctx["slot_img_dark"])
-        self.assertFalse(ctx["slot_norm_img_dark"])
-        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False, dark_charts=True)
-        self.assertTrue(ctx["agp_img_dark"])
-        self.assertTrue(ctx["slot_img_dark"])
-        self.assertTrue(ctx["slot_norm_img_dark"])
+        for key in ("agp_img", "slot_img", "slot_norm_img"):
+            with self.subTest(chart=key):
+                self.assertTrue(ctx[key])
+                self.assertIn("prefers-color-scheme:dark",
+                              ctx[key].replace(" ", ""))
+                self.assertNotIn(f"{key}_dark", ctx)
 
     def test_english_report(self):
         html, ctx = core.generate_report(EXAMPLE, lang="en", window_hours=4.0)

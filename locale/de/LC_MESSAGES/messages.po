@@ -1330,9 +1330,6 @@ msgstr "Nightscout wie CamAPS auswerten (ergänzt die Loop-Größen)"
 msgid "Attach daily overview"
 msgstr "Tagesübersicht anhängen"
 
-#: templates/upload.html.j2:115
-msgid "Also render dark-theme charts (AGP, slots, daily)"
-msgstr "Auch dunkle Charts erzeugen (AGP, Slots, Tagesgraphen)"
 
 #: templates/upload.html.j2:118
 msgid "Slots (time-of-day windows)"
@@ -1551,3 +1548,11 @@ msgstr "Deine letzten Einstellungen wurden wiederhergestellt — Sprache, Mahlze
 #: templates/upload.html.j2
 msgid "Reading date range…"
 msgstr "Zeitraum wird gelesen…"
+
+#: lcr/charts.py
+msgid "Hypoglycemia (%)"
+msgstr "Hypoglykämie (%)"
+
+#: lcr/charts.py
+msgid "Hyperglycemia (%)"
+msgstr "Hyperglykämie (%)"
