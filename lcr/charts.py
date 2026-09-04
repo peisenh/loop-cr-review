@@ -217,7 +217,11 @@ def agp_chart(times, gluc, dark=False):
         index = pure.digitize(time.hour * 60 + time.minute, bins) - 1
         if 0 <= index < len(buckets):
             buckets[index].append(value)
-    xs, perc = [], {q: [] for q in (5, 25, 50, 75, 95)}
+    # 10-90 rather than 5-95, both of which the consensus statements allow: the
+    # CamAPS report this one is meant to lie beside uses 10-90, and two charts
+    # of the same shape with different bands invite a comparison that is not
+    # one. It also matches the normalised cards further down.
+    xs, perc = [], {q: [] for q in (10, 25, 50, 75, 90)}
     for bin_index in range(len(bins) - 1):
         vals = buckets[bin_index]
         if len(vals) >= 5:
@@ -238,12 +242,12 @@ def agp_chart(times, gluc, dark=False):
         chart.add(f'<line x1="{chart.left}" y1="{y}" x2="{chart.right}" y2="{y}" '
                   f'class="target-s" stroke-width="0.9"/>')
 
-    chart.band(band_d(xs, perc[5], perc[95], sx, sy), "p5", 0.6)
+    chart.band(band_d(xs, perc[10], perc[90], sx, sy), "p5", 0.6)
     chart.band(band_d(xs, perc[25], perc[75], sx, sy), "p25", 0.55)
     chart.line(path_d(xs, perc[50], sx, sy), "median", 2)
 
     _axes(chart, sx, sy, x_ticks, y_ticks, _("Time of day"), glucose_unit())
-    chart.legend([("p5", "5–95 %", True), ("p25", "25–75 %", True),
+    chart.legend([("p5", "10–90 %", True), ("p25", "25–75 %", True),
                   ("median", _("Median"), False)], "ink", size=LEGEND_SIZE)
     return chart.to_svg("AGP")
 

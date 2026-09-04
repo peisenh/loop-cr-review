@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+- The AGP shows the 10th and 90th percentiles rather than the 5th and 95th.
+  Both are allowed by the consensus statements, and 5–95 is the older AGP
+  definition — but the CamAPS report this one is meant to lie beside uses
+  10–90, and two charts of the same shape with different bands invite a
+  comparison that is not one. It also matches the normalised cards further
+  down, which were already at 10–90.
+
 ### Added
 - `tools/fetch-nightscout.py` pulls a date range from a Nightscout site into the
   `entries.json` + `treatments.json` pair the reader wants. It walks the range in

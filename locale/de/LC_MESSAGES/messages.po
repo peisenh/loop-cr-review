@@ -576,8 +576,8 @@ msgid "very high"
 msgstr "sehr hoch"
 
 #: templates/report.html.j2:266
-msgid "AGP (percentiles 5/25/50/75/95)"
-msgstr "AGP (Perzentile 5/25/50/75/95)"
+msgid "AGP (percentiles 10/25/50/75/90)"
+msgstr "AGP (Perzentile 10/25/50/75/90)"
 
 #: templates/report.html.j2:269
 msgid "Real postprandial courses per meal (median)"
