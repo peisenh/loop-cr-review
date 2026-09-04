@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-import numpy as np
 
 import loop_cr_review as core
 
@@ -8,7 +7,7 @@ import loop_cr_review as core
 def _basal(hours, rate_u_h, fasting):
     t0 = datetime(2026, 5, 1, 0, 0)
     n = hours * 60
-    rate = np.full(n, rate_u_h, dtype=float)
+    rate = [float(rate_u_h)] * n
     return (rate, t0, n, fasting, fasting, fasting)
 
 

@@ -1,13 +1,17 @@
 # Changelog
 
-All notable changes to this project are documented here.
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
-Entries up to and including 0.5.3 are in German; newer entries are in English.
-
-> Not a medical device — analysis only. No diagnosis, no treatment recommendation.
-
 ## [Unreleased]
+
+### Fixed
+- The test run works without numpy. Three test modules imported it only to build
+  their inputs — arrays the code no longer receives — and now build lists
+  instead. `tests/test_pure.py` and the new `tests/test_pcg64.py` still compare
+  against numpy where that is the point, and skip where it is absent; CI
+  installs it so those comparisons actually run rather than quietly skipping.
+- `lcr/pcg64.py` has tests. It was verified by hand while it was written and then
+  committed without any, which is exactly the piece that must not be almost
+  right: a generator that is nearly correct produces plausible numbers and a
+  quietly different report.
 
 ## [0.25.0] - 2026-09-04
 

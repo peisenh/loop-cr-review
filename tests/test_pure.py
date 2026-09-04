@@ -13,7 +13,10 @@ move the AGP bands and the time-in-range figures without anything looking
 broken. It is checked first and hardest.
 
 numpy is still a test dependency here on purpose: the point is to prove the
-replacement matches, and that needs the original present to compare against.
+replacement matches, and that needs the original present to compare against. It
+is in `requirements-dev.txt`, not in the runtime ones — where it is absent these
+comparisons skip rather than fail, and the checks that need no comparison still
+run.
 """
 from __future__ import annotations
 
@@ -21,7 +24,10 @@ import math
 import random
 import unittest
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:                                  # pragma: no cover
+    np = None
 
 from lcr import pure
 
@@ -56,6 +62,7 @@ def _with_gaps():
     return out
 
 
+@unittest.skipIf(np is None, "numpy not installed (requirements-dev.txt)")
 class TestPercentile(unittest.TestCase):
     """The one that can be subtly wrong and still look right."""
 
@@ -80,6 +87,7 @@ class TestPercentile(unittest.TestCase):
         self.assertTrue(math.isnan(pure.percentile([math.nan, math.nan], 50)))
 
 
+@unittest.skipIf(np is None, "numpy not installed (requirements-dev.txt)")
 class TestAggregates(unittest.TestCase):
     """Medians, means and extremes, with and without gaps."""
 
@@ -123,6 +131,7 @@ class TestAggregates(unittest.TestCase):
                 self.assertEqual(pure.nanargmin(values), int(np.nanargmin(arr)))
 
 
+@unittest.skipIf(np is None, "numpy not installed (requirements-dev.txt)")
 class TestSequenceOperations(unittest.TestCase):
     """Search, difference and sort order."""
 

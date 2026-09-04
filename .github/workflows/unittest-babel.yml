@@ -29,6 +29,11 @@ jobs:
           # gunicorn/Qt are deliberately left out (not needed to import).
           pip install "Flask>=3.0,<4.0" "waitress>=3.0" "pywebview>=5.0"
           pip install babel
+          # numpy is no longer a runtime dependency, but tests/test_pure.py and
+          # tests/test_pcg64.py check the replacements against the calls they
+          # replace, which needs the original here. Without it those comparisons
+          # skip, and the run would pass while proving nothing.
+          pip install numpy
 
       - name: Babel — compile de/en catalogs
         run: |

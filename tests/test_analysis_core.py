@@ -8,10 +8,10 @@ for direction.
 """
 from __future__ import annotations
 
+import math
 import unittest
 from datetime import datetime, timedelta
 
-import numpy as np
 
 import loop_cr_review as core
 from lcr import charts
@@ -24,7 +24,7 @@ def _basal(rate_per_min, fasting, t0=None):
     read_basal_timeline expands the segments to).
     """
     t0 = t0 or datetime(2026, 5, 1, 0, 0)
-    rate = np.array(rate_per_min, dtype=float)
+    rate = [float(v) for v in rate_per_min]
     return (rate, t0, len(rate), fasting, fasting, fasting)
 
 
@@ -101,7 +101,7 @@ class TestLoopExtraBasalAndCrEff(unittest.TestCase):
             rate[i] = 0.0                                          # -0.8 U/h -> -3.2 U
         row = self._one_meal(rate, fasting=0.8, cho=60.0, bolus=3.0)
         self.assertAlmostEqual(row["exc"], -3.2, places=6)
-        self.assertTrue(np.isnan(row["cr_eff"]))
+        self.assertTrue(math.isnan(row["cr_eff"]))
 
     def test_delta_four_hours(self):
         """d4 is post-window glucose minus pre-meal glucose."""
@@ -122,8 +122,8 @@ class TestLoopExtraBasalAndCrEff(unittest.TestCase):
         rows = core.analyze_meals(meals, [], _basal(rate, 0.8, self.t0),
                                   self.window, _const_lookup(120.0, 120.0))
         self.assertEqual(len(rows), 1)
-        self.assertTrue(np.isnan(rows[0]["exc"]))
-        self.assertTrue(np.isnan(rows[0]["cr_eff"]))
+        self.assertTrue(math.isnan(rows[0]["exc"]))
+        self.assertTrue(math.isnan(rows[0]["cr_eff"]))
         self.assertAlmostEqual(rows[0]["cr"], 10.0)
 
 
@@ -162,7 +162,7 @@ class TestConsensusMetrics(unittest.TestCase):
         # 100 samples, 5 min apart: 60 in range, 20 high, 10 very high, 10 low
         self.times = [datetime(2026, 5, 1, 0, 0) + timedelta(minutes=5 * i)
                       for i in range(100)]
-        self.gluc = np.array([120.0] * 60 + [200.0] * 20 + [300.0] * 10 + [60.0] * 10)
+        self.gluc = ([120.0] * 60 + [200.0] * 20 + [300.0] * 10 + [60.0] * 10)
 
     def test_time_in_range_percentages(self):
         m = core.consensus_metrics(self.times, self.gluc)
@@ -179,14 +179,17 @@ class TestConsensusMetrics(unittest.TestCase):
 
     def test_mean_cv_and_gmi(self):
         m = core.consensus_metrics(self.times, self.gluc)
-        mean = float(self.gluc.mean())
+        # Worked out here rather than taken from the code under test: the point
+        # is that the reported mean and CV are the textbook ones.
+        mean = math.fsum(self.gluc) / len(self.gluc)
+        variance = math.fsum((v - mean) ** 2 for v in self.gluc) / len(self.gluc)
         self.assertAlmostEqual(m["mean"], mean, places=6)
-        self.assertAlmostEqual(m["cv"], float(self.gluc.std()) / mean * 100, places=6)
+        self.assertAlmostEqual(m["cv"], math.sqrt(variance) / mean * 100, places=6)
         # GMI (Bergenstal): 3.31 + 0.02392 * mean(mg/dL)
         self.assertAlmostEqual(m["gmi"], 3.31 + 0.02392 * mean, places=9)
 
     def test_very_low_counts_separately(self):
-        gluc = np.array([50.0] * 50 + [120.0] * 50)
+        gluc = [50.0] * 50 + [120.0] * 50
         m = core.consensus_metrics(self.times, gluc)
         self.assertAlmostEqual(m["tbr2"], 50.0, places=6)   # <54
         self.assertAlmostEqual(m["tbr1"], 0.0, places=6)
