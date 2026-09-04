@@ -46,6 +46,21 @@
   .card-break h2 { break-after: avoid }
   .card-break thead { display: table-header-group }
   .disclaimer, .methodbox { break-inside: avoid }
+  /* A part heading and its one line of prose belong to what follows them, not
+     to the foot of the previous page. break-after pulls the next block along.
+     The risk of forcing too much together is bounded: a card already avoids
+     being split, so it would have moved to the next page anyway — what this
+     adds is at most the heading's own height of white space, not a card's. */
+  .part { break-inside: avoid; break-after: avoid;
+          page-break-inside: avoid; page-break-after: avoid }
+  /* The legend belongs to the panels it explains: without this the appendix
+     heading and its key sat at the foot of one page and the first day began on
+     the next. The card itself is taller than a page, so it carries card-break
+     and is allowed to split between panels — just not right after the key. */
+  .daily-card .note { break-after: avoid; page-break-after: avoid }
+  /* Two lines minimum on either side of a break, so a paragraph does not end
+     a page with a single stranded line. */
+  p, .part-sub, .note { orphans: 2; widows: 2 }
   :root {
     --ink:#1a2233; --muted:#5a6b82; --line:#dde3ee; --bg:#fff; --card:#fff;
     --gen:#8a97a8; --link:#5b8def; --track:#eef1f6; --slot-bg:#fafbfd;
@@ -459,7 +474,7 @@ img { width: 100%; border-radius: 8px }
 <div class="part"><h2>{% trans %}Appendix — daily courses{% endtrans %}</h2>
   <div class="part-sub">{% trans %}Raw daily plots, unfiltered.{% endtrans %}</div></div>
 
-<div class="card"><h2>{% trans %}Daily overview — CGM · bolus · basal{% endtrans %}</h2>
+<div class="card card-break daily-card"><h2>{% trans %}Daily overview — CGM · bolus · basal{% endtrans %}</h2>
   <div class="note">{% trans lo=tir_lo, hi=tir_hi, unit=unit %}Green band = target range {{ lo }}–{{ hi }} {{ unit }} · <b style="color:#0b2e6b">units</b>
     = bolus · <span style="color:#c0392b">grams</span> = carbs (all individual entries) ·
     blue area below = basal rate (U/h scale on the right, same for all days). One panel per day.{% endtrans %}</div></div>

@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- A part heading no longer strands at the foot of a printed page while the card
+  it introduces starts on the next one. It is kept with what follows, and
+  paragraphs keep two lines either side of a break. The same for the appendix:
+  its key stayed on one page while the first daily panel began on the next, so
+  the legend was separated from what it explains.
 - Bolus and carb labels on a daily panel no longer land on top of each other.
   They were stacked from fixed rows twelve and forty-two, so the fourth bolus
   in a short span sat exactly on the carb row and the two read as one number.
