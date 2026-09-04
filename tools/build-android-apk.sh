@@ -39,8 +39,9 @@ mkdir -p "$APP" dist
 printf 'sdk.dir=%s\n' "$SDK" > "$APP/local.properties"
 
 VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo poc)"
-# Phones and tablets: one ABI. x86_64 is only useful for the emulator.
-ABI="${ANDROID_ABI:-arm64-v8a}"
+# Both ABIs by default. x86_64 is only useful for the emulator, but it lets
+# that run natively, and Play splits a bundle so no device downloads both.
+ABI="${ANDROID_ABI:-arm64-v8a,x86_64}"
 
 # Same bake as the desktop binaries: the APK has no git, so tool_version()
 # only sees _version.py. Leave the placeholder and the report prints

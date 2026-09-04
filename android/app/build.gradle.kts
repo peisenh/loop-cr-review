@@ -15,16 +15,22 @@ android {
         versionCode = 7
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
-            // arm64 by default, but no longer of necessity: with no native code
-            // of our own the alignment question that forced this is gone, and
-            // Chaquopy's own runtime is available for every ABI. Kept as the
-            // default until a build for the others has actually been tried;
-            // -Pabi= overrides it. History: poc/android-x86_64-16k/.
+            // Both ABIs. arm64 alone was forced by numpy, which had to be
+            // 16 KB aligned and only was for arm64 — with no native code of our
+            // own that reason is gone, and only Chaquopy's runtime is left, at
+            // about 6 MB per slice. History: poc/android-x86_64-16k/.
+            //
+            // It costs a device nothing: Play splits a bundle by ABI, so a phone
+            // still downloads one slice. The sideload APK carries both, and the
+            // emulator gets to run natively instead of translating arm64, which
+            // is the point.
+            //
+            // -Pabi= overrides this, e.g. -Pabi=arm64-v8a for a smaller APK.
             val abi = findProperty("abi") as String?
             if (!abi.isNullOrBlank()) {
                 abiFilters += abi.split(',').map { it.trim() }.filter { it.isNotEmpty() }
             } else {
-                abiFilters += listOf("arm64-v8a")
+                abiFilters += listOf("arm64-v8a", "x86_64")
             }
         }
     }

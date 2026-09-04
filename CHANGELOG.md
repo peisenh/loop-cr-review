@@ -46,8 +46,11 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   dominates on arrays this small.
 
   With no native code left, the wheels, the ABI question and the page-size
-  question all go away. The arm64 restriction is now a default rather than a
-  necessity.
+  question all go away — and with them the arm64-only restriction, which existed
+  because numpy was aligned for that architecture and no other. The APK carries
+  arm64-v8a and x86_64 again. It costs a device nothing, since Play splits a
+  bundle by ABI; what it buys is an emulator that runs natively instead of
+  translating arm64.
 - The Play upload publishes to the internal track instead of leaving a draft,
   and uses `tracks` rather than the deprecated `track` that warned on every run.
 - The Android matplotlib wheel build script is kept in

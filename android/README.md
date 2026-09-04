@@ -79,12 +79,18 @@ its JSON key in the repository secret. The link takes a while to become
 effective, so the first attempt often fails on permissions with nothing actually
 misconfigured.
 
-**arm64-v8a by default**, but no longer of necessity. That restriction existed
-because numpy had to be 16 KB aligned and only arm64 got that from the toolchain
-— every attempt at an aligned x86_64 wheel failed, which
-`poc/android-x86_64-16k/` records. With no native code of our own the constraint
-is gone; the default is kept until a build for the other ABIs has actually been
-tried, and `-Pabi=` overrides it.
+**arm64-v8a and x86_64.** For a long time it was arm64 alone, because numpy had
+to be 16 KB aligned and only arm64 got that from the toolchain — every attempt
+at an aligned x86_64 wheel failed, which `poc/android-x86_64-16k/` records. With
+no native code of our own that reason is gone, and what remains is Chaquopy's
+runtime at about 6 MB per slice.
+
+It costs a device nothing: Play splits a bundle by ABI, so a phone downloads one
+slice either way. The sideload APK carries both and is 20 MB instead of 14. What
+it buys is an emulator that runs natively rather than translating arm64, which
+makes it usable for testing again.
+
+`-Pabi=` overrides the default, e.g. `ANDROID_ABI=arm64-v8a` for a smaller APK.
 
 Or Android Studio: open **this directory** (`android/`), not the repo root.
 Gradle copies the analysis before every *build* (`syncAnalysis`). A project

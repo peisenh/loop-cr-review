@@ -43,7 +43,7 @@ mkdir -p "$APP" dist
 printf 'sdk.dir=%s\n' "$SDK" > "$APP/local.properties"
 
 VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo poc)"
-ABI="${ANDROID_ABI:-arm64-v8a}"
+ABI="${ANDROID_ABI:-arm64-v8a,x86_64}"
 
 cp -f _version.py build-version.bak 2>/dev/null || true
 echo "VERSION = \"$VERSION\"" > _version.py
