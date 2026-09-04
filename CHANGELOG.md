@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-09-04
+
 ### Fixed
 - Pinch to zoom works in the app. A WebView does not allow it unless asked,
   so the report could be zoomed in a browser but not in the app that shows the
@@ -1270,7 +1272,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.25.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.25.1...HEAD
+[0.25.1]: https://github.com/peisenh/loop-cr-review/compare/v0.25.0...v0.25.1
 [0.25.0]: https://github.com/peisenh/loop-cr-review/compare/v0.24.1...v0.25.0
 [0.24.1]: https://github.com/peisenh/loop-cr-review/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/peisenh/loop-cr-review/compare/v0.23.0...v0.24.0
