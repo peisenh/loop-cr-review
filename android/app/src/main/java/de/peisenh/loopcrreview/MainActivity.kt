@@ -104,6 +104,13 @@ class MainActivity : Activity() {
         webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = false
         webView.settings.allowContentAccess = false
+        // Pinch to zoom, as the same report allows in a browser. A WebView does
+        // not do this on its own, and the daily panels are the one place where
+        // a reader wants to get closer — the labels are small by design.
+        // The on-screen +/- buttons stay off: they sit over the content.
+        webView.settings.setSupportZoom(true)
+        webView.settings.builtInZoomControls = true
+        webView.settings.displayZoomControls = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
                 view: WebView,

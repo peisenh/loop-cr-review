@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Fixed
+- Pinch to zoom works in the app. A WebView does not allow it unless asked,
+  so the report could be zoomed in a browser but not in the app that shows the
+  same file — and the daily panels are where a reader wants to get closer. The
+  on-screen zoom buttons stay off; they would sit over the content.
 - The test run works without numpy. Three test modules imported it only to build
   their inputs — arrays the code no longer receives — and now build lists
   instead. `tests/test_pure.py` and the new `tests/test_pcg64.py` still compare
