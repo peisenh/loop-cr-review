@@ -6,16 +6,16 @@ Imported by every other module; imports none of them, so there are no cycles.
 """
 import gettext as _gettext_module
 import json
+import math
 import subprocess
 import sys
-import warnings
 from collections import defaultdict
 from contextlib import contextmanager
 import contextvars
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import numpy as np
+from lcr import pure
 
 __all__ = [
     "MAX_SEARCH_DEPTH",
@@ -509,9 +509,9 @@ def num(val):
     """
     val = val.strip().strip('"')
     if val == "":
-        return np.nan
+        return pure.NAN
     parsed = float(val.replace(",", ".")) if "," in val else float(val)
-    return parsed if np.isfinite(parsed) else np.nan
+    return parsed if math.isfinite(parsed) else pure.NAN
 
 
 def parse_ts(val):
@@ -526,7 +526,7 @@ def parse_ts(val):
 
 def fmt_cr(value):
     """Carb ratio as '1:x.x' or '—' for nan."""
-    return f"1:{value:.1f}" if value and not np.isnan(value) else "—"
+    return f"1:{value:.1f}" if value and not pure.is_nan(value) else "—"
 
 
 def slot_of(hour):
@@ -540,17 +540,20 @@ def slot_of(hour):
 
 def _slot_norm_rows(meals, slot, window, val_at, clean_times=None):
     """Baseline-normalised per-meal rows for a slot. Empty list if none."""
-    grid = np.arange(0, window + 1, 10)
+    grid = pure.arange(0, window + 1, 10)
     rows = []
     for m in meals:
         if slot_of(m["time"].hour) != slot:
             continue
         if clean_times is not None and m["time"] not in clean_times:
             continue
-        row = np.array([val_at(m["time"], int(g), 6) for g in grid], dtype=float)
-        if np.isnan(row[0]):
+        row = [val_at(m["time"], int(g), 6) for g in grid]
+        if pure.is_nan(row[0]):
             continue
-        rows.append(row - row[0])
+        base = row[0]
+        # NaN minus a number is NaN either way; written out because a list
+        # subtraction is not element-wise the way an array one was.
+        rows.append([pure.NAN if pure.is_nan(v) else v - base for v in row])
     return rows, grid
 
 
@@ -584,10 +587,10 @@ def select_slot_rows(slot_rows):
 
 def slot_median_curve(meals, slot, window, val_at):
     """Median postprandial curve (0..window) of a slot or None."""
-    grid = np.arange(0, window + 1, 10)
+    grid = pure.arange(0, window + 1, 10)
     stacks = [[val_at(m["time"], int(g), 6) for g in grid]
               for m in meals if slot_of(m["time"].hour) == slot]
-    return np.nanmedian(np.array(stacks), axis=0) if stacks else None
+    return pure.column_median(stacks) if stacks else None
 
 def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
     """Baseline-normalised median curve of a slot (start of each meal = 0).
@@ -607,7 +610,7 @@ def slot_norm_curve(meals, slot, window, val_at, clean_times=None):
     rows, _grid = _slot_norm_rows(meals, slot, window, val_at, clean_times)
     if not rows:
         return None, 0
-    return np.nanmedian(np.array(rows), axis=0), len(rows)
+    return pure.column_median(rows), len(rows)
 
 def slot_norm_bands(meals, slot, window, val_at, clean_times=None):
     """Median + percentile bands of baseline-normalised curves for one slot.
@@ -617,17 +620,16 @@ def slot_norm_bands(meals, slot, window, val_at, clean_times=None):
     rows, grid = _slot_norm_rows(meals, slot, window, val_at, clean_times)
     if not rows:
         return None
-    arr = np.array(rows, dtype=float)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        return {
-            "grid": grid, "n": len(rows),
-            "p10": np.nanpercentile(arr, 10, axis=0),
-            "p25": np.nanpercentile(arr, 25, axis=0),
-            "p50": np.nanpercentile(arr, 50, axis=0),
-            "p75": np.nanpercentile(arr, 75, axis=0),
-            "p90": np.nanpercentile(arr, 90, axis=0),
-        }
+    # No warning filter needed any more: a column with nothing in it yields
+    # NaN quietly instead of raising a RuntimeWarning the way numpy did.
+    return {
+        "grid": grid, "n": len(rows),
+        "p10": pure.column_percentile(rows, 10),
+        "p25": pure.column_percentile(rows, 25),
+        "p50": pure.column_percentile(rows, 50),
+        "p75": pure.column_percentile(rows, 75),
+        "p90": pure.column_percentile(rows, 90),
+    }
 
 # Layout of the daily panels (y positions of the event rows).
 DAILY_BOLUS_Y, DAILY_CARB_Y, DAILY_ROW, DAILY_MIN_GAP = 452, 388, 18, 0.9
@@ -641,27 +643,29 @@ def _basal_from_segments(segs):
     t0 = segs[0][0]
     minutes = int((segs[-1][0] + timedelta(minutes=segs[-1][1]) - t0).total_seconds() // 60) + 1
     minutes = max(minutes, 1)
-    rate = np.full(minutes, np.nan)
+    rate = [pure.NAN] * minutes
     for start, dur, value in segs:
         i0 = int((start - t0).total_seconds() // 60)
         if i0 >= minutes or i0 + max(int(dur), 1) <= 0:
             continue
         a = max(0, i0)
         b = min(minutes, i0 + max(int(dur), 1))
-        rate[a:b] = value
+        # A list slice takes a sequence, not a scalar the way an array did.
+        rate[a:b] = [value] * (b - a)
     last = segs[0][2]
     for i in range(minutes):
-        if np.isnan(rate[i]):
+        if pure.is_nan(rate[i]):
             rate[i] = last
         else:
             last = rate[i]
     fasting_idx = [i for i in range(minutes)
                    if (t0 + timedelta(minutes=i)).hour in FASTING_HOURS]
-    fasting = float(np.mean([rate[i] for i in fasting_idx])) if fasting_idx else float(np.mean(rate))
+    fasting = (float(pure.mean([rate[i] for i in fasting_idx])) if fasting_idx
+               else float(pure.mean(rate)))
     per_night = defaultdict(list)
     for i in fasting_idx:
         per_night[(t0 + timedelta(minutes=i)).date()].append(rate[i])
-    night_means = [float(np.mean(v)) for v in per_night.values() if v]
+    night_means = [float(pure.mean(v)) for v in per_night.values() if v]
     fb_lo = fb_hi = fasting
     fb_spread = False
     if night_means:
@@ -697,12 +701,17 @@ def sorted_unique_series(times, gluc):
     Sources deliver rows in file order and can repeat a timestamp; the
     analysis assumes a strictly increasing series.
     """
-    times = np.array(times)
-    gluc = np.array(gluc)
-    order = np.argsort(times, kind="stable")
-    times, gluc = times[order], gluc[order]
-    keep = np.concatenate(([True], times[1:] != times[:-1]))
-    return times[keep], gluc[keep]
+    order = pure.argsort(list(times))
+    ordered = [(times[i], gluc[i]) for i in order]
+    out_times, out_gluc = [], []
+    for stamp, value in ordered:
+        # A repeated timestamp keeps the first reading, as the stable sort and
+        # the neighbour comparison did together.
+        if out_times and stamp == out_times[-1]:
+            continue
+        out_times.append(stamp)
+        out_gluc.append(value)
+    return out_times, out_gluc
 
 
 def tool_version():

@@ -59,9 +59,6 @@ echo "==> version $VERSION  abi $ABI  (Play AAB)"
 # shellcheck source=android-keystore-env.sh
 source "$(dirname "$0")/android-keystore-env.sh"
 
-echo "==> fetching numpy Android wheel"
-./tools/fetch-android-wheels.sh
-
 GRADLE_PROPS=(-PappVersion="$VERSION" -Pabi="$ABI")
 if [ -n "${PLAY_VERSION_CODE:-}" ]; then
   GRADLE_PROPS+=(-PversionCode="$PLAY_VERSION_CODE")

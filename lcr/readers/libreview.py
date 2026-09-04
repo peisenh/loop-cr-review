@@ -3,12 +3,11 @@
 """Reading a LibreView CSV export. Always lite: it carries no basal rate."""
 import csv
 
-import numpy as np
 
+from lcr import pure
 from lcr.common import (
     HEAD_BYTES, LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit,
     single_match, sniff_candidates, sorted_unique_series)
-
 
 
 def libreview_csv(base):
@@ -93,15 +92,15 @@ def read_libreview(base):
             if typ == "0" and i_hist is not None and i_hist < len(row) and row[i_hist].strip():
                 times.append(ts)
                 gluc.append(num(row[i_hist]))
-            cho = num(row[i_cho]) if i_cho is not None and i_cho < len(row) else np.nan
+            cho = num(row[i_cho]) if i_cho is not None and i_cho < len(row) else pure.NAN
             ins = 0.0
             for idx in (i_ins, i_meal_ins, i_corr):
                 if idx is not None and idx < len(row) and row[idx].strip():
                     v = num(row[idx])
-                    if not np.isnan(v):
+                    if not pure.is_nan(v):
                         ins += v
-            if (not np.isnan(cho) and cho > 0) or ins > 0:
-                raw.append({"time": ts, "cho": 0.0 if np.isnan(cho) else cho, "bg": np.nan,
+            if (not pure.is_nan(cho) and cho > 0) or ins > 0:
+                raw.append({"time": ts, "cho": 0.0 if pure.is_nan(cho) else cho, "bg": pure.NAN,
                             "bolus": ins})
     if not times:
         raise LoopCRError("LibreView CSV has no glucose rows.")

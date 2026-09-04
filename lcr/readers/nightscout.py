@@ -5,8 +5,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import numpy as np
 
+from lcr import pure
 from lcr.common import (
     LoopCRError, _basal_from_segments, find_below, merge_carb_entries, set_glucose_unit,
     single_match, sorted_unique_series)
@@ -85,7 +85,7 @@ def read_nightscout(base):
         cho = float(row["carbs"]) if row.get("carbs") not in (None, "") else 0.0
         ins = float(row["insulin"]) if row.get("insulin") not in (None, "") else 0.0
         if cho > 0 or ins > 0:
-            raw.append({"time": ts, "cho": cho, "bg": np.nan, "bolus": ins})
+            raw.append({"time": ts, "cho": cho, "bg": pure.NAN, "bolus": ins})
     meals, minors = merge_carb_entries(raw)
     segs = []
     for row in treatments:

@@ -1,3 +1,0 @@
-# numpy is fetched at APK-build time; matplotlib is committed.
-numpy-*.whl
-*.part

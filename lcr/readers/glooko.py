@@ -5,8 +5,7 @@ import csv
 import re
 from pathlib import Path
 
-import numpy as np
-
+from lcr import pure
 from lcr.common import (
     LoopCRError, _basal_from_segments, merge_carb_entries, num, parse_ts, set_glucose_unit)
 
@@ -31,7 +30,7 @@ def numbered_csvs(directory, stem):
 
 
 def read_cgm(base):
-    """-> (times[np.array], glucose[np.array], patient_name, sensor).
+    """-> (times[list], glucose[list], patient_name, sensor).
 
     Reads all cgm_data_*.csv (Glooko splits long periods across several files).
     """
@@ -57,14 +56,15 @@ def read_cgm(base):
                     gluc.append(num(row[1]))
                     if not sensor and len(row) >= 3 and row[2].strip():
                         sensor = row[2].strip()
-    times = np.array(times)
-    gluc = np.array(gluc)
-    order = np.argsort(times, kind="stable")
-    times, gluc = times[order], gluc[order]
-    if len(times):                                   # Duplikate (gleicher Zeitstempel) raus
-        keep = np.concatenate(([True], times[1:] != times[:-1]))
-        times, gluc = times[keep], gluc[keep]
-    return times, gluc, name, sensor
+    order = pure.argsort(times)
+    out_times, out_gluc = [], []
+    for i in order:
+        # Duplikate (gleicher Zeitstempel) raus; der erste Wert gewinnt.
+        if out_times and times[i] == out_times[-1]:
+            continue
+        out_times.append(times[i])
+        out_gluc.append(gluc[i])
+    return out_times, out_gluc, name, sensor
 
 
 def read_meals(base):
@@ -87,10 +87,10 @@ def read_meals(base):
                 if len(row) < 6:
                     continue
                 cho = num(row[3])
-                if not np.isnan(cho) and cho > 0:
+                if not pure.is_nan(cho) and cho > 0:
                     ins = num(row[5])
                     raw.append({"time": parse_ts(row[0]), "cho": cho, "bg": num(row[2]),
-                                "bolus": 0.0 if np.isnan(ins) else ins})
+                                "bolus": 0.0 if pure.is_nan(ins) else ins})
     meals, minors = merge_carb_entries(raw)
     return meals, minors, pump
 
@@ -106,7 +106,7 @@ def read_tdd(base):
             for row in reader:
                 if len(row) >= 4 and row[0].strip():
                     bolus, total, basal = num(row[1]), num(row[2]), num(row[3])
-                    if not np.isnan(total):
+                    if not pure.is_nan(total):
                         out[parse_ts(row[0]).date()] = (bolus, total, basal)
     return out
 
@@ -123,15 +123,15 @@ def read_bolus_events(base):
                 if len(row) < 6:
                     continue
                 cho, ins = num(row[3]), num(row[5])
-                cho = 0.0 if np.isnan(cho) else cho
-                ins = 0.0 if np.isnan(ins) else ins
+                cho = 0.0 if pure.is_nan(cho) else cho
+                ins = 0.0 if pure.is_nan(ins) else ins
                 if cho > 0 or ins > 0:
                     events.append({"time": parse_ts(row[0]), "cho": cho, "bolus": ins})
     return events
 
 
 def read_basal_timeline(base):
-    """-> (rate[np.array U/h per minute], t0, minutes, fasting_basal)."""
+    """-> (rate[list of U/h per minute], t0, minutes, fasting_basal)."""
     segs = []
     for path in numbered_csvs(base / "Insulin data", "basal_data"):
         with open(path, encoding="utf-8-sig") as fh:
@@ -142,9 +142,9 @@ def read_basal_timeline(base):
                 if len(row) < 5:
                     continue
                 rate_val = num(row[4])
-                if not np.isnan(rate_val):
+                if not pure.is_nan(rate_val):
                     dur = num(row[2])
-                    segs.append((parse_ts(row[0]), int(dur) if not np.isnan(dur) else 5, rate_val))
+                    segs.append((parse_ts(row[0]), int(dur) if not pure.is_nan(dur) else 5, rate_val))
     if not segs:
         raise LoopCRError(f"No basal rates found in {base / 'Insulin data'} "
                           "(basal_data_*.csv empty or missing).")

@@ -9,8 +9,8 @@ export may well be glucose only — the report then shows what it can.
 """
 import csv
 
-import numpy as np
 
+from lcr import pure
 from lcr.common import (
     HEAD_BYTES, LoopCRError, merge_carb_entries, num, parse_ts, set_glucose_unit,
     single_match, sniff_candidates, sorted_unique_series)
@@ -46,7 +46,7 @@ def _glucose(raw, unit_is_mmol):
     """Glucose cell -> value. 'Low'/'High' become the limit they stand for."""
     text = raw.strip()
     if not text:
-        return np.nan
+        return pure.NAN
     limit = LIMIT_VALUES.get(text.lower())
     if limit is not None:
         return limit / 18.0 if unit_is_mmol else limit
@@ -102,24 +102,24 @@ def read_dexcom(base):
 
             if kind == "EGV":
                 value = _glucose(row.get(c_gluc) or "", unit_is_mmol)
-                if not np.isnan(value):
+                if not pure.is_nan(value):
                     times.append(stamp)
                     gluc.append(value)
                 continue
 
-            cho = num(row.get(c_cho) or "") if c_cho else np.nan
+            cho = num(row.get(c_cho) or "") if c_cho else pure.NAN
             bolus = 0.0
             if kind == "Insulin" and c_ins:
                 # Long-acting is the basal substitute on injections — it says
                 # nothing about a single meal, so only fast-acting counts here.
                 if (row.get(c_sub) or "").strip().lower().startswith("fast"):
                     value = num(row[c_ins])
-                    bolus = 0.0 if np.isnan(value) else value
-            if kind == "Carbs" and (np.isnan(cho) or cho <= 0):
+                    bolus = 0.0 if pure.is_nan(value) else value
+            if kind == "Carbs" and (pure.is_nan(cho) or cho <= 0):
                 continue
             if (kind == "Carbs" and cho > 0) or bolus > 0:
-                raw.append({"time": stamp, "cho": 0.0 if np.isnan(cho) else cho,
-                            "bg": np.nan, "bolus": bolus})
+                raw.append({"time": stamp, "cho": 0.0 if pure.is_nan(cho) else cho,
+                            "bg": pure.NAN, "bolus": bolus})
 
     if not times:
         raise LoopCRError("Dexcom CSV has no glucose rows.")

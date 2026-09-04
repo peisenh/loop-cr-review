@@ -15,12 +15,11 @@ android {
         versionCode = 7
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
-            // arm64 only. numpy has to be 16 KB aligned to load on
-            // current devices, and that alignment is a toolchain default for arm64
-            // and nothing else — every attempt to get an aligned x86_64 wheel
-            // failed, see poc/android-x86_64-16k/. Shipping an x86_64 slice that
-            // cannot load its own libraries would be worse than not shipping one.
-            // The emulator runs arm64 translated; -Pabi= still overrides this.
+            // arm64 by default, but no longer of necessity: with no native code
+            // of our own the alignment question that forced this is gone, and
+            // Chaquopy's own runtime is available for every ABI. Kept as the
+            // default until a build for the others has actually been tried;
+            // -Pabi= overrides it. History: poc/android-x86_64-16k/.
             val abi = findProperty("abi") as String?
             if (!abi.isNullOrBlank()) {
                 abiFilters += abi.split(',').map { it.trim() }.filter { it.isNotEmpty() }
@@ -107,23 +106,13 @@ tasks.named("preBuild") { dependsOn(syncAnalysis) }
 tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
     .configureEach { dependsOn(syncAnalysis) }
 
-val wheelsDir = layout.projectDirectory.dir("wheels").asFile
-
 chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            // numpy 2.3.2 from pypi-upstream, which is 16 KB aligned for arm64.
-            // It is the only compiled dependency left: the charts are drawn as
-            // SVG now, so there is no matplotlib and no hand-built wheel.
-            //
-            // find-links stays: fetch-android-wheels.sh puts the wheel in
-            // app/wheels/, and without this pip ignores it and downloads its
-            // own copy — the fetch step would be doing nothing.
-            options("--extra-index-url", "https://chaquo.com/pypi-upstream")
-            options("--find-links", wheelsDir.absolutePath)
-            install("numpy==2.3.2")
-
+            // Nothing here is compiled. Flask, Jinja2 and waitress are pure
+            // Python, and with numpy gone there is no wheel to fetch, no ABI to
+            // match and no page-size question to answer.
             install("Flask==3.1.2")
             install("Jinja2==3.1.6")
             install("waitress==3.0.2")

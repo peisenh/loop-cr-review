@@ -19,13 +19,13 @@ Android app
 
 ## Devices
 
-Works on **4 KB and 16 KB** page-size devices. The APK ships numpy **2.3.2**
-from [Chaquopy pypi-upstream](https://chaquo.com/pypi-upstream/numpy/), the only
-compiled dependency left (ELF `PT_LOAD` align `0x4000`) — the charts are SVG, so
-matplotlib and the wheel that had to be built by hand are gone. Play upload is
-not blocked by native-lib alignment; listing on Play is a separate decision.
+Works on **4 KB and 16 KB** page-size devices, and the question no longer
+really arises: the APK carries no compiled code of its own. The charts are SVG
+and the arithmetic is plain Python, so numpy and the hand-built matplotlib wheel
+that preceded it are both gone. What is left — Flask, Jinja2, waitress — is pure
+Python, resolved by Chaquopy at build time.
 
-Notices for bundled third-party code: [`app/wheels/NOTICE.md`](app/wheels/NOTICE.md).
+Notices for bundled third-party code: [`NOTICE.md`](NOTICE.md).
 Background: [docs/android-poc.md](../docs/android-poc.md).
 
 ## Build
@@ -79,13 +79,12 @@ its JSON key in the repository secret. The link takes a while to become
 effective, so the first attempt often fails on permissions with nothing actually
 misconfigured.
 
-**arm64-v8a only.** numpy has to be 16 KB aligned to load on current devices,
-and that alignment turns out to be a toolchain default for arm64 and nothing else
-— no combination of linker flags produced an aligned x86_64 wheel, which
-`poc/android-x86_64-16k/` records. Shipping an x86_64 slice that cannot load its
-own libraries would be worse than shipping none. The emulator runs arm64
-translated; `-Pabi=` still overrides the default for anyone who wants to try.
-numpy is downloaded during the build (not in git).
+**arm64-v8a by default**, but no longer of necessity. That restriction existed
+because numpy had to be 16 KB aligned and only arm64 got that from the toolchain
+— every attempt at an aligned x86_64 wheel failed, which
+`poc/android-x86_64-16k/` records. With no native code of our own the constraint
+is gone; the default is kept until a build for the other ABIs has actually been
+tried, and `-Pabi=` overrides it.
 
 Or Android Studio: open **this directory** (`android/`), not the repo root.
 Gradle copies the analysis before every *build* (`syncAnalysis`). A project
@@ -128,7 +127,7 @@ but will not match the registered key.
 
 ## Limits
 
-- Cold start loads Python, Flask and numpy together.
+- Cold start loads Python and Flask.
 - A long report with the app in the background may be killed (no foreground
   service).
 - Save and “open in browser” are explicit; the raw export is deleted as soon

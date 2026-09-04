@@ -14,7 +14,6 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # Re-exported so callers keep importing from loop_cr_review: the split into
@@ -40,6 +39,7 @@ from lcr.readers import (  # pylint: disable=unused-import
     is_dexcom, is_glooko, is_libreview, is_nightscout, libreview_csv, numbered_csvs,
     parse_day, peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
     read_libreview, read_meals, read_nightscout, read_tdd)
+from lcr import pure
 from lcr.charts import (  # pylint: disable=unused-import
     PALETTE, _day_title, agp_chart, daily_charts, gri_grid_chart, selection_effect,
     slot_curves_chart, slot_norm_curves_chart)
@@ -72,7 +72,7 @@ def _slot_flag(agg, slot, meals, window, val_at):
     if agg["cls"] == "ok" and not agg.get("rescues"):
         curve = slot_median_curve(meals, slot, window, val_at)
         if curve is not None:
-            met = curve_metrics(curve, np.arange(0, window + 1, 10))
+            met = curve_metrics(curve, pure.arange(0, window + 1, 10))
             if met["nadir"] < g(NADIR_LOW) and met["nadir_t"] >= NADIR_LATE:
                 flag += _(" ⚠︎ (hypo — secure first)")
     return flag
@@ -98,10 +98,10 @@ def _fmt_spread(stab):
         return None
     out = {}
     cre = stab["spread"].get("cre")
-    if cre and not any(np.isnan(v) for v in cre):
+    if cre and not any(pure.is_nan(v) for v in cre):
         out["cre"] = f"{fmt_cr(cre[0])} – {fmt_cr(cre[1])}"
     ratio = stab["spread"].get("ratio")
-    if ratio and not any(np.isnan(v) for v in ratio):
+    if ratio and not any(pure.is_nan(v) for v in ratio):
         out["ratio"] = f"{ratio[0] * 100:+.0f} … {ratio[1] * 100:+.0f} %"
     return out or None
 
@@ -145,12 +145,12 @@ def _meals_context(rows):
         # while following a different rule, and a single meal carries almost no
         # signal (see VALIDATION.md). Only a marked drop is flagged, on the Δ4h
         # value itself — that is a measurement, not an assessment.
-        low_d4 = not np.isnan(row["d4"]) and row["d4"] < g(D4_STRONG)
+        low_d4 = not pure.is_nan(row["d4"]) and row["d4"] < g(D4_STRONG)
         out.append({
             "time": f"{row['time']:%d.%m %H:%M}", "label": _slot_state()[2][row["slot"]],
             "cho": f"{row['cho']:.0f}", "bolus": f"{row['bolus']:.1f}", "cr": fmt_cr(row["cr"]),
-            "exc": "—" if np.isnan(row["exc"]) else f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
-            "d4": fmt_delta(row["d4"]) if not np.isnan(row["d4"]) else "—",
+            "exc": "—" if pure.is_nan(row["exc"]) else f"{row['exc']:+.2f}", "cre": fmt_cr(row["cr_eff"]),
+            "d4": fmt_delta(row["d4"]) if not pure.is_nan(row["d4"]) else "—",
             "contam": row["contam"], "hypo_rescue": row.get("hypo_rescue", False),
             "cgm_gap": row.get("cgm_gap", False),
             "low_d4": low_d4,
@@ -175,14 +175,14 @@ def _captions(meals, by_slot, window, val_at):
 
 def _recommendations_context(meals, by_slot, window, val_at, stability=None, selected=None):
     """Per slot: curve metrics + derived levers; plus CR_eff example."""
-    grid = np.arange(0, window + 1, 10)
+    grid = pure.arange(0, window + 1, 10)
     recs, example, example_exc = [], None, 0.0
     stability = stability or {}
     selected = selected or {}
     for slot in _slot_state()[1]:
         curve = slot_median_curve(meals, slot, window, val_at)
         agg = aggregate_slot(by_slot.get(slot, []))
-        if curve is None or agg is None or np.all(np.isnan(curve)):
+        if curve is None or agg is None or all(pure.is_nan(v) for v in curve):
             continue
         met = curve_metrics(curve, grid)
         recs.append({
@@ -281,8 +281,9 @@ def build_context(base, window, wlab, daily=False, lang="de",
     times, gluc, meals, minors, events = clip_by_days(
         times, gluc, meals, minors, events, date_from, date_to, window)
     val_at = make_glucose_lookup(times, gluc)
-    cgm_times64 = (np.asarray(times, dtype="datetime64[ns]")
-                   if times is not None else None)
+    # Plain datetimes: the gap check binary-searches them, which needs an
+    # order and nothing else.
+    cgm_stamps = list(times) if times is not None else None
 
     met = consensus_metrics(times, gluc)
     gri = gri_metrics(met)
@@ -291,7 +292,7 @@ def build_context(base, window, wlab, daily=False, lang="de",
     # Without a basal trace the loop figures stay empty, but contamination, hypo
     # rescues and the return delta come from the glucose curve and are worked out
     # the same way - the assessment then rests on CHO/bolus and the delta alone.
-    rows = analyze_meals(meals, minors, basal, window, val_at, cgm_times=cgm_times64)
+    rows = analyze_meals(meals, minors, basal, window, val_at, cgm_times=cgm_stamps)
     _progress("meals", 50)
     by_slot = defaultdict(list)
     for row in rows:
