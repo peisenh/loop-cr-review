@@ -9,96 +9,68 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
-### Changed
-- Nothing in the app is compiled any more. numpy is gone, and with it the last
-  wheel, the last ABI question and the last reason a build could fail on one
-  platform and not another. What it was doing here was elementary — medians,
-  means, percentiles, a sorted search — and `lcr/pure.py` does it in about 250
-  lines, checked against numpy call by call in `tests/test_pure.py`.
-
-  Every step was verified by regenerating the report and comparing it character
-  for character against the previous one. Not a single figure moved.
-
-  That included the bootstrap, which resamples two thousand times using numpy's
-  random generator: any other stream would have given a statistically equivalent
-  answer and a different printed one, so `lcr/pcg64.py` reproduces PCG64, its
-  seeding and its bounded-integer method exactly rather than replacing them.
-
-  Speed did not suffer and in places improved: numpy's per-call overhead
-  dominates on the small arrays this report actually uses — an AGP bin holds one
-  value per day — where plain Python is about five times faster.
-- The matplotlib wheel, its licence file and the build script were still in the
-  tree: those deletions never reached the repository, because a change delivered
-  as an archive cannot express a removed file. 10 MB less.
-- Third-party notices move from `android/app/wheels/NOTICE.md` to
-  `android/NOTICE.md`; there are no wheels left to have a folder for.
-
-### Changed
-- The Android matplotlib wheel build script is kept in
-  `poc/matplotlib-android-wheel/` rather than only in git history. It is retired
-  — the app ships no matplotlib — but it worked, took a while to get right, and
-  the problem it solves is still real for anyone building matplotlib for a
-  16 KB page-size device. The 10 MB wheel itself is not kept; the script rebuilds
-  it.
-
-### Changed
-- The basal axis on the right of a daily panel is labelled at the size it used
-  to be — the last font size that had been carried over rather than converted.
-- The legend above the normalised cards no longer overlaps the first row. The
-  strip reserved for it was a fixed 40 units while the box is as tall as its
-  rows make it — about 53. It is derived from the row count now.
-- Axis captions hang off the axis rather than off the edge of the canvas. At
-  the edge they drifted about 45 units away from the picture they belong to,
-  which showed most below the x axis.
-- The GRI grid names its axes again, at a size that can be read. The card is
-  190 px wide rather than 128, and the captions are short forms — the full
-  wording sits directly above the picture, and only the axes say which of the
-  two components is driving the score towards red.
-- The option to render dark charts is gone, from the command line, the web
-  form and the report context. It had nothing left to do: an SVG carries its
-  dark colours in its own stylesheet, so one chart serves both themes. Dark
-  mode itself is unchanged — a report opened with a dark system setting still
-  looks dark, charts included.
-- Charts are inline SVG, drawn without matplotlib. That was the only reason
-  numpy had to be in the app at all, the only dependency needing a hand-built
-  wheel, and the source of every Android problem this project has had — the
-  16 KB alignment, the version coupling, the x86_64 dead end. What it drew is
-  bands, lines, a few labels and a pair of axes.
-
-  A report with daily panels went from 951 KB to about 310 KB, the APK from
-  44 MB to 27, and 90 days with daily charts now render in a few seconds. One
-  chart serves both themes through a stylesheet inside it, so the second
-  rendering pass is gone; the `dark_charts` option no longer does anything and
-  will be removed separately.
-
-  The GRI grid comes out better than before rather than merely smaller: its
-  zones are bands of a linear score, so they are straight stripes, clipped as
-  exact polygons instead of contoured from a 500x500 grid.
-
-### Fixed
-- The Play bundle no longer lands in the GitHub release. The release job attaches
-  every artifact, and an AAB is a trap there: nobody can install one, while the
-  APK they came for sits right beside it. It goes straight to Play from the
-  workflow; `./tools/build-android-play.sh` still makes one locally.
-
 ### Added
 - Each daily panel names the carbs of that day next to its TDD. A high total
   daily dose says little on its own; beside what was eaten it says something.
   Only counted meals are summed, so the figure matches the labels below the
   curve, and a day without meals says nothing rather than "0 g".
-- The APK build checks 16 KB alignment with `zipalign -c -P 16`. The wheels are
-  checked when they are built, but only the finished package shows what a device
-  loads — Chaquopy's libraries and the Python runtime arrive at assembly and pass
-  through no earlier check. The two look at different things: `zipalign` at where
-  a library sits in the archive, the wheel check at what the ELF headers declare.
+- The APK build checks 16 KB alignment with `zipalign -c -P 16` on the finished
+  package. The two checks look at different things: `zipalign` at where a
+  library sits in the archive, the wheel check at what its ELF headers declare.
+- Release notes for the store live in `android/whatsnew/`, one file per
+  language, and go up with the bundle. The workflow counts the characters
+  first, because Play truncates at 500 without saying so and the cut lands
+  mid-sentence.
 
 ### Changed
-- The Play upload uses `tracks` rather than the deprecated `track`, which warned
-  on every run.
-- The internal upload is published rather than left as a draft. That track
-  reaches nobody outside its own tester list, so there is nothing to hold back —
-  and a draft cannot be promoted to another track until it has been published by
-  hand, which is a step for no gain.
+- **Nothing in the app is compiled any more.** matplotlib and numpy are both
+  gone. A report with daily panels went from 5.8 MB to about 3.1, the APK from
+  44 MB to 14, and 90 days with daily charts render in seconds rather than
+  minutes.
+
+  The charts are inline SVG (`lcr/svg.py`): sharp at any size, a fraction of the
+  bytes, and following the light or dark theme through a stylesheet inside the
+  file, so there is no second rendering pass and the `--dark-charts` option is
+  gone with it. Dark mode itself is unchanged. The GRI grid comes out better
+  than before rather than merely smaller — its zones are bands of a linear
+  score, so they are straight stripes, clipped as exact polygons instead of
+  contoured from a 500x500 grid.
+
+  The arithmetic is plain Python (`lcr/pure.py`), checked against the numpy call
+  it replaces in `tests/test_pure.py`. Every step was verified by regenerating
+  the report and comparing it character for character with the previous one, on
+  the example export and on a real 90 day one: not a single figure moved. That
+  had to include the bootstrap, which resamples two thousand times using numpy's
+  generator, so `lcr/pcg64.py` reproduces PCG64 exactly rather than replacing
+  it. Speed did not suffer and in places improved — numpy's per-call overhead
+  dominates on arrays this small.
+
+  With no native code left, the wheels, the ABI question and the page-size
+  question all go away. The arm64 restriction is now a default rather than a
+  necessity.
+- The Play upload publishes to the internal track instead of leaving a draft,
+  and uses `tracks` rather than the deprecated `track` that warned on every run.
+- The Android matplotlib wheel build script is kept in
+  `poc/matplotlib-android-wheel/` rather than only in git history. It is retired,
+  but it worked, and the problem it solves is still real for anyone building
+  matplotlib for a 16 KB page-size device.
+- Third-party notices move from `android/app/wheels/NOTICE.md` to
+  `android/NOTICE.md`; there are no wheels left to have a folder for.
+
+### Fixed
+- Chart typography, found by laying a new report beside an old one. Font sizes
+  had been carried over from matplotlib rather than converted — it measured in
+  points at 120 dpi on a figure of a given width in inches, the SVG measures in
+  units on a viewBox — so every label came out roughly a third too small. Axis
+  captions hung off the edge of the canvas rather than off the axis, the legend
+  above the normalised cards overlapped the first row, and the GRI axes were
+  unnamed and unreadable at the card's width.
+- The Play bundle no longer lands in the GitHub release. The release job
+  attaches every artifact, and an AAB is a trap there: nobody can install one,
+  while the APK they came for sits right beside it.
+- The matplotlib wheel, its licence file and the build script were still tracked
+  after the change that removed them: those deletions never arrived, because a
+  change delivered as an archive cannot express a removed file. 10 MB less.
 
 ## [0.24.1] - 2026-09-03
 

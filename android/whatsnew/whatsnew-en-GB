@@ -1,1 +1,7 @@
-General improvements
+Noticeably faster: a report covering 90 days with the daily overview now takes seconds instead of minutes.
+
+The app is a third of its former size — down from 44 to 14 MB. Less space used, quicker to start.
+
+The charts are sharp at any zoom and in print, and a saved or shared report is about half the size it was.
+
+In dark mode the charts now follow along by themselves.
