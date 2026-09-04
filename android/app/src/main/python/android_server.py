@@ -5,7 +5,7 @@ import tempfile
 import threading
 from pathlib import Path
 
-# Writable cache before numpy/matplotlib import chains pull fonts
+# Writable cache before the numpy import chain needs one
 _cache = Path(tempfile.gettempdir()) / "loop-cr-review-android"
 _cache.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("MPLCONFIGDIR", str(_cache / "mpl"))

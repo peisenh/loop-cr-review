@@ -15,7 +15,7 @@ android {
         versionCode = 7
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
-            // arm64 only. numpy and matplotlib have to be 16 KB aligned to load on
+            // arm64 only. numpy has to be 16 KB aligned to load on
             // current devices, and that alignment is a toolchain default for arm64
             // and nothing else — every attempt to get an aligned x86_64 wheel
             // failed, see poc/android-x86_64-16k/. Shipping an x86_64 slice that
@@ -108,24 +108,21 @@ tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
     .configureEach { dependsOn(syncAnalysis) }
 
 val wheelsDir = layout.projectDirectory.dir("wheels").asFile
-val mplWheels = wheelsDir.listFiles()?.filter {
-    it.isFile && it.name.startsWith("matplotlib-") && it.name.endsWith(".whl")
-} ?: emptyList()
-require(mplWheels.size == 1) {
-    "Need exactly one matplotlib-*.whl in app/wheels/ (committed). " +
-        "Rebuild: ./tools/build-matplotlib-android-wheel.sh"
-}
 
 chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            // numpy 2.3.2 from pypi-upstream (16 KB). matplotlib is the
-            // committed wheel built against that numpy — see wheels/NOTICE.md.
+            // numpy 2.3.2 from pypi-upstream, which is 16 KB aligned for arm64.
+            // It is the only compiled dependency left: the charts are drawn as
+            // SVG now, so there is no matplotlib and no hand-built wheel.
+            //
+            // find-links stays: fetch-android-wheels.sh puts the wheel in
+            // app/wheels/, and without this pip ignores it and downloads its
+            // own copy — the fetch step would be doing nothing.
             options("--extra-index-url", "https://chaquo.com/pypi-upstream")
             options("--find-links", wheelsDir.absolutePath)
             install("numpy==2.3.2")
-            install("./wheels/${mplWheels.single().name}")
 
             install("Flask==3.1.2")
             install("Jinja2==3.1.6")

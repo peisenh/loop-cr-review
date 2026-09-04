@@ -132,23 +132,21 @@ class TestGenerateReportExample(unittest.TestCase):
         self.assertGreaterEqual(len(ctx["daily_days"]), 1)
         for day in ctx["daily_days"]:
             self.assertTrue(day["img"])
-            self.assertFalse(day["img_dark"])
-        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=True, dark_charts=True)
-        for day in ctx["daily_days"]:
-            self.assertTrue(day["img"])
-            self.assertTrue(day["img_dark"])
 
-    def test_dark_charts_optional_for_all(self):
-        """AGP/slot/norm dark PNGs only with dark_charts (same flag as daily)."""
+    def test_one_chart_serves_both_themes(self):
+        """No second rendering pass: the dark variant is a rule inside the SVG.
+
+        This replaces a pair of tests that checked a dark copy was produced only
+        when asked for. There is nothing to ask for now — every chart carries
+        its dark colours in its own stylesheet.
+        """
         _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False)
-        self.assertTrue(ctx["agp_img"])
-        self.assertFalse(ctx["agp_img_dark"])
-        self.assertFalse(ctx["slot_img_dark"])
-        self.assertFalse(ctx["slot_norm_img_dark"])
-        _html, ctx = core.generate_report(EXAMPLE, lang="de", daily=False, dark_charts=True)
-        self.assertTrue(ctx["agp_img_dark"])
-        self.assertTrue(ctx["slot_img_dark"])
-        self.assertTrue(ctx["slot_norm_img_dark"])
+        for key in ("agp_img", "slot_img", "slot_norm_img"):
+            with self.subTest(chart=key):
+                self.assertTrue(ctx[key])
+                self.assertIn("prefers-color-scheme:dark",
+                              ctx[key].replace(" ", ""))
+                self.assertNotIn(f"{key}_dark", ctx)
 
     def test_english_report(self):
         html, ctx = core.generate_report(EXAMPLE, lang="en", window_hours=4.0)
@@ -322,19 +320,27 @@ class TestDayTitle(unittest.TestCase):
         self.assertIn("36.7", core._day_title(date(2026, 7, 1), tdd))
 
 
-class TestMatplotlibBootstrap(unittest.TestCase):
-    """The two lines that keep the binary quiet and fast on every start.
+class TestChartsAreSelfContained(unittest.TestCase):
+    """Charts are SVG, and nothing in the app compiles any more.
 
-    Regression: while tidying imports after the split, the `logging` line was
-    dropped as an unused import — the font cache message came back on every
-    run of the onefile binary. Both settings must be in place *before*
-    matplotlib is imported, so importing the tool is enough to check them.
+    This replaces two tests that guarded matplotlib's font cache and its
+    logging — settings that had to be made before importing it, and that a
+    tidy-up once dropped by accident. Neither has anything to guard now, and
+    what took their place is the reason they went: no matplotlib anywhere in
+    what ships.
     """
 
-    def test_font_cache_has_a_fixed_location(self):
-        self.assertTrue(os.environ.get("MPLCONFIGDIR"),
-                        "MPLCONFIGDIR unset: the binary rebuilds the font cache every start")
+    def test_the_report_carries_no_bitmap_charts(self):
+        html, _ctx = core.generate_report(EXAMPLE, lang="de")
+        self.assertNotIn("data:image/png", html)
+        self.assertIn("<svg", html)
 
-    def test_font_manager_is_silenced(self):
-        self.assertGreaterEqual(logging.getLogger("matplotlib.font_manager").level,
-                                logging.ERROR)
+    def test_charts_do_not_import_matplotlib(self):
+        source = (Path(__file__).resolve().parents[1] / "lcr" / "charts.py").read_text()
+        self.assertNotIn("import matplotlib", source)
+
+    def test_a_chart_carries_its_own_colours(self):
+        """One file for both themes: the dark variant is a media query in it."""
+        html, _ctx = core.generate_report(EXAMPLE, lang="de")
+        self.assertIn("prefers-color-scheme:dark", html.replace(" ", ""))
+

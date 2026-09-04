@@ -99,7 +99,7 @@ Positives Loop-Mehrbasal kann zu einer zu schwachen CR passen, ist bei CamAPS ab
 Debian/Ubuntu über Systempakete (empfohlen, z. B. im Homelab):
 
 ```bash
-sudo apt install python3-numpy python3-matplotlib python3-jinja2
+sudo apt install python3-numpy python3-jinja2
 ```
 
 Oder plattformunabhängig über pip (ggf. in einem venv):
@@ -149,7 +149,6 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | --- | --- | --- |
 | `export_dir` | Ordner mit Glooko-Export, Nightscout-Dump, LibreView- oder Clarity-CSV. **Pflichtangabe**; gesucht wird bis zwei Ebenen darunter | — |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
-| `--dark-charts` | zusätzlich dunkle Chart-PNGs (AGP, Slot-Kurven, Baseline-Norm, und Tagesgraphen bei `-d`); ohne Option nur helle Charts | aus |
 | `--assume-camaps` | Loop-Größen (Loop-Mehrbasal, CR_eff) auch für Nightscout. LibreView und Clarity bleiben Lite. Default aus | aus |
 | `--span` | nur CGM-Zeitraum ausgeben, kein Report | aus |
 | `--from` / `--to` | Kalendertage YYYY-MM-DD (einschließlich) | ganzer Export |
@@ -240,15 +239,16 @@ Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
 (lokal und GitHub derselbe Schlüssel). Play Protect fragt einmal.
 0.20.x vorher deinstallieren — andere Signatur.
 
-**Geräte:** 4-KB- und 16-KB-Speicherseiten (Native-Libs `0x4000`-align:
-numpy 2.3.2 plus committetes matplotlib-Wheel). Lokal auf Pixel 8
-(Android 17) und Tab M11 geprüft.
+**Geräte:** 4-KB- und 16-KB-Speicherseiten. numpy 2.3.2 ist die einzige
+Native-Lib und `0x4000`-ausgerichtet; die Charts sind SVG, matplotlib und
+das handgebaute Wheel entfallen. Lokal auf Pixel 8 (Android 17) und
+Tab M11 geprüft.
 
 **Play:** Alignment blockiert nicht mehr. Die APK hängt weiter nur am
 GitHub-Release (Sideload); ein Store-Listing ist eine eigene Entscheidung.
 
 **Lizenzen in der APK:** Projektcode AGPL-3.0; übrige Bestandteile
-(AndroidX, Chaquopy, CPython, numpy, matplotlib, Flask, …) unter ihrer
+(AndroidX, Chaquopy, CPython, numpy, Flask, …) unter ihrer
 jeweiligen Lizenz. Übersicht: `android/app/wheels/NOTICE.md`.
 
 Lokal bauen (JDK 17 + Android-SDK):

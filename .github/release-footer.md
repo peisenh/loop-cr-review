@@ -30,12 +30,11 @@ from source instead (see README).
   key as local builds. Install from the file manager (unknown sources).
   Play Protect may ask once. Uninstall 0.20.x first — different signature.
 
-  Native libs are 16 KB-aligned (numpy 2.3.2 + a matplotlib wheel built
-  against it). That is no longer the Play-blocker; the APK is still
-  distributed only as a GitHub asset, not via Play Store.
+  numpy 2.3.2 is the only native library and is 16 KB-aligned. The charts
+  are SVG, so matplotlib is no longer bundled. Alignment is not a
+  Play-blocker.
 
-  Third-party: numpy (BSD-3-Clause) and matplotlib (Matplotlib / PSF-based
-  license) are bundled in the APK. Project code is AGPL-3.0. Texts:
-  `android/app/wheels/NOTICE.md` in the source repo.
+  Third-party: numpy (BSD-3-Clause) is bundled in the APK. Project code is
+  AGPL-3.0. Texts: `android/app/wheels/NOTICE.md` in the source repo.
 
 All variants run entirely on your machine; your data never leaves it.

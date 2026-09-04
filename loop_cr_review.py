@@ -41,8 +41,8 @@ from lcr.readers import (  # pylint: disable=unused-import
     parse_day, peek_span, read_basal_timeline, read_bolus_events, read_cgm, read_dexcom,
     read_libreview, read_meals, read_nightscout, read_tdd)
 from lcr.charts import (  # pylint: disable=unused-import
-    _chart_palette, _chart_theme, _day_title, _draw_day_events, agp_chart, daily_charts,
-    fig_to_b64, gri_grid_chart, selection_effect, slot_curves_chart, slot_norm_curves_chart)
+    PALETTE, _day_title, agp_chart, daily_charts, gri_grid_chart, selection_effect,
+    slot_curves_chart, slot_norm_curves_chart)
 from lcr.analysis import (  # pylint: disable=unused-import
     _hypo_caution, _reference_lever, _scan_minors, _weak_levers, aggregate_slot,
     analyze_meals, build_cr_note, cgm_gap_in_window, consensus_metrics, curve_metrics,
@@ -218,28 +218,24 @@ def _tir_bands(met):
             (_("Very Low &lt;%(v)s") % {"v": fmt_glucose(g(54))}, met["tbr2"], "#7d1f1f")]
 
 
-def _daily_days_dual(times, gluc, base, basal, dark_charts=False, events=None, tdd=None, progress=None):
-    """Daily panels for the HTML report. Dark copies only if requested."""
+def _daily_days(times, gluc, base, basal, events=None, tdd=None, progress=None):
+    """Daily panels for the HTML report.
+
+    One pass, not two: an SVG chart carries both themes in its own stylesheet,
+    so there is no dark copy to render.
+    """
     events = read_bolus_events(base) if events is None else events
     tdd = read_tdd(base) if tdd is None else tdd
     # The daily charts are one of the dominant report-generation costs. Report
     # progress once per completed day so the UI does not sit at one percentage
-    # while matplotlib renders a large multi-day report.
+    # while a large multi-day report is being drawn.
     daily_progress = progress
-    light = daily_charts(times, gluc, events, basal, tdd, dark=False,
-                         progress=(lambda done, total: daily_progress("daily",
-                                                                       done, total, False))
-                                   if daily_progress else None)
-    if not dark_charts:
-        return [{"img": a["img"], "img_dark": ""} for a in light]
-    dark = daily_charts(times, gluc, events, basal, tdd, dark=True,
-                        progress=(lambda done, total: daily_progress("daily",
-                                                                       done, total, True))
+    return daily_charts(times, gluc, events, basal, tdd,
+                        progress=(lambda done, total: daily_progress("daily", done, total))
                                   if daily_progress else None)
-    return [{"img": a["img"], "img_dark": b["img"]} for a, b in zip(light, dark)]
 
 
-def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
+def build_context(base, window, wlab, daily=False, lang="de",
                   assume_camaps=False, date_from=None, date_to=None, progress=None):
     """Read all data, analyse, and assemble the template context.
 
@@ -312,45 +308,30 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
 
     # Chart rendering dominates report generation for larger exports. Keep the
     # progress range reserved for the actual rendering work instead of jumping
-    # to 90% before matplotlib starts.
+    # to 90% before the charts start.
     _progress("charts", 71)
     chart_state = {"step": 0}
 
-    def _daily_progress(_stage, done, total, dark):   # stage: callback signature
-        # One completed daily panel is one real unit of work. Light and dark
-        # panels are separate rendering passes when dark charts are requested.
-        passes = 2 if dark_charts else 1
-        completed = done + (total if dark else 0)
-        chart_state["step"] = completed
-        total_steps = max(1, total * passes)
-        pct = 86 + int(11 * completed / total_steps)
-        suffix = f" {done}/{total}" if not dark else f" dark {done}/{total}"
-        _progress("daily" + suffix, min(pct, 97))
+    def _daily_progress(_stage, done, total):   # stage: callback signature
+        # One completed daily panel is one real unit of work.
+        chart_state["step"] = done
+        pct = 86 + int(11 * done / max(1, total))
+        _progress(f"daily {done}/{total}", min(pct, 97))
 
     # Build the expensive charts in measured phases. The final report render is
     # deliberately kept separate so 100% only means the HTML is ready.
-    gri_img = gri_grid_chart(gri, dark=False)
-    _progress("charts", 73)
-    gri_img_dark = gri_grid_chart(gri, dark=True) if dark_charts else ""
+    gri_img = gri_grid_chart(gri)
     _progress("charts", 74)
     agp_img = agp_chart(times, gluc)
-    _progress("charts", 76)
-    agp_img_dark = agp_chart(times, gluc, dark=True) if dark_charts else ""
     _progress("charts", 77)
     slot_img = slot_curves_chart(meals, window, val_at)
-    _progress("charts", 79)
-    slot_img_dark = (slot_curves_chart(meals, window, val_at, dark=True)
-                     if dark_charts else "")
     _progress("charts", 80)
     slot_norm_img = slot_norm_curves_chart(meals, window, val_at)
-    _progress("charts", 84)
-    slot_norm_img_dark = (slot_norm_curves_chart(meals, window, val_at, dark=True)
-                          if dark_charts else "")
     _progress("charts", 86)
-    daily_days = (_daily_days_dual(times, gluc, base, basal, dark_charts,
-                                   events=events,
-                                   tdd=ns["tdd"] if ns else None,
-                                   progress=_daily_progress)
+    daily_days = (_daily_days(times, gluc, base, basal,
+                              events=events,
+                              tdd=ns["tdd"] if ns else None,
+                              progress=_daily_progress)
                   if daily else [])
     _progress("charts", 97)
 
@@ -362,17 +343,12 @@ def build_context(base, window, wlab, daily=False, lang="de", dark_charts=False,
         "days": f"{met['days']:.0f}", "device": device if lite else f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
-        "gri": {**gri,
-                "img": gri_img,
-                "img_dark": gri_img_dark},
+        "gri": {**gri, "img": gri_img},
         "tir_bands": [{"label": lab, "val": f"{val:.1f}", "width": f"{min(val, 100):.1f}",
                        "color": col} for lab, val, col in _tir_bands(met)],
         "agp_img": agp_img,
-        "agp_img_dark": agp_img_dark,
         "slot_img": slot_img,
-        "slot_img_dark": slot_img_dark,
         "slot_norm_img": slot_norm_img,
-        "slot_norm_img_dark": slot_norm_img_dark,
         "selection": selection_effect(meals, by_slot, window, val_at),
         "daily_days": daily_days,
         "curve_cap": curve_cap,
@@ -419,9 +395,6 @@ def parse_args():
                         help="folder containing report.html.j2 (default: ./templates next to this script)")
     parser.add_argument("-d", "--daily", action="store_true",
                         help="also output a daily overview (small day profiles per calendar day)")
-    parser.add_argument("--dark-charts", action="store_true",
-                        help="also render dark-theme chart PNGs (AGP, slot curves, baseline-norm, "
-                        "and daily if -d); without this, only light charts are embedded")
     parser.add_argument("--slots-profile", default="default",
                         choices=sorted(SLOT_PROFILES),
                         help="built-in time-of-day profile: default, extended (5–11/11–15/15–22), "
@@ -443,7 +416,7 @@ def parse_args():
 
 
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
-                    daily=False, dark_charts=False, assume_camaps=False,
+                    daily=False, assume_camaps=False,
                     date_from=None, date_to=None,
                     slots=None, template_dir=None, progress=None):
     """Analyse an unpacked export and return (html, context).
@@ -466,7 +439,7 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     tpl_dir = Path(template_dir) if template_dir else resource_dir() / "templates"
     with _slot_scope(slots):
         context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
-                            dark_charts=dark_charts, assume_camaps=assume_camaps,
+                            assume_camaps=assume_camaps,
                             date_from=date_from, date_to=date_to, progress=progress)
         if progress is not None:
             progress("render", 98)
@@ -498,7 +471,7 @@ def main():
             slots = None
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
-            daily=args.daily, dark_charts=args.dark_charts,
+            daily=args.daily,
             assume_camaps=args.assume_camaps,
             date_from=parse_day(args.date_from), date_to=parse_day(args.date_to),
             slots=slots, template_dir=args.template_dir)

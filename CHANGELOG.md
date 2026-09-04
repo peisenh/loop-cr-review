@@ -9,6 +9,40 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
 
 ## [Unreleased]
 
+### Changed
+- The basal axis on the right of a daily panel is labelled at the size it used
+  to be — the last font size that had been carried over rather than converted.
+- The legend above the normalised cards no longer overlaps the first row. The
+  strip reserved for it was a fixed 40 units while the box is as tall as its
+  rows make it — about 53. It is derived from the row count now.
+- Axis captions hang off the axis rather than off the edge of the canvas. At
+  the edge they drifted about 45 units away from the picture they belong to,
+  which showed most below the x axis.
+- The GRI grid names its axes again, at a size that can be read. The card is
+  190 px wide rather than 128, and the captions are short forms — the full
+  wording sits directly above the picture, and only the axes say which of the
+  two components is driving the score towards red.
+- The option to render dark charts is gone, from the command line, the web
+  form and the report context. It had nothing left to do: an SVG carries its
+  dark colours in its own stylesheet, so one chart serves both themes. Dark
+  mode itself is unchanged — a report opened with a dark system setting still
+  looks dark, charts included.
+- Charts are inline SVG, drawn without matplotlib. That was the only reason
+  numpy had to be in the app at all, the only dependency needing a hand-built
+  wheel, and the source of every Android problem this project has had — the
+  16 KB alignment, the version coupling, the x86_64 dead end. What it drew is
+  bands, lines, a few labels and a pair of axes.
+
+  A report with daily panels went from 951 KB to about 310 KB, the APK from
+  44 MB to 27, and 90 days with daily charts now render in a few seconds. One
+  chart serves both themes through a stylesheet inside it, so the second
+  rendering pass is gone; the `dark_charts` option no longer does anything and
+  will be removed separately.
+
+  The GRI grid comes out better than before rather than merely smaller: its
+  zones are bands of a linear score, so they are straight stripes, clipped as
+  exact polygons instead of contoured from a 500x500 grid.
+
 ### Fixed
 - The Play bundle no longer lands in the GitHub release. The release job attaches
   every artifact, and an AAB is a trap there: nobody can install one, while the
