@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+- `tools/fetch-nightscout.py` pulls a date range from a Nightscout site into the
+  `entries.json` + `treatments.json` pair the reader wants. It walks the range in
+  weekly windows rather than asking for everything at once — the API answers with
+  ten values from two days unless told otherwise, and a count large enough for
+  three months is the kind of query a small instance times out on. Records that
+  come back twice at a window boundary are dropped by `_id`.
+
 ### Fixed
 - The report brings its own page margin. Without one it depended on whatever
   the print dialogue defaulted to, and Chrome on Android defaults to none — so

@@ -67,7 +67,9 @@ The same CamAPS stream can also sit in **Nightscout** (`entries` / `treatments`)
 The core method relies on CamAPS delivering auto-corrections as **modulated basal**. Extra basal in the meal window is additional Auto Mode activity; it *may* fit a too-weak/too-strong CR, but on real CamAPS it is not specific to that. Other systems work differently:
 
 - **Tandem Control-IQ, Omnipod 5, and others** deliver auto-corrections partly as **boluses**. These do not appear in the basal → the loop extra basal underestimates the compensation, and the verdict is distorted.
-- **Nightscout:** `entries.json` + `treatments.json` dump (API, no live fetch). CGM from `sgv`, meals from Meal/Correction Bolus, basal from `Temp Basal`. Times: UTC from the ISO string, local clock via the CGM `utcOffset` (treatment offset 0 is ignored). **Default is lite** — Part 2 only with `--assume-camaps`, and only if this really is CamAPS via NS. Do not treat AAPS/Loop Nightscout as CamAPS.
+- **Nightscout:** `entries.json` + `treatments.json` dump (API, no live fetch).
+  `./tools/fetch-nightscout.py --url ... --days 90` pulls both from a site and
+  leaves them in a folder, ready to analyse. CGM from `sgv`, meals from Meal/Correction Bolus, basal from `Temp Basal`. Times: UTC from the ISO string, local clock via the CGM `utcOffset` (treatment offset 0 is ignored). **Default is lite** — Part 2 only with `--assume-camaps`, and only if this really is CamAPS via NS. Do not treat AAPS/Loop Nightscout as CamAPS.
 - **LibreView:** one glucose CSV (record types 0/4/5). Always lite — no basal, so no loop figures.
 - **Dexcom Clarity:** the CSV from the Clarity export (`EGV`/`Carbs`/`Insulin` rows).
   Carbs and insulin only as far as they were logged in the Dexcom app; long-acting
