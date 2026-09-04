@@ -98,8 +98,11 @@ h2 { font-size: 14px; margin: 0 0 10px }
 .gri-components { display:grid; grid-template-columns:1fr; gap:5px; margin-top:8px; padding-top:0; border-top:0; font-size:9px; color:var(--muted) }
 .gri-components b { display:block; color:var(--ink); font-size:8.7px; margin-bottom:1px }
 /* max-width as well as min(): an SVG has no intrinsic size to fall back on,
-   so a renderer that does not know min() would let it fill the card. */
-.gri-card .chart-wrap { width:min(100%, 128px); max-width:128px; margin:0 auto }
+   so a renderer that does not know min() would let it fill the card.
+   190 rather than 128: at the smaller size the axis labels came out about four
+   pixels tall, and without them one cannot see which component is driving the
+   score towards red. */
+.gri-card .chart-wrap { width:min(100%, 190px); max-width:190px; margin:0 auto }
 .gri-zones { margin-top:4px; padding-top:4px; border-top:1px solid var(--line); font-size:8.5px; line-height:1.25; color:var(--muted); text-align:center; white-space:normal }
 .gri-zones b { color:var(--ink) }
 .tir-card { display:block }
@@ -131,8 +134,8 @@ h2 { font-size: 14px; margin: 0 0 10px }
 @media print {
   .clinical-two-col { align-items: stretch !important; }
   .gri-card { overflow: hidden !important; }
-  .gri-card .chart-wrap { width: min(100%, 112px) !important;
-                          max-width: 112px !important; }
+  .gri-card .chart-wrap { width: min(100%, 160px) !important;
+                          max-width: 160px !important; }
   .gri-components { gap: 2px !important; margin-top: 5px !important; }
   .gri-zones {
     margin-top: 3px !important;

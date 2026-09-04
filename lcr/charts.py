@@ -78,7 +78,12 @@ PALETTE = {
 WIDE, WIDE_HEIGHT = 1000, 392
 GRI_SIDE = 240
 DAY_W, DAY_H = 1100, 250
-CARD_W, CARD_H, CARD_COLS, CARD_GAP, LEGEND_H = 496, 280, 2, 8, 40
+CARD_W, CARD_H, CARD_COLS, CARD_GAP = 496, 280, 2, 8
+# The strip above the cards has to hold the legend box, which is as tall as
+# its rows make it: three at 10.2 plus padding is about 53. Reserved less
+# than that and the box hangs over the first row of card borders.
+LEGEND_ROWS, LEGEND_SIZE_N = 3, 10.2
+LEGEND_H = int(LEGEND_ROWS * (LEGEND_SIZE_N + 5) + 12 - 5) + 8
 ZONE_COLOURS = ("#69a84f", "#f4cf2e", "#ef8a0c", "#e43d3d", "#8f3434")
 ZONE_LEVELS = (0, 20, 40, 60, 80, 100)
 
@@ -104,7 +109,7 @@ def _day_title(day, tdd, cho=None):
 
 def _wide_chart():
     """A page-wide chart with room for axis labels. -> (chart, sx, sy) later."""
-    return Chart(WIDE, WIDE_HEIGHT, margins=(64, 20, 48, 18), palette=PALETTE)
+    return Chart(WIDE, WIDE_HEIGHT, margins=(64, 20, 42, 18), palette=PALETTE)
 
 
 # Font sizes converted from what matplotlib drew rather than copied. It measured
@@ -124,11 +129,14 @@ def _axes(chart, sx, sy, x_ticks, y_ticks, x_label, y_label, size=TICK_SIZE):
     chart.frame("frame")
     chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=size)
     chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{v:.0f}", size=size)
-    chart.text((chart.left + chart.right) / 2, chart.height - 5, x_label, "ink",
+    # Captions hang off the axis, not off the edge of the canvas: tick labels
+    # sit 14 below it and descend a few more, so a caption at +32 clears them
+    # without drifting away from the picture it belongs to.
+    chart.text((chart.left + chart.right) / 2, chart.bottom + 32, x_label, "ink",
                size=LABEL_SIZE, anchor="middle")
-    chart.add(f'<text transform="translate(13,{(chart.top + chart.bottom) / 2}) '
-              f'rotate(-90)" class="ink" font-size="{LABEL_SIZE}" '
-              f'text-anchor="middle">{y_label}</text>')
+    chart.add(f'<text transform="translate({chart.left - 42},'
+              f'{(chart.top + chart.bottom) / 2}) rotate(-90)" class="ink" '
+              f'font-size="{LABEL_SIZE}" text-anchor="middle">{y_label}</text>')
 
 
 def gri_grid_chart(gri, dark=False):
@@ -145,7 +153,11 @@ def gri_grid_chart(gri, dark=False):
     xmax = max(15.0, min(20.0, float(np.ceil(max(hypo, 15.0) / 5.0) * 5.0)))
     ymax = max(30.0, min(40.0, float(np.ceil(max(hyper, 30.0) / 5.0) * 5.0)))
 
-    chart = Chart(GRI_SIDE, GRI_SIDE, margins=(30, 8, 26, 8), palette=PALETTE)
+    # Room for axis captions. They matter here more than on other charts: the
+    # card names both components above the picture, but only the axes say
+    # which of the two is driving the score towards red. Short forms: the
+    # full wording is directly above, and at this width it would not fit.
+    chart = Chart(GRI_SIDE, GRI_SIDE, margins=(52, 10, 46, 10), palette=PALETTE)
     sx, sy = chart.scales((0, xmax), (0, ymax))
     rect = [(0, 0), (xmax, 0), (xmax, ymax), (0, ymax)]
 
@@ -158,8 +170,13 @@ def gri_grid_chart(gri, dark=False):
         if data:
             chart.add(f'<path d="{data}" fill="{colour}" fill-opacity="0.88"/>')
 
-    x_ticks = list(range(0, int(xmax) + 1, 2))
-    y_ticks = list(range(0, int(ymax) + 1, 5))
+    # Few ticks, and large enough to read. The card is 128 px wide, so a label
+    # converted faithfully from the old chart came out under five pixels — it
+    # was already too small there. The axis captions are dropped entirely: the
+    # card names both components with their values right above the grid, so
+    # they said nothing the reader did not already have.
+    x_ticks = list(range(0, int(xmax) + 1, 5))
+    y_ticks = list(range(0, int(ymax) + 1, 10))
     chart.grid_x(sx, x_ticks, "grid", 0.10)
     chart.grid_y(sy, y_ticks, "grid", 0.10)
     chart.frame("frame")
@@ -170,14 +187,14 @@ def gri_grid_chart(gri, dark=False):
     chart.add(f'<circle cx="{px}" cy="{py}" r="3.4" class="dot-ring-s" fill="none" '
               f'stroke-width="1.1"/>')
 
-    chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=7.4)
-    chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{int(v)}", size=7.4)
-    chart.text(GRI_SIDE / 2, GRI_SIDE - 2, _("Hypoglycemia component (%)"),
-               "ink", size=8.8, anchor="middle")
-    chart.add(f'<text transform="translate(8,{GRI_SIDE / 2}) rotate(-90)" '
-              f'class="ink" font-size="8.8" text-anchor="middle">'
-              f'{_("Hyperglycemia component (%)")}</text>')
-    return chart.to_svg("GRI")
+    chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=14, mark=5)
+    chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{int(v)}", size=14, mark=5)
+    chart.text((chart.left + chart.right) / 2, chart.bottom + 32,
+               _("Hypoglycemia (%)"), "ink", size=14, anchor="middle")
+    chart.add(f'<text transform="translate({chart.left - 36},'
+              f'{(chart.top + chart.bottom) / 2}) rotate(-90)" class="ink" '
+              f'font-size="14" text-anchor="middle">{_("Hyperglycemia (%)")}</text>')
+    return chart.to_svg(_("Glycemia Risk Index"))
 
 
 def agp_chart(times, gluc, dark=False):
@@ -298,7 +315,7 @@ def slot_norm_curves_chart(meals, window, val_at, dark=False):
 
     chart.legend([("median", _("Median"), False), ("p25", "25–75 %", True),
                   ("p5", "10–90 %", True)], "title",
-                 x=width / 2 - 110, y=1, size=10.2)
+                 x=width / 2 - 110, y=2, size=LEGEND_SIZE_N)
 
     for index, (label, band) in enumerate(bands):
         row, col = divmod(index, CARD_COLS)
@@ -317,7 +334,7 @@ def _norm_card(chart, x, y, label, band, window, y_range):
     chart.text(x + CARD_W / 2, y + 40, f"n = {band['n']}", "sub", size=12.3,
                anchor="middle")
 
-    panel = chart.panel(x, y + 50, CARD_W, CARD_H - 50, margins=(74, 8, 34, 16))
+    panel = chart.panel(x, y + 50, CARD_W, CARD_H - 50, margins=(74, 8, 40, 16))
     sx, sy = panel.scales((0, window), y_range)
     y_ticks = list(range(int(y_range[0] // 50) * 50, int(y_range[1]) + 1, 50))
     x_ticks = list(range(0, int(window) + 1, 50))
@@ -335,12 +352,14 @@ def _norm_card(chart, x, y, label, band, window, y_range):
     panel.frame("frame-soft")
     panel.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=8.9)
     panel.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{int(v)}", size=8.9)
-    panel.text((panel.left + panel.right) / 2, y + CARD_H - 6,
+    # Off the axis, like the other charts: at the card edge the caption drifted
+    # away from the panel it labels, which is what one notices first.
+    panel.text((panel.left + panel.right) / 2, panel.bottom + 26,
                _("Minutes after meal"), "ink", size=9.5, anchor="middle")
     caption = _("Δ %(u)s vs. meal start") % {"u": glucose_unit()}
-    chart.add(f'<text transform="translate({x + 22},{y + 44 + (CARD_H - 44) / 2}) '
-              f'rotate(-90)" class="ink" font-size="9.5" text-anchor="middle">'
-              f'{caption}</text>')
+    chart.add(f'<text transform="translate({panel.left - 34},'
+              f'{(panel.top + panel.bottom) / 2}) rotate(-90)" class="ink" '
+              f'font-size="9.5" text-anchor="middle">{caption}</text>')
 
 
 def _day_labels(chart, sx, items, base_y, role, bold=False):
@@ -379,10 +398,12 @@ def _day_basal(chart, sx, series, gmax):
         previous = y
     steps.append(f"L{points[-1][0]},{chart.bottom}Z")
     chart.add(f'<path d="{"".join(steps)}" class="basal" fill-opacity="0.35"/>')
-    chart.text(chart.right + 6, chart.top + 8, "U/h", "basal", size=6)
-    chart.text(chart.right + 6, chart.bottom, "0", "basal", size=6)
+    # 6 pt on an 11 inch figure is 8.3 units here — the last size that was
+    # carried over instead of converted.
+    chart.text(chart.right + 6, chart.top + 10, "U/h", "basal", size=8.3)
+    chart.text(chart.right + 6, chart.bottom, "0.0", "basal", size=8.3)
     chart.text(chart.right + 6, chart.top + height * (1 - 1 / 2.2),
-               f"{gmax:.1f}", "basal", size=6)
+               f"{gmax:.1f}", "basal", size=8.3)
 
 
 def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):

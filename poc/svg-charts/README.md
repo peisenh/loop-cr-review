@@ -113,11 +113,14 @@ on top of each other.
 
 ## What remains
 
-- The `dark_charts` option still exists in the CLI, the web form and the app,
-  and now does nothing: one SVG serves both themes. 32 places refer to it, so
-  removing it is its own step rather than a tail end of this one.
-- Then numpy, which is the point of all this: without it and matplotlib,
-  nothing in the app is compiled.
+- numpy, which is the point of all this: without it and matplotlib, nothing in
+  the app is compiled. The percentile check that decides whether that is
+  feasible has already passed — a full report came out byte-identical with a
+  pure-Python percentile in place of numpy's.
+
+The `dark_charts` option has since been removed: the command line flag, the
+checkbox, the second rendering pass, the `*_img_dark` context keys and the
+catalogue string. Dark mode itself is untouched.
 
 ## How to check it
 
