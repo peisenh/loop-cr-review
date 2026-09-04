@@ -56,11 +56,17 @@ shoot() {  # shoot <url-or-file> <output>
 # The upload form is served, not a file: it pulls its logo and stylesheet from
 # /static, which a file:// page cannot reach.
 PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
+SERVER_LOG="$WORK/server.log"
 python3 -c "
 import webapp
 webapp.app.run(host='127.0.0.1', port=$PORT, threaded=True)
-" >/dev/null 2>&1 &
+" >"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
+
+# Wait for it, and stop if it never comes. Without this the script carried on
+# and photographed the browser's "connection refused" page, which looks like a
+# screenshot until someone opens it.
+up=0
 for _ in $(seq 1 40); do
   if python3 -c "
 import socket, sys
@@ -68,9 +74,28 @@ try:
     socket.create_connection(('127.0.0.1', $PORT), 0.2).close()
 except OSError:
     sys.exit(1)
-" 2>/dev/null; then break; fi
+" 2>/dev/null; then up=1; break; fi
   sleep 0.25
 done
+if [ "$up" -ne 1 ]; then
+  echo "The upload server did not come up on port $PORT within ten seconds." >&2
+  echo "Its output:" >&2
+  sed 's/^/    /' "$SERVER_LOG" >&2 || true
+  exit 1
+fi
+
+# An open port is not a working page: it can answer while the app raises. Ask
+# for the form and look for something only the form has.
+if ! python3 -c "
+import sys, urllib.request
+page = urllib.request.urlopen('http://127.0.0.1:$PORT/?lang=de', timeout=10).read().decode()
+sys.exit(0 if 'type=\"file\"' in page else 1)
+" 2>/dev/null; then
+  echo "The server answers on port $PORT but does not serve the upload form." >&2
+  echo "Its output:" >&2
+  sed 's/^/    /' "$SERVER_LOG" >&2 || true
+  exit 1
+fi
 
 # Which sections to photograph, by the heading each one starts with. Spaced far
 # enough apart that the pictures do not repeat each other: a phone screen holds

@@ -68,6 +68,12 @@ Entries up to and including 0.5.3 are in German; newer entries are in English.
   captions hung off the edge of the canvas rather than off the axis, the legend
   above the normalised cards overlapped the first row, and the GRI axes were
   unnamed and unreadable at the card's width.
+- The store screenshot script stops when its local server does not come up,
+  instead of photographing the browser's "connection refused" page — which
+  looks like a screenshot until someone opens it. It also checks that the page
+  it gets is the upload form, since an open port can answer while the app
+  raises, and it shows the server's output on failure rather than discarding
+  it.
 - The Play bundle no longer lands in the GitHub release. The release job
   attaches every artifact, and an AAB is a trap there: nobody can install one,
   while the APK they came for sits right beside it.
