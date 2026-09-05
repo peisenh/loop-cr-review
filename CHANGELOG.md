@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-09-05
+
 ### Added
 - `tools/fetch-nightscout.py` pulls a date range from a Nightscout site into the
   `entries.json` + `treatments.json` pair the reader wants, so the data no longer
@@ -1317,7 +1319,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.25.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/peisenh/loop-cr-review/compare/v0.25.1...v0.26.0
 [0.25.1]: https://github.com/peisenh/loop-cr-review/compare/v0.25.0...v0.25.1
 [0.25.0]: https://github.com/peisenh/loop-cr-review/compare/v0.24.1...v0.25.0
 [0.24.1]: https://github.com/peisenh/loop-cr-review/compare/v0.24.0...v0.24.1

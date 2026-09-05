@@ -12,7 +12,7 @@ android {
         applicationId = "de.peisenh.loopcrreview"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
+        versionCode = 10
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
             // Both ABIs. arm64 alone was forced by numpy, which had to be
