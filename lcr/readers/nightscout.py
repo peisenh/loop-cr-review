@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Reading a Nightscout export (entries + treatments as JSON or CSV)."""
 import json
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -25,8 +26,15 @@ def _nightscout_dir(base):
     return single_match(dict.fromkeys(cands), "Nightscout dumps", base)
 
 
-def _ns_parse_time(obj, offset_min):
-    """UTC instant from dateString/created_at/date, then naive local via offset_min."""
+def _ns_parse_time(obj, fallback_min):
+    """UTC instant from dateString/created_at/date, then naive local time.
+
+    The offset comes from the record itself where it has one, and only from
+    *fallback_min* where it does not. Taking one offset for the whole export
+    was wrong across a daylight-saving change: a six-month range starting in
+    March carried the winter offset into every summer day, and every reading
+    came out an hour early.
+    """
     raw = obj.get("dateString") or obj.get("created_at")
     if raw:
         dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
@@ -36,22 +44,51 @@ def _ns_parse_time(obj, offset_min):
         dt = datetime.fromtimestamp(float(obj["date"]) / 1000.0, tz=timezone.utc)
     else:
         return None
-    off = int(offset_min or 0)
+    off = _ns_record_offset(obj)
+    if off is None:
+        off = int(fallback_min or 0)
     local = dt.astimezone(timezone(timedelta(minutes=off)))
     return local.replace(tzinfo=None)
 
 
+def _ns_record_offset(obj):
+    """The record's own offset in minutes, or None if it has none. -> int|None
+
+    Zero counts as no offset. Uploaders that do not track the wearer's time
+    write it, and reading it as Greenwich would move those records by the
+    whole offset — where a record genuinely was taken at UTC, the fallback
+    lands on the same value anyway.
+    """
+    raw = obj.get("utcOffset")
+    if raw in (None, ""):
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return value or None
+
+
 def _ns_offset_minutes(entries):
-    """Display offset from CGM entries (Nightscout utcOffset is minutes)."""
-    offs = [int(x["utcOffset"]) for x in entries if x.get("utcOffset") not in (None, "")]
-    return offs[0] if offs else 0
+    """Offset for records that carry none. -> int
+
+    The most common one in the export, not the first: the first record is the
+    oldest, and in a range that crosses a daylight-saving change that is the
+    wrong side of it.
+    """
+    offs = [off for off in (_ns_record_offset(x) for x in entries) if off is not None]
+    if not offs:
+        return 0
+    return Counter(offs).most_common(1)[0][0]
 
 
 def read_nightscout(base):
     """Load a Nightscout dump (entries.json + treatments.json).
 
-    Times: ISO Z / epoch as UTC, then shifted to the CGM ``utcOffset`` so slot
-    clocks match the wearer. Treatment ``utcOffset: 0`` is ignored.
+    Times: ISO Z / epoch as UTC, then shifted to each record's own ``utcOffset``
+    so slot clocks match the wearer. A record without one — Nightscout writes a
+    zero where the uploader does not track the zone — takes the offset most of
+    the export carries.
     """
     ns = _nightscout_dir(base)
     if ns is None:

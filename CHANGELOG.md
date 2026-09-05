@@ -25,6 +25,13 @@
   come back twice at a window boundary are dropped by `_id`.
 
 ### Fixed
+- Nightscout times are right across a daylight-saving change. The offset was
+  taken from the first record and applied to every other one — and the first
+  record is the oldest, so a range starting before the March change carried the
+  winter offset into every summer day and each reading came out an hour early.
+  A fortnight in summer looked correct, which is why it went unnoticed. Each
+  record now uses its own offset; one that has none takes the offset most of the
+  export carries, rather than being read as Greenwich.
 - The report brings its own page margin. Without one it depended on whatever
   the print dialogue defaulted to, and Chrome on Android defaults to none — so
   text sat flush against the sheet edge, where no printer can put ink. 14 mm top
