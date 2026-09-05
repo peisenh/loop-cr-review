@@ -13,12 +13,16 @@ months is the kind of query that times out on a small instance. So it walks the
 range in windows and stitches the results together, dropping anything that comes
 back twice at a boundary.
 
-Authentication, whichever the site uses:
+Authentication is by access token — the kind Nightscout's admin page creates for
+a role, which can be revoked on its own and given read rights alone:
 
-    --token READ-TOKEN        an access token created in Nightscout's admin page
-    --secret API-SECRET       the API_SECRET itself; it is hashed before sending
+    --token READ-TOKEN
 
-Neither is needed if the site reads without authentication.
+Not needed if the site reads without authentication. The older API_SECRET is not
+supported on purpose: the protocol wants it as a SHA-1 hash sent with every
+request, which is both a weak hash and a credential that cannot be revoked
+without changing it everywhere. A token is the better answer and every current
+Nightscout has them.
 
 Usage:
     tools/fetch-nightscout.py --url https://mysite.example --token abc123 --days 90
@@ -27,7 +31,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 import urllib.error
@@ -45,12 +48,10 @@ PAGE_COUNT = 20000
 TIMEOUT = 120
 
 
-def _fetch(url, params, secret_hash):
+def _fetch(url, params):
     """One API call. -> parsed JSON list"""
     query = urllib.parse.urlencode(params, safe="[]$")
     request = urllib.request.Request(f"{url}?{query}")
-    if secret_hash:
-        request.add_header("api-secret", secret_hash)
     request.add_header("Accept", "application/json")
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
         return json.load(response)
@@ -66,7 +67,7 @@ def _windows(start, end):
     return out
 
 
-def _collect(base, path, field, start, end, token, secret_hash, label):
+def _collect(base, path, field, start, end, token, label):
     """Every record in the range, in order, without duplicates. -> list"""
     url = f"{base}/api/v1/{path}"
     seen, out = set(), []
@@ -79,11 +80,11 @@ def _collect(base, path, field, start, end, token, secret_hash, label):
         if token:
             params["token"] = token
         try:
-            batch = _fetch(url, params, secret_hash)
+            batch = _fetch(url, params)
         except urllib.error.HTTPError as error:
             hint = ""
             if error.code in (401, 403):
-                hint = "  (the site wants a token or API secret, or this one is wrong)"
+                hint = "  (the site wants a token, or this one has no read rights)"
             raise SystemExit(f"{label}: {error.code} {error.reason}{hint}") from error
         except urllib.error.URLError as error:
             raise SystemExit(f"{label}: cannot reach {base} — {error.reason}") from error
@@ -109,7 +110,6 @@ def main():
     parser.add_argument("--url", required=True,
                         help="base URL of the site, e.g. https://mysite.example")
     parser.add_argument("--token", help="read access token")
-    parser.add_argument("--secret", help="API_SECRET (hashed before sending)")
     parser.add_argument("--days", type=int, default=90,
                         help="how far back to go, when --from is not given (default 90)")
     parser.add_argument("--from", dest="date_from", help="first day, YYYY-MM-DD")
@@ -126,14 +126,11 @@ def main():
         raise SystemExit("the start of the range is not before its end")
 
     base = args.url.rstrip("/")
-    secret_hash = (hashlib.sha1(args.secret.encode()).hexdigest()  # noqa: S324
-                   if args.secret else None)
-
     print(f"==> {base}  {start:%d.%m.%Y} bis {end:%d.%m.%Y}")
     entries = _collect(base, "entries.json", "dateString", start, end,
-                       args.token, secret_hash, "entries")
+                       args.token, "entries")
     treatments = _collect(base, "treatments.json", "created_at", start, end,
-                          args.token, secret_hash, "treatments")
+                          args.token, "treatments")
 
     if not entries:
         raise SystemExit("no glucose readings in that range — check the dates and the site")

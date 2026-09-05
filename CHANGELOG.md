@@ -11,6 +11,12 @@
   down, which were already at 10–90.
 
 ### Added
+- `tools/fetch-nightscout.py` authenticates by access token only. It also took
+  the older API_SECRET, which the protocol wants as a SHA-1 hash on every
+  request — a weak hash, and a credential that cannot be revoked without
+  changing it everywhere it is used. CodeQL flagged the hash, rightly; the
+  answer is not to suppress the warning but to drop the weaker path, since a
+  token can be given read rights alone and revoked on its own.
 - `tools/fetch-nightscout.py` pulls a date range from a Nightscout site into the
   `entries.json` + `treatments.json` pair the reader wants. It walks the range in
   weekly windows rather than asking for everything at once — the API answers with
