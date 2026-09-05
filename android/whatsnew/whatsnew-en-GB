@@ -1,9 +1,7 @@
-Noticeably faster: a report covering 90 days with the daily overview now takes seconds instead of minutes.
+The report saves and prints properly as a PDF — a real page margin, no clipped lines, and no heading left alone at the foot of a page.
 
-The app is a third of its former size — down from 44 to 14 MB. Less space used, quicker to start.
+The AGP now shows the 10th to 90th percentiles, the same band as the CamAPS report, so the two can be read side by side.
 
-The charts are sharp at any zoom and in print, and a saved or shared report is about half the size it was.
+GMI is given in both units: per cent and mmol/mol.
 
-In dark mode the charts now follow along by themselves.
-
-The report can now be pinched to zoom inside the app as well.
+Nightscout data spanning a clock change is read at the right time of day.

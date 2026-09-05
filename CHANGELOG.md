@@ -2,64 +2,50 @@
 
 ## [Unreleased]
 
-### Changed
-- The AGP shows the 10th and 90th percentiles rather than the 5th and 95th.
-  Both are allowed by the consensus statements, and 5–95 is the older AGP
-  definition — but the CamAPS report this one is meant to lie beside uses
-  10–90, and two charts of the same shape with different bands invite a
-  comparison that is not one. It also matches the normalised cards further
-  down, which were already at 10–90.
-
 ### Added
-- `tools/fetch-nightscout.py` authenticates by access token only. It also took
-  the older API_SECRET, which the protocol wants as a SHA-1 hash on every
-  request — a weak hash, and a credential that cannot be revoked without
-  changing it everywhere it is used. CodeQL flagged the hash, rightly; the
-  answer is not to suppress the warning but to drop the weaker path, since a
-  token can be given read rights alone and revoked on its own.
 - `tools/fetch-nightscout.py` pulls a date range from a Nightscout site into the
-  `entries.json` + `treatments.json` pair the reader wants. It walks the range in
-  weekly windows rather than asking for everything at once — the API answers with
-  ten values from two days unless told otherwise, and a count large enough for
-  three months is the kind of query a small instance times out on. Records that
-  come back twice at a window boundary are dropped by `_id`.
-
-### Fixed
-- Nightscout times are right across a daylight-saving change. The offset was
-  taken from the first record and applied to every other one — and the first
-  record is the oldest, so a range starting before the March change carried the
-  winter offset into every summer day and each reading came out an hour early.
-  A fortnight in summer looked correct, which is why it went unnoticed. Each
-  record now uses its own offset; one that has none takes the offset most of the
-  export carries, rather than being read as Greenwich.
-- The report brings its own page margin. Without one it depended on whatever
-  the print dialogue defaulted to, and Chrome on Android defaults to none — so
-  text sat flush against the sheet edge, where no printer can put ink. 14 mm top
-  and bottom, 12 mm at the sides, which clears the unprintable border of every
-  common printer.
-- A part heading no longer strands at the foot of a printed page while the card
-  it introduces starts on the next one. It is kept with what follows, and
-  paragraphs keep two lines either side of a break. The same for the appendix:
-  its key stayed on one page while the first daily panel began on the next, so
-  the legend was separated from what it explains.
-- Bolus and carb labels on a daily panel no longer land on top of each other.
-  They were stacked from fixed rows twelve and forty-two, so the fourth bolus
-  in a short span sat exactly on the carb row and the two read as one number.
-  The carbs now start below however many rows the boluses needed.
-- A day with an implausible number of entries no longer writes labels into
-  nowhere. Fifty entries within an hour produced a hundred labels, seventy-nine
-  of them below the panel — drawn, counted in the file size, and never seen.
-  Stacking stops after six rows and a count says how many are left out; the mark
-  on the axis stays, since the event did happen. Marks that fall on the same
-  position are drawn once, which bounds a panel at about 330 KB however many
-  entries an export contains.
-
-### Added
+  `entries.json` + `treatments.json` pair the reader wants, so the data no longer
+  has to come out of Glooko. It walks the range in weekly windows rather than
+  asking for everything at once — the API answers with ten values from two days
+  unless told otherwise, and a count large enough for three months is the kind of
+  query a small instance times out on. Records that come back twice at a window
+  boundary are dropped by `_id`. Authentication is by access token only: the older
+  API_SECRET travels as a SHA-1 hash on every request and can only be changed by
+  replacing it everywhere it is used.
 - The GMI is given in both units: per cent and, in brackets beside it, mmol/mol.
   Which one a clinic speaks follows its HbA1c convention rather than the glucose
   one — per cent under DCCT/NGSP, mmol/mol under IFCC — so a reader outside
-  Germany would otherwise have to convert. Both formulas come from the same
-  paper (Bergenstal 2018) and agree with each other.
+  Germany would otherwise have to convert. Both formulas come from the same paper
+  (Bergenstal 2018) and agree with each other.
+
+### Changed
+- The AGP shows the 10th and 90th percentiles rather than the 5th and 95th. Both
+  are allowed by the consensus statements, and 5–95 is in fact the older AGP
+  definition — but the CamAPS, Glooko and Nightscout reports this one is meant to
+  be read beside all use 10–90, and two charts of the same shape with different
+  bands invite a comparison that is not one. It also settles an inconsistency
+  inside this report: the normalised cards were already at 10–90.
+
+### Fixed
+- Nightscout times are right across a daylight-saving change. The offset was taken
+  from the first record and applied to every other one — and the first record is
+  the oldest, so a range starting before the March change carried the winter offset
+  into every summer day and each reading came out an hour early. A fortnight in
+  summer looks correct, which is why it went unnoticed until a 180 day export. Each
+  record now uses its own offset; one that has none takes the offset most of the
+  export carries, rather than being read as Greenwich.
+- The report brings its own page margin. Without one it depended on whatever the
+  print dialogue defaulted to, and Chrome on Android defaults to none — so text sat
+  flush against the sheet edge, where no printer can put ink.
+- Print breaks: a part heading no longer strands at the foot of a page while the
+  card it introduces starts on the next one, and the appendix key no longer sits on
+  one page while the first daily panel begins on the following one.
+- Bolus and carb labels on a daily panel no longer land on top of each other. They
+  were stacked from fixed rows twelve and forty-two, so the fourth bolus in a short
+  span sat exactly on the carb row and the two read as one number. The carbs now
+  start below however many rows the boluses needed, and stacking stops after six
+  rows with a count for the rest — fifty entries within an hour used to produce a
+  hundred labels, seventy-nine of them below the panel, drawn and never seen.
 
 ## [0.25.1] - 2026-09-04
 
