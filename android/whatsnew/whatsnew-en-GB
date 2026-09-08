@@ -1,7 +1,5 @@
+New: “analysis only”. The report then shows the measured values alone — courses, metrics and the per-meal table — and leaves out the assessment and its suggestions.
+
 The report saves and prints properly as a PDF — a real page margin, no clipped lines, and no heading left alone at the foot of a page.
 
 The AGP now shows the 10th to 90th percentiles, the same band as the CamAPS report, so the two can be read side by side.
-
-GMI is given in both units: per cent and mmol/mol.
-
-Nightscout data spanning a clock change is read at the right time of day.

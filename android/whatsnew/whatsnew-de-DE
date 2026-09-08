@@ -1,7 +1,5 @@
+Neu: „Nur Auswertung“. Der Bericht zeigt dann allein die gemessenen Werte — Verlauf, Metriken und die Tabelle je Mahlzeit — und lässt die Beurteilung samt Empfehlungen weg.
+
 Der Bericht lässt sich sauber als PDF speichern oder drucken — mit richtigem Seitenrand, ohne abgeschnittene Zeilen und ohne Überschriften, die allein am Seitenende stehen.
 
 Das AGP zeigt jetzt die Perzentile 10 bis 90 wie der CamAPS-Bericht, so lassen sich beide direkt nebeneinander lesen.
-
-GMI steht in beiden Einheiten: Prozent und mmol/mol.
-
-Nightscout-Daten über eine Zeitumstellung hinweg werden mit der richtigen Uhrzeit gelesen.

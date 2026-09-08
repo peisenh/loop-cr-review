@@ -14,7 +14,11 @@ Two tiers, chosen from the export:
 - **Full (CamAPS FX Auto Mode** via Glooko, or Nightscout with `--assume-camaps` when that dump really is CamAPS): AGP, consensus metrics, GRI **and** a loop-aware CR assessment per time-of-day slot.
 - **Lite** (LibreView, Dexcom Clarity, Nightscout without that flag): the same glucose analysis — **without** loop extra basal, `CR_eff`, or fasting basal. Other AID systems (Control-IQ, Omnipod 5, …) belong here, not in the loop verdict.
 
-Details: “Supported systems”.
+Across that sits how much the report concludes from it: `--no-assessment` (web
+form: "Analysis only") leaves out part 2 — measured values yes, verdict no. The
+two axes are independent and combine freely.
+
+Details: “Supported systems” and “With or without the assessment”.
 
 ![Example report from loop-cr-review](docs/screenshot.png)
 
@@ -82,6 +86,24 @@ derivations from the curve shape. What remains is the classic view — this much
 many carbs, and this is where glucose stood four hours later. With no loop smoothing the
 excursion that signal is arguably more direct than under CamAPS.
 
+## With or without the assessment
+
+Full and lite say **what the export supports**. Separate from that is **how much
+the report concludes from it**. With `--no-assessment` (web form: "Analysis
+only") part 2 goes entirely: no per-slot verdict, no derivations from the curve
+shape, none of the loop-derived quantities.
+
+What stays is what was measured — AGP, consensus metrics, GRI, the courses per
+meal type, and the per-meal table with CR (CHO/bolus) and Δ4h. CR and Δ are
+figures derived from the export rather than judgements, so they stay; the verdict
+column and the levers go with part 2.
+
+The two switches mesh without contradicting each other: `lite` drops the loop
+figures because the export does not carry them, `--no-assessment` drops the
+conclusions because they were not asked for. And a missing basal trace in an
+otherwise full export is no longer fatal without the assessment: the report is
+built and only loses the loop columns.
+
 
 Use with other loops is **conceivable with adaptations**, but untested — in particular, (1) the export columns would need to be mapped and (2) auto-correction **boluses** would need to be included in the "loop extra basal" term. Without these adaptations, the results are not valid for non-CamAPS systems.
 
@@ -139,6 +161,7 @@ python3 loop_cr_review.py <export_folder> -w 3.5     # different window (hours)
 python3 loop_cr_review.py <export_folder> --lang en  # report in English (default: de)
 python3 loop_cr_review.py <ns-folder>                # Nightscout: entries.json + treatments.json → lite
 python3 loop_cr_review.py <ns-folder> --assume-camaps  # NS: enable CamAPS Part 2
+python3 loop_cr_review.py <export_folder> --no-assessment  # analysis only, no part 2
 python3 loop_cr_review.py <libreview-folder>          # LibreView CSV → always lite
 python3 loop_cr_review.py <clarity-folder>            # Dexcom Clarity CSV → always lite
 python3 loop_cr_review.py <export_folder> --span      # print from–to only
@@ -152,6 +175,7 @@ python3 loop_cr_review.py <export_folder> -t <template_folder>
 | `export_dir` | Folder with a Glooko export, Nightscout dump, LibreView or Clarity CSV. **Required**; searched up to two levels below | — |
 | `-w, --window-hours` | postprandial analysis window (h) | `4.0` |
 | `--assume-camaps` | Loop figures (loop extra basal, CR_eff) for Nightscout as well. LibreView and Clarity stay lite. Default off | off |
+| `--no-assessment` | Analysis only: leave out part 2 (per-slot verdict, derivations, loop figures). The measured values stay | off |
 | `--span` | print the CGM date range, no report | off |
 | `--from` / `--to` | calendar days YYYY-MM-DD (inclusive) | full export |
 | `-d, --daily` | also output a daily overview (small day profiles per calendar day) | off |
@@ -177,7 +201,9 @@ private folder under the system temp directory. The export is deleted as soon as
 the report exists; the report itself after 15 minutes at the latest, or right
 away with "download". The report is shown in a chrome (New report / Save);
 the saved HTML is the same file the CLI writes. Nightscout stays lite unless you tick
-“force CamAPS assessment”. Meant for **private LAN use, not public hosting**.
+“force CamAPS assessment”. The “analysis only” box leaves out part 2; while it is
+ticked, “force CamAPS assessment” is greyed out, because everything it unlocks sits
+in part 2. Meant for **private LAN use, not public hosting**.
 
 ```bash
 # with Docker (recommended)

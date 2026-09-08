@@ -99,7 +99,7 @@ _PLATFORM = "server"
 # because the app serves itself on a fresh port every launch and localStorage is
 # scoped to the origin, port included.
 _PREFS_COOKIE = "lcr_prefs"
-_PREF_FLAGS = ("assume_camaps", "daily")
+_PREF_FLAGS = ("assume_camaps", "daily", "no_assessment")
 
 
 def _remembered_prefs():
@@ -331,6 +331,11 @@ def _read_options():
         abort(400, "window must be between 0.5 and 12 hours")
     daily = request.form.get("daily") == "on"
     assume_camaps = request.form.get("assume_camaps") == "on"
+    # Part 2 off makes the CamAPS opt-in meaningless: everything it unlocks
+    # lives there. Settle it here rather than leaving the core to guess.
+    assess = request.form.get("no_assessment") != "on"
+    if not assess:
+        assume_camaps = False
     date_from = request.form.get("date_from") or None
     date_to = request.form.get("date_to") or None
     try:
@@ -338,7 +343,7 @@ def _read_options():
         date_to = core.parse_day(date_to)
     except LoopCRError as exc:
         abort(400, _client_message(exc, "invalid date"))
-    return lang, window_hours, daily, assume_camaps, date_from, date_to
+    return lang, window_hours, daily, assume_camaps, assess, date_from, date_to
 
 
 def _slots_from_fields():
@@ -502,7 +507,8 @@ def _do_job(status_path, result_path, options):
         html, _ctx = core.generate_report(
             options["base"], lang=options["lang"], window_hours=options["window_hours"],
             daily=options["daily"],
-            assume_camaps=options["assume_camaps"], date_from=options["date_from"],
+            assume_camaps=options["assume_camaps"], assess=options["assess"],
+            date_from=options["date_from"],
             date_to=options["date_to"], slots=options["slots"],
             progress=lambda stage, pct: _job_progress(status_path, stage, pct))
         result_path.write_text(html, encoding="utf-8")
@@ -567,7 +573,7 @@ def span():
 def analyze():
     """Start an asynchronous report job and return its opaque job id."""
     files = _export_uploads()
-    lang, window_hours, daily, assume_camaps, date_from, date_to = _read_options()
+    lang, window_hours, daily, assume_camaps, assess, date_from, date_to = _read_options()
     _sweep_stale_jobs()
     job_id = uuid.uuid4().hex
     job = _JOB_ROOT / job_id
@@ -580,7 +586,7 @@ def analyze():
         base = _find_export_base(extract)
         options = {
             "base": str(base), "lang": lang, "window_hours": window_hours,
-            "daily": daily, "assume_camaps": assume_camaps,
+            "daily": daily, "assume_camaps": assume_camaps, "assess": assess,
             "date_from": date_from, "date_to": date_to, "slots": slots,
             "download": request.form.get("download") == "on",
         }
@@ -701,7 +707,7 @@ def report():
 
     """Build the report from the uploaded export and return it as HTML."""
     files = _export_uploads()
-    lang, window_hours, daily, assume_camaps, date_from, date_to = _read_options()
+    lang, window_hours, daily, assume_camaps, assess, date_from, date_to = _read_options()
 
     with tempfile.TemporaryDirectory(prefix="lcr-") as tmp:
         tmpd = Path(tmp)
@@ -709,7 +715,7 @@ def report():
         slots = _read_slots(tmpd)
         base = _find_export_base(extract)
         html = _generate_or_400(base, lang, window_hours, daily,
-                                assume_camaps, date_from, date_to, slots)
+                                assume_camaps, assess, date_from, date_to, slots)
 
     headers = {}
     if request.form.get("download") == "on":
@@ -726,7 +732,7 @@ def _load_slots_or_400(path):
     return None                          # pragma: no cover
 
 
-def _generate_or_400(base, lang, window_hours, daily, assume_camaps,
+def _generate_or_400(base, lang, window_hours, daily, assume_camaps, assess,
                      date_from, date_to, slots):
     """Run generate_report; map any failure to a clean HTTP 400.
 
@@ -738,7 +744,7 @@ def _generate_or_400(base, lang, window_hours, daily, assume_camaps,
     try:
         html, _ctx = core.generate_report(
             base, lang=lang, window_hours=window_hours, daily=daily,
-            assume_camaps=assume_camaps,
+            assume_camaps=assume_camaps, assess=assess,
             date_from=date_from, date_to=date_to, slots=slots)
         return html
     except (LoopCRError, SystemExit) as exc:  # core raises LoopCRError (legacy SystemExit)

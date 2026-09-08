@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  loop-cr-review\n"
 "Report-Msgid-Bugs-To: github@peter-e.de\n"
-"POT-Creation-Date: 2026-09-01 10:32+0000\n"
+"POT-Creation-Date: 2026-09-08 11:32+0000\n"
 "PO-Revision-Date: 2026-08-11 06:26+0000\n"
 "Last-Translator: Peter Eisenhauer <github@peter-e.de>\n"
 "Language: en\n"
@@ -59,324 +59,312 @@ msgstr "Low %(lo)s–%(hi)s"
 msgid "Very Low &lt;%(v)s"
 msgstr "Very Low &lt;%(v)s"
 
-#: loop_cr_review.py:311
+#: loop_cr_review.py:320
 msgid "device unknown"
 msgstr "device unknown"
 
-#: lcr/analysis.py:78
+#: lcr/analysis.py:91
 msgid "Low risk"
 msgstr "Low risk"
 
-#: lcr/analysis.py:80
+#: lcr/analysis.py:93
 msgid "Low to moderate risk"
 msgstr "Low to moderate risk"
 
-#: lcr/analysis.py:82
+#: lcr/analysis.py:95
 msgid "Moderate risk"
 msgstr "Moderate risk"
 
-#: lcr/analysis.py:84
+#: lcr/analysis.py:97
 msgid "High risk"
 msgstr "High risk"
 
-#: lcr/analysis.py:86
+#: lcr/analysis.py:99
 msgid "Very high risk"
 msgstr "Very high risk"
 
-#: lcr/analysis.py:315 templates/report.html.j2:334
+#: lcr/analysis.py:330 templates/report.html.j2:368
 msgid "coverage looks too weak"
 msgstr "coverage looks too weak"
 
-#: lcr/analysis.py:316 templates/report.html.j2:334
+#: lcr/analysis.py:331 templates/report.html.j2:368
 msgid "coverage looks too strong"
 msgstr "coverage looks too strong"
 
-#: lcr/analysis.py:317 templates/report.html.j2:334
+#: lcr/analysis.py:332 templates/report.html.j2:368
 msgid "plausibly adequate"
 msgstr "plausibly adequate"
 
-#: lcr/analysis.py:326
+#: lcr/analysis.py:341
 msgid " ⚠︎ (hypo treated)"
 msgstr " ⚠︎ (hypo treated)"
 
-#: lcr/analysis.py:329
+#: lcr/analysis.py:344
 msgid " ⚠︎ (hypo rescue — likely too strong)"
 msgstr " ⚠︎ (hypo rescue — likely too strong)"
 
-#: lcr/analysis.py:332
+#: lcr/analysis.py:347
 msgid " ⚠︎ (isolated hypo(s) — mixed, check meals individually)"
 msgstr " ⚠︎ (isolated hypo(s) — mixed, check meals individually)"
 
-#: lcr/analysis.py:338
+#: lcr/analysis.py:353
 msgid " ⚠︎ (few clean meals)"
 msgstr " ⚠︎ (few clean meals)"
 
-#: lcr/analysis.py:350
+#: lcr/analysis.py:365
 msgid "rises and then falls to low values"
 msgstr "rises and then falls to low values"
 
-#: lcr/analysis.py:352 lcr/analysis.py:487
+#: lcr/analysis.py:367 lcr/analysis.py:502
 msgid "climbs and does not return to baseline"
 msgstr "climbs and does not return to baseline"
 
-#: lcr/analysis.py:354
+#: lcr/analysis.py:369
 msgid "falls clearly below baseline"
 msgstr "falls clearly below baseline"
 
-#: lcr/analysis.py:355 lcr/analysis.py:492
+#: lcr/analysis.py:370 lcr/analysis.py:507
 msgid "returns close to baseline (balanced)"
 msgstr "returns close to baseline (balanced)"
 
-#: lcr/analysis.py:371 lcr/analysis.py:385 lcr/analysis.py:405
-#: lcr/analysis.py:410 lcr/analysis.py:413 lcr/analysis.py:418
-#: lcr/analysis.py:420
+#: lcr/analysis.py:386 lcr/analysis.py:400 lcr/analysis.py:420 lcr/analysis.py:425
+#: lcr/analysis.py:428 lcr/analysis.py:433 lcr/analysis.py:435
 msgid "Caution"
 msgstr "Caution"
 
-#: lcr/analysis.py:372
+#: lcr/analysis.py:387
 msgid ""
-"BG clearly elevated at the end of the window, but the loop rather "
-"throttled (contradictory signal) → possibly an outlier/small sample size "
-"rather than a CR problem; check individual meals before tightening"
+"BG clearly elevated at the end of the window, but the loop rather throttled "
+"(contradictory signal) → possibly an outlier/small sample size rather than a CR "
+"problem; check individual meals before tightening"
 msgstr ""
-"BG clearly elevated at the end of the window, but the loop rather "
-"throttled (contradictory signal) → possibly an outlier/small sample size "
-"rather than a CR problem; check individual meals before tightening"
+"BG clearly elevated at the end of the window, but the loop rather throttled "
+"(contradictory signal) → possibly an outlier/small sample size rather than a CR "
+"problem; check individual meals before tightening"
 
-#: lcr/analysis.py:375 lcr/analysis.py:433
+#: lcr/analysis.py:390 lcr/analysis.py:448
 msgid "Dose"
 msgstr "Dose"
 
-#: lcr/analysis.py:376
+#: lcr/analysis.py:391
 #, python-format
 msgid "underdosed; CR_eff came out at %(cre)s here"
 msgstr "underdosed; CR_eff came out at %(cre)s here"
 
-#: lcr/analysis.py:380
+#: lcr/analysis.py:395
 msgid "underdosed; a topic for the care team"
 msgstr "underdosed; a topic for the care team"
 
-#: lcr/analysis.py:386
+#: lcr/analysis.py:401
 #, python-format
 msgid ""
-"Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely "
-"on the strong loop extra basal — the loop caught the too-weak CR. Before "
-"tightening, check individual meals and contamination"
+"Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely on the strong"
+" loop extra basal — the loop caught the too-weak CR. Before tightening, check "
+"individual meals and contamination"
 msgstr ""
-"Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely "
-"on the strong loop extra basal — the loop caught the too-weak CR. Before "
-"tightening, check individual meals and contamination"
+"Δ%(h)dh is negative (BG fell at the end); the verdict here rests solely on the strong"
+" loop extra basal — the loop caught the too-weak CR. Before tightening, check "
+"individual meals and contamination"
 
-#: lcr/analysis.py:405
+#: lcr/analysis.py:420
 #, python-format
 msgid "nadir ~%(n).0f %(u)s around %(t)d min — the hypo risk shapes this window"
 msgstr "nadir ~%(n).0f %(u)s around %(t)d min — the hypo risk shapes this window"
 
-#: lcr/analysis.py:410
+#: lcr/analysis.py:425
 #, python-format
 msgid ""
-"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; "
-"the dose in this window is worth discussing"
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; the dose in "
+"this window is worth discussing"
 msgstr ""
-"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; "
-"the dose in this window is worth discussing"
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated; the dose in "
+"this window is worth discussing"
 
-#: lcr/analysis.py:413
+#: lcr/analysis.py:428
 #, python-format
 msgid ""
-"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated "
-"on one meal; check that meal, do not tighten the whole slot"
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated on one meal; "
+"check that meal, do not tighten the whole slot"
 msgstr ""
-"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated "
-"on one meal; check that meal, do not tighten the whole slot"
+"nadir ~%(n).0f %(u)s around %(t)d min — a hypo occurred and was treated on one meal; "
+"check that meal, do not tighten the whole slot"
 
-#: lcr/analysis.py:418
+#: lcr/analysis.py:433
 msgid "a hypo occurred and was treated in the window; reduce the dose here"
 msgstr "a hypo occurred and was treated in the window; reduce the dose here"
 
-#: lcr/analysis.py:420
+#: lcr/analysis.py:435
 msgid ""
-"a hypo occurred and was treated on one meal; check that meal, do not "
-"tighten the whole slot"
+"a hypo occurred and was treated on one meal; check that meal, do not tighten the "
+"whole slot"
 msgstr ""
-"a hypo occurred and was treated on one meal; check that meal, do not "
-"tighten the whole slot"
+"a hypo occurred and was treated on one meal; check that meal, do not tighten the "
+"whole slot"
 
-#: lcr/analysis.py:428
+#: lcr/analysis.py:443
 msgid "Pre-bolus"
 msgstr "Pre-bolus"
 
-#: lcr/analysis.py:428
+#: lcr/analysis.py:443
 msgid ""
-"early high peak — a longer bolus-meal interval is one possible "
-"explanation (it caps the spike without more dose)"
+"early high peak — a longer bolus-meal interval is one possible explanation (it caps "
+"the spike without more dose)"
 msgstr ""
-"early high peak — a longer bolus-meal interval is one possible "
-"explanation (it caps the spike without more dose)"
+"early high peak — a longer bolus-meal interval is one possible explanation (it caps "
+"the spike without more dose)"
 
-#: lcr/analysis.py:433
+#: lcr/analysis.py:448
 msgid ""
-"overdosed/drop — the dose of this meal is the nearest candidate; consider"
-" pre-bolus and dose together"
+"overdosed/drop — the dose of this meal is the nearest candidate; consider pre-bolus "
+"and dose together"
 msgstr ""
-"overdosed/drop — the dose of this meal is the nearest candidate; consider"
-" pre-bolus and dose together"
+"overdosed/drop — the dose of this meal is the nearest candidate; consider pre-bolus "
+"and dose together"
 
-#: lcr/analysis.py:437
+#: lcr/analysis.py:452
 msgid "Fat/protein"
 msgstr "Fat/protein"
 
-#: lcr/analysis.py:437
+#: lcr/analysis.py:452
 msgid ""
-"monotonic late rise (no turning point) — fat/protein comes into question;"
-" a split or extended bolus is as much in question as the ratio"
+"monotonic late rise (no turning point) — fat/protein comes into question; a split or "
+"extended bolus is as much in question as the ratio"
 msgstr ""
-"monotonic late rise (no turning point) — fat/protein comes into question;"
-" a split or extended bolus is as much in question as the ratio"
+"monotonic late rise (no turning point) — fat/protein comes into question; a split or "
+"extended bolus is as much in question as the ratio"
 
-#: lcr/analysis.py:442
+#: lcr/analysis.py:457
 msgid "Observe"
 msgstr "Observe"
 
-#: lcr/analysis.py:442
+#: lcr/analysis.py:457
 msgid ""
-"slight late re-rise → possibly fat/protein or basal rate in this window; "
-"just keep an eye on it"
+"slight late re-rise → possibly fat/protein or basal rate in this window; just keep an"
+" eye on it"
 msgstr ""
-"slight late re-rise → possibly fat/protein or basal rate in this window; "
-"just keep an eye on it"
+"slight late re-rise → possibly fat/protein or basal rate in this window; just keep an"
+" eye on it"
 
-#: lcr/analysis.py:452
+#: lcr/analysis.py:467
 msgid "no notable shape"
 msgstr "no notable shape"
 
-#: lcr/analysis.py:462 lcr/analysis.py:465 lcr/analysis.py:467
+#: lcr/analysis.py:477 lcr/analysis.py:480 lcr/analysis.py:482
 msgid "Reference"
 msgstr "Reference"
 
-#: lcr/analysis.py:462
-msgid ""
-"CR on average fits, but a meal went low (hypo rescue) — check that one, "
-"do not tighten"
-msgstr ""
-"CR on average fits, but a meal went low (hypo rescue) — check that one, "
-"do not tighten"
+#: lcr/analysis.py:477
+msgid "CR on average fits, but a meal went low (hypo rescue) — check that one, do not tighten"
+msgstr "CR on average fits, but a meal went low (hypo rescue) — check that one, do not tighten"
 
-#: lcr/analysis.py:465
+#: lcr/analysis.py:480
 msgid "the dose fits; for timing see the pre-bolus note above"
 msgstr "the dose fits; for timing see the pre-bolus note above"
 
-#: lcr/analysis.py:467
+#: lcr/analysis.py:482
 msgid "dose and timing fit; this slot serves as a comparison for the others"
 msgstr "dose and timing fit; this slot serves as a comparison for the others"
 
-#: lcr/analysis.py:477
+#: lcr/analysis.py:492
 msgid "high peak, then drop below baseline"
 msgstr "high peak, then drop below baseline"
 
-#: lcr/analysis.py:478
+#: lcr/analysis.py:493
 msgid "falls below baseline"
 msgstr "falls below baseline"
 
-#: lcr/analysis.py:484
+#: lcr/analysis.py:499
 msgid "returns close to baseline, loop throttles noticeably"
 msgstr "returns close to baseline, loop throttles noticeably"
 
-#: lcr/analysis.py:485
+#: lcr/analysis.py:500
 msgid "returns close to baseline"
 msgstr "returns close to baseline"
 
-#: lcr/analysis.py:489
+#: lcr/analysis.py:504
 msgid "slight late rise, but net balanced"
 msgstr "slight late rise, but net balanced"
 
-#: lcr/analysis.py:491
+#: lcr/analysis.py:506
 msgid "early peak, then returns cleanly"
 msgstr "early peak, then returns cleanly"
 
-#: lcr/analysis.py:513
+#: lcr/analysis.py:528
 #, python-format
-msgid ""
-"• Derived CR = CHO/bolus; no slot deviates notably from the median "
-"(1:%(m).1f).<br>"
-msgstr ""
-"• Derived CR = CHO/bolus; no slot deviates notably from the median "
-"(1:%(m).1f).<br>"
+msgid "• Derived CR = CHO/bolus; no slot deviates notably from the median (1:%(m).1f).<br>"
+msgstr "• Derived CR = CHO/bolus; no slot deviates notably from the median (1:%(m).1f).<br>"
 
-#: lcr/analysis.py:517
+#: lcr/analysis.py:532
 msgid "tighter"
 msgstr "tighter"
 
-#: lcr/analysis.py:517
+#: lcr/analysis.py:532
 msgid "looser"
 msgstr "looser"
 
-#: lcr/analysis.py:519
+#: lcr/analysis.py:534
 msgid ""
-"elevated pre-meal BG → correction likely blended in by the calculator, "
-"derived CR underestimates the programmed ratio"
+"elevated pre-meal BG → correction likely blended in by the calculator, derived CR "
+"underestimates the programmed ratio"
 msgstr ""
-"elevated pre-meal BG → correction likely blended in by the calculator, "
-"derived CR underestimates the programmed ratio"
+"elevated pre-meal BG → correction likely blended in by the calculator, derived CR "
+"underestimates the programmed ratio"
 
-#: lcr/analysis.py:522
+#: lcr/analysis.py:537
 msgid ""
-"pre-meal BG not clearly elevated → rather a genuinely different "
-"programmed ratio than a pure correction"
+"pre-meal BG not clearly elevated → rather a genuinely different programmed ratio than"
+" a pure correction"
 msgstr ""
-"pre-meal BG not clearly elevated → rather a genuinely different "
-"programmed ratio than a pure correction"
+"pre-meal BG not clearly elevated → rather a genuinely different programmed ratio than"
+" a pure correction"
 
-#: lcr/analysis.py:524
+#: lcr/analysis.py:539
 #, python-format
 msgid ""
-"%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-"
-"meal BG ~%(bg).0f %(u)s – %(hint)s"
+"%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-meal BG "
+"~%(bg).0f %(u)s – %(hint)s"
 msgstr ""
-"%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-"
-"meal BG ~%(bg).0f %(u)s – %(hint)s"
+"%(slot)s: derived CR 1:%(scr).1f (%(dir)s than median 1:%(m).1f), pre-meal BG "
+"~%(bg).0f %(u)s – %(hint)s"
 
-#: lcr/analysis.py:529
+#: lcr/analysis.py:544
+msgid "• Derived CR = CHO/bolus (may include blended-in corrections). Notable deviations: "
+msgstr "• Derived CR = CHO/bolus (may include blended-in corrections). Notable deviations: "
+
+#: lcr/analysis.py:545
 msgid ""
-"• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
-"deviations: "
+". Clarification (programmed ratio vs. correction factor vs. timing) by the care "
+"team.<br>"
 msgstr ""
-"• Derived CR = CHO/bolus (may include blended-in corrections). Notable "
-"deviations: "
+". Clarification (programmed ratio vs. correction factor vs. timing) by the care "
+"team.<br>"
 
-#: lcr/analysis.py:530
-msgid ""
-". Clarification (programmed ratio vs. correction factor vs. timing) by "
-"the care team.<br>"
+#: lcr/charts.py:202
+msgid "Hypoglycemia (%)"
+msgstr "Hypoglycemia (%)"
+
+#: lcr/charts.py:205
+msgid "Hyperglycemia (%)"
+msgstr "Hyperglycemia (%)"
+
+#: lcr/charts.py:206
+#, fuzzy
+msgid "Glycemia Risk Index"
+msgstr "Glycemia Risk Index (GRI)"
+
+#: lcr/charts.py:249
+msgid "Time of day"
 msgstr ""
-". Clarification (programmed ratio vs. correction factor vs. timing) by "
-"the care team.<br>"
 
-#: lcr/charts.py:171
-msgid "Hypoglycemia component (%)"
-msgstr "Hypoglycemia component (%)"
-
-#: lcr/charts.py:172
-msgid "Hyperglycemia component (%)"
-msgstr "Hyperglycemia component (%)"
-
-#: lcr/charts.py:228 lcr/charts.py:365
-msgid "Minutes after meal"
-msgstr "Minutes after meal"
-
-#: lcr/charts.py:318
+#: lcr/charts.py:251 lcr/charts.py:335
 msgid "Median"
 msgstr "Median"
 
-#: lcr/charts.py:319
-msgid "25–75 %"
-msgstr "25–75 %"
+#: lcr/charts.py:281 lcr/charts.py:377
+msgid "Minutes after meal"
+msgstr "Minutes after meal"
 
-#: lcr/charts.py:320
-msgid "10–90 %"
-msgstr "10–90 %"
-
-#: lcr/charts.py:367
+#: lcr/charts.py:378
 #, python-format
 msgid "Δ %(u)s vs. meal start"
 msgstr "Δ %(u)s vs. meal start"
@@ -405,505 +393,482 @@ msgstr "Morning snack"
 msgid "Afternoon snack"
 msgstr "Afternoon snack"
 
-#: lcr/common.py:543
+#: lcr/common.py:560
 msgid "Monday"
 msgstr "Monday"
 
-#: lcr/common.py:543
+#: lcr/common.py:560
 msgid "Tuesday"
 msgstr "Tuesday"
 
-#: lcr/common.py:543
+#: lcr/common.py:560
 msgid "Wednesday"
 msgstr "Wednesday"
 
-#: lcr/common.py:543
+#: lcr/common.py:560
 msgid "Thursday"
 msgstr "Thursday"
 
-#: lcr/common.py:544
+#: lcr/common.py:561
 msgid "Friday"
 msgstr "Friday"
 
-#: lcr/common.py:544
+#: lcr/common.py:561
 msgid "Saturday"
 msgstr "Saturday"
 
-#: lcr/common.py:544
+#: lcr/common.py:561
 msgid "Sunday"
 msgstr "Sunday"
 
-#: templates/report.html.j2:208
+#: templates/report.html.j2:241
+msgid "Ambulatory Glucose Profile"
+msgstr "Ambulatory Glucose Profile"
+
+#: templates/report.html.j2:241
 msgid "Ambulatory Glucose Profile &amp; Meal Windows"
 msgstr "Ambulatory Glucose Profile &amp; Meal Windows"
 
-#: templates/report.html.j2:208
+#: templates/report.html.j2:241
 msgid "Ambulatory Glucose Profile &amp; CR Assessment"
 msgstr "Ambulatory Glucose Profile &amp; CR Assessment"
 
-#: templates/report.html.j2:209
+#: templates/report.html.j2:242
 #, python-format
 msgid "%(days)s days"
 msgstr "%(days)s days"
 
-#: templates/report.html.j2:209
+#: templates/report.html.j2:242
 msgid "sensor wear"
 msgstr "sensor wear"
 
-#: templates/report.html.j2:210
+#: templates/report.html.j2:243
 msgid "Created with"
 msgstr "Created with"
 
-#: templates/report.html.j2:210
+#: templates/report.html.j2:243
 #, python-format
 msgid "%(wlab)s window"
 msgstr "%(wlab)s window"
 
-#: templates/report.html.j2:214
+#: templates/report.html.j2:247
 msgid ""
-"Source: LibreView. No basal in this export, so no loop figures — the "
-"assessment rests on the glucose course alone."
+"Source: LibreView. No basal in this export, so no loop figures — the assessment rests"
+" on the glucose course alone."
 msgstr ""
-"Source: LibreView. No basal in this export, so no loop figures — the "
-"assessment rests on the glucose course alone."
+"Source: LibreView. No basal in this export, so no loop figures — the assessment rests"
+" on the glucose course alone."
 
-#: templates/report.html.j2:214
+#: templates/report.html.j2:247
 msgid ""
-"Source: Nightscout. Read without a basal trace, so the assessment rests "
-"on the glucose course alone; the CamAPS loop figures are off unless you "
-"opt in."
+"Source: Nightscout. Read without a basal trace, so the assessment rests on the "
+"glucose course alone; the CamAPS loop figures are off unless you opt in."
 msgstr ""
-"Source: Nightscout. Read without a basal trace, so the assessment rests "
-"on the glucose course alone; the CamAPS loop figures are off unless you "
-"opt in."
+"Source: Nightscout. Read without a basal trace, so the assessment rests on the "
+"glucose course alone; the CamAPS loop figures are off unless you opt in."
 
-#: templates/report.html.j2:214
-msgid ""
-"Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the "
-"basal trace."
-msgstr ""
-"Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the "
-"basal trace."
+#: templates/report.html.j2:247
+msgid "Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace."
+msgstr "Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace."
 
-#: templates/report.html.j2:217
+#: templates/report.html.j2:250
 msgid ""
-"<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a "
-"statistical analysis of\n"
-"  existing CGM/pump data. It does <b>not</b> provide a diagnosis and "
-"<b>no</b> treatment recommendation and\n"
-"  does not replace medical judgement. <b>Never change insulin, CR, or "
-"other settings without your\n"
-"  diabetes care team.</b> All values serve solely as a basis for "
-"discussion; <b>no warranty</b> for\n"
+"<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a statistical "
+"analysis of\n"
+"  existing CGM/pump data. It does <b>not</b> provide a diagnosis and <b>no</b> "
+"treatment recommendation and\n"
+"  does not replace medical judgement. <b>Never change insulin, CR, or other settings "
+"without your\n"
+"  diabetes care team.</b> All values serve solely as a basis for discussion; <b>no "
+"warranty</b> for\n"
 "  correctness or completeness."
 msgstr ""
-"<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a "
-"statistical analysis of\n"
-"  existing CGM/pump data. It does <b>not</b> provide a diagnosis and "
-"<b>no</b> treatment recommendation and\n"
-"  does not replace medical judgement. <b>Never change insulin, CR, or "
-"other settings without your\n"
-"  diabetes care team.</b> All values serve solely as a basis for "
-"discussion; <b>no warranty</b> for\n"
+"<b>⚠︎ Not a medical device — analysis only.</b> This tool performs a statistical "
+"analysis of\n"
+"  existing CGM/pump data. It does <b>not</b> provide a diagnosis and <b>no</b> "
+"treatment recommendation and\n"
+"  does not replace medical judgement. <b>Never change insulin, CR, or other settings "
+"without your\n"
+"  diabetes care team.</b> All values serve solely as a basis for discussion; <b>no "
+"warranty</b> for\n"
 "  correctness or completeness."
 
-#: templates/report.html.j2:226
+#: templates/report.html.j2:259
 msgid "Part 1 — what the data shows"
 msgstr "Part 1 — what the data shows"
 
-#: templates/report.html.j2:227
+#: templates/report.html.j2:260
 msgid "Measurements and courses as recorded. No selection, no assessment."
 msgstr "Measurements and courses as recorded. No selection, no assessment."
 
-#: templates/report.html.j2:229
+#: templates/report.html.j2:262
 #, python-format
 msgid "mean glucose %(unit)s"
 msgstr "mean glucose %(unit)s"
 
-#: templates/report.html.j2:231
+#: templates/report.html.j2:264
 msgid "CV (target ≤36%)"
 msgstr "CV (target ≤36%)"
 
-#: templates/report.html.j2:245
+#: templates/report.html.j2:278
 #, python-format
-msgid ""
-"Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
-"≤36%%."
-msgstr ""
-"Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV "
-"≤36%%."
+msgid "Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV ≤36%%."
+msgstr "Targets: TIR ≥70%% · TBR&lt;%(lo)s &lt;4%% · TBR&lt;%(vlo)s &lt;1%% · CV ≤36%%."
 
-#: templates/report.html.j2:246
+#: templates/report.html.j2:279
 #, python-format
 msgid "TITR(%(lo)s–%(hi)s %(unit)s)"
 msgstr "TITR(%(lo)s–%(hi)s %(unit)s)"
 
-#: templates/report.html.j2:249
+#: templates/report.html.j2:282
 msgid "Glycemia Risk Index (GRI)"
 msgstr "Glycemia Risk Index (GRI)"
 
-#: templates/report.html.j2:252
+#: templates/report.html.j2:285
 #, python-format
 msgid "Zone %(zone)s (%(rng)s)"
 msgstr "Zone %(zone)s (%(rng)s)"
 
-#: templates/report.html.j2:255
+#: templates/report.html.j2:288
 msgid "Hyperglycemia component"
 msgstr "Hyperglycemia component"
 
-#: templates/report.html.j2:256
+#: templates/report.html.j2:289
 msgid "Hypoglycemia component"
 msgstr "Hypoglycemia component"
 
-#: templates/report.html.j2:263
+#: templates/report.html.j2:296
 msgid "very low"
 msgstr "very low"
 
-#: templates/report.html.j2:263
+#: templates/report.html.j2:296
 msgid "low"
 msgstr "low"
 
-#: templates/report.html.j2:263
+#: templates/report.html.j2:296
 msgid "medium"
 msgstr "medium"
 
-#: templates/report.html.j2:263
+#: templates/report.html.j2:296
 msgid "high"
 msgstr "high"
 
-#: templates/report.html.j2:263
+#: templates/report.html.j2:296
 msgid "very high"
 msgstr "very high"
 
-#: templates/report.html.j2:266
+#: templates/report.html.j2:299
 msgid "AGP (percentiles 10/25/50/75/90)"
 msgstr "AGP (percentiles 10/25/50/75/90)"
 
-#: templates/report.html.j2:269
+#: templates/report.html.j2:302
 msgid "Real postprandial courses per meal (median)"
 msgstr "Real postprandial courses per meal (median)"
 
-#: templates/report.html.j2:272
+#: templates/report.html.j2:305
 msgid ""
-"This absolute median uses <b>all meals</b> in each slot — as do the "
-"baseline-normalised curves below."
+"This absolute median uses <b>all meals</b> in each slot — as do the baseline-"
+"normalised curves below."
 msgstr ""
-"This absolute median uses <b>all meals</b> in each slot — as do the "
-"baseline-normalised curves below."
+"This absolute median uses <b>all meals</b> in each slot — as do the baseline-"
+"normalised curves below."
 
-#: templates/report.html.j2:272
+#: templates/report.html.j2:305
 msgid ""
-"This absolute median uses <b>all meals</b> in each slot, including "
-"contaminated windows — as do the baseline-normalised curves below. The CR"
-" table in Part 2 prefers contamination-free meals instead (at least 3 "
-"clean, otherwise all), so its count (n) can differ; how much that "
-"selection changes the picture is stated there."
+"This absolute median uses <b>all meals</b> in each slot, including contaminated "
+"windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers "
+"contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) "
+"can differ; how much that selection changes the picture is stated there."
 msgstr ""
-"This absolute median uses <b>all meals</b> in each slot, including "
-"contaminated windows — as do the baseline-normalised curves below. The CR"
-" table in Part 2 prefers contamination-free meals instead (at least 3 "
-"clean, otherwise all), so its count (n) can differ; how much that "
-"selection changes the picture is stated there."
+"This absolute median uses <b>all meals</b> in each slot, including contaminated "
+"windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers "
+"contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) "
+"can differ; how much that selection changes the picture is stated there."
 
-#: templates/report.html.j2:275
+#: templates/report.html.j2:308
 msgid "Baseline-normalised courses by meal type"
 msgstr "Baseline-normalised courses by meal type"
 
-#: templates/report.html.j2:276
+#: templates/report.html.j2:309
 msgid ""
-"All values relative to each meal’s own pre-meal baseline (0 = baseline). "
-"No selection, no assessment."
+"All values relative to each meal’s own pre-meal baseline (0 = baseline). No "
+"selection, no assessment."
 msgstr ""
-"All values relative to each meal’s own pre-meal baseline (0 = baseline). "
-"No selection, no assessment."
+"All values relative to each meal’s own pre-meal baseline (0 = baseline). No "
+"selection, no assessment."
 
-#: templates/report.html.j2:279
+#: templates/report.html.j2:312
 msgid ""
-"The curves show the typical course (median) and the spread (25–75 and "
-"10–90) of baseline-normalised glucose for each meal type. Positive = "
-"above baseline, negative = below."
+"The curves show the typical course (median) and the spread (25–75 and 10–90) of "
+"baseline-normalised glucose for each meal type. Positive = above baseline, negative ="
+" below."
 msgstr ""
-"The curves show the typical course (median) and the spread (25–75 and "
-"10–90) of baseline-normalised glucose for each meal type. Positive = "
-"above baseline, negative = below."
+"The curves show the typical course (median) and the spread (25–75 and 10–90) of "
+"baseline-normalised glucose for each meal type. Positive = above baseline, negative ="
+" below."
 
-#: templates/report.html.j2:280
+#: templates/report.html.j2:313
 msgid ""
-"Baseline = glucose near meal start (individual). n = number of meals of "
-"this type with a usable start value."
+"Baseline = glucose near meal start (individual). n = number of meals of this type "
+"with a usable start value."
 msgstr ""
-"Baseline = glucose near meal start (individual). n = number of meals of "
-"this type with a usable start value."
+"Baseline = glucose near meal start (individual). n = number of meals of this type "
+"with a usable start value."
 
-#: templates/report.html.j2:281
+#: templates/report.html.j2:314
 #, python-format
 msgid ""
-"The value at the end of the median is related to the Δ%(w)s used later in"
-" Part 2; that part may prefer a cleaner meal subset, so n can differ "
-"there."
+"The value at the end of the median is related to the Δ%(w)s used later in Part 2; "
+"that part may prefer a cleaner meal subset, so n can differ there."
 msgstr ""
-"The value at the end of the median is related to the Δ%(w)s used later in"
-" Part 2; that part may prefer a cleaner meal subset, so n can differ "
-"there."
+"The value at the end of the median is related to the Δ%(w)s used later in Part 2; "
+"that part may prefer a cleaner meal subset, so n can differ there."
 
-#: templates/report.html.j2:286
+#: templates/report.html.j2:320
 msgid "Part 2 — assessment and how to read it"
 msgstr "Part 2 — assessment and how to read it"
 
-#: templates/report.html.j2:287
+#: templates/report.html.j2:321
 msgid "Everything from here rests on the method described in this part."
 msgstr "Everything from here rests on the method described in this part."
 
-#: templates/report.html.j2:290
+#: templates/report.html.j2:324
 msgid "How to read this report (no basal in the export)"
 msgstr "How to read this report (no basal in the export)"
 
-#: templates/report.html.j2:290
+#: templates/report.html.j2:324
 msgid "How to read this report (CamAPS FX Auto Mode)"
 msgstr "How to read this report (CamAPS FX Auto Mode)"
 
-#: templates/report.html.j2:291
+#: templates/report.html.j2:325
 msgid ""
-"• <b>Scope:</b> This export carries no basal rate, so nothing can be said"
-" about a\n"
-"  loop's share. What remains is the classic view: this much bolus for "
-"this many carbs, and this\n"
+"• <b>Scope:</b> This export carries no basal rate, so nothing can be said about a\n"
+"  loop's share. What remains is the classic view: this much bolus for this many "
+"carbs, and this\n"
 "  is where glucose stood four hours later."
 msgstr ""
-"• <b>Scope:</b> This export carries no basal rate, so nothing can be said"
-" about a\n"
-"  loop's share. What remains is the classic view: this much bolus for "
-"this many carbs, and this\n"
+"• <b>Scope:</b> This export carries no basal rate, so nothing can be said about a\n"
+"  loop's share. What remains is the classic view: this much bolus for this many "
+"carbs, and this\n"
 "  is where glucose stood four hours later."
 
-#: templates/report.html.j2:294
+#: templates/report.html.j2:328
 msgid ""
-"• <b>One ratio:</b> <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only"
-" (it may\n"
-"  include correction insulin). It is not a programmed pump setting; it is"
-" derived from the\n"
+"• <b>One ratio:</b> <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (it may\n"
+"  include correction insulin). It is not a programmed pump setting; it is derived "
+"from the\n"
 "  export."
 msgstr ""
-"• <b>One ratio:</b> <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only"
-" (it may\n"
-"  include correction insulin). It is not a programmed pump setting; it is"
-" derived from the\n"
+"• <b>One ratio:</b> <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (it may\n"
+"  include correction insulin). It is not a programmed pump setting; it is derived "
+"from the\n"
 "  export."
 
-#: templates/report.html.j2:297
+#: templates/report.html.j2:331
 msgid ""
-"• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly"
-" corrects via\n"
-"  <b>modulated basal</b> (not auto-bolus). Other AID systems need a "
-"different signal."
+"• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects "
+"via\n"
+"  <b>modulated basal</b> (not auto-bolus). Other AID systems need a different signal."
 msgstr ""
-"• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly"
-" corrects via\n"
-"  <b>modulated basal</b> (not auto-bolus). Other AID systems need a "
-"different signal."
+"• <b>Scope:</b> Built for CamAPS FX Auto Mode, where the algorithm mainly corrects "
+"via\n"
+"  <b>modulated basal</b> (not auto-bolus). Other AID systems need a different signal."
 
-#: templates/report.html.j2:299
+#: templates/report.html.j2:333
 msgid ""
 "• <b>Loop extra basal</b> in the post-meal window:\n"
 "  <code>∫ (basal rate − fasting basal) dt</code>.\n"
-"  Positive → extra Auto Mode activity after the meal. It can fit a too-"
-"weak CR, but on real CamAPS it is not specific to that."
+"  Positive → extra Auto Mode activity after the meal. It can fit a too-weak CR, but "
+"on real CamAPS it is not specific to that."
 msgstr ""
 "• <b>Loop extra basal</b> in the post-meal window:\n"
 "  <code>∫ (basal rate − fasting basal) dt</code>.\n"
-"  Positive → extra Auto Mode activity after the meal. It can fit a too-"
-"weak CR, but on real CamAPS it is not specific to that."
+"  Positive → extra Auto Mode activity after the meal. It can fit a too-weak CR, but "
+"on real CamAPS it is not specific to that."
 
-#: templates/report.html.j2:302
+#: templates/report.html.j2:336
 msgid ""
 "• <b>Two ratios:</b>\n"
-"  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include "
-"correction insulin).\n"
-"  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective "
-"ratio <i>including</i> loop compensation.\n"
-"  Neither is a programmed pump setting; both are derived from the export."
-"\n"
-"  If the loop already adds or cuts a lot of insulin with no meal, that "
-"says nothing about the carb ratios. The less non-meal loop influence in "
-"the window, the less CR_eff is shifted by that extra Auto Mode activity."
+"  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include correction "
+"insulin).\n"
+"  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective ratio "
+"<i>including</i> loop compensation.\n"
+"  Neither is a programmed pump setting; both are derived from the export.\n"
+"  If the loop already adds or cuts a lot of insulin with no meal, that says nothing "
+"about the carb ratios. The less non-meal loop influence in the window, the less "
+"CR_eff is shifted by that extra Auto Mode activity."
 msgstr ""
 "• <b>Two ratios:</b>\n"
-"  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include "
-"correction insulin).\n"
-"  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective "
-"ratio <i>including</i> loop compensation.\n"
-"  Neither is a programmed pump setting; both are derived from the export."
-"\n"
-"  If the loop already adds or cuts a lot of insulin with no meal, that "
-"says nothing about the carb ratios. The less non-meal loop influence in "
-"the window, the less CR_eff is shifted by that extra Auto Mode activity."
+"  <code>CR (CHO/bolus)</code> = carbs ÷ meal bolus only (may include correction "
+"insulin).\n"
+"  <code>CR_eff</code> = CHO ÷ (bolus + loop extra basal) — effective ratio "
+"<i>including</i> loop compensation.\n"
+"  Neither is a programmed pump setting; both are derived from the export.\n"
+"  If the loop already adds or cuts a lot of insulin with no meal, that says nothing "
+"about the carb ratios. The less non-meal loop influence in the window, the less "
+"CR_eff is shifted by that extra Auto Mode activity."
 
-#: templates/report.html.j2:307
+#: templates/report.html.j2:341
 msgid ""
-"• <b>Use:</b> Discussion material for the diabetes care team only — not a"
-" dosing instruction."
+"• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing "
+"instruction."
 msgstr ""
-"• <b>Use:</b> Discussion material for the diabetes care team only — not a"
-" dosing instruction."
+"• <b>Use:</b> Discussion material for the diabetes care team only — not a dosing "
+"instruction."
 
-#: templates/report.html.j2:311
+#: templates/report.html.j2:345
 msgid "CR assessment per slot, and what follows from it"
 msgstr "CR assessment per slot, and what follows from it"
 
-#: templates/report.html.j2:315
+#: templates/report.html.j2:349
 #, python-format
 msgid ""
-"Away from meals the basal was typically about %(pct)s %% off the "
-"overnight average. That is common under CamAPS — it does not say whether "
-"the carb ratio is wrong."
+"Away from meals the basal was typically about %(pct)s %% off the overnight average. "
+"That is common under CamAPS — it does not say whether the carb ratio is wrong."
 msgstr ""
-"Away from meals the basal was typically about %(pct)s %% off the "
-"overnight average. That is common under CamAPS — it does not say whether "
-"the carb ratio is wrong."
+"Away from meals the basal was typically about %(pct)s %% off the overnight average. "
+"That is common under CamAPS — it does not say whether the carb ratio is wrong."
 
-#: templates/report.html.j2:317
+#: templates/report.html.j2:351
 msgid ""
-"Too little time without a meal to compare the basal to overnight. The "
-"table below is still only discussion material."
+"Too little time without a meal to compare the basal to overnight. The table below is "
+"still only discussion material."
 msgstr ""
-"Too little time without a meal to compare the basal to overnight. The "
-"table below is still only discussion material."
+"Too little time without a meal to compare the basal to overnight. The table below is "
+"still only discussion material."
 
-#: templates/report.html.j2:323 templates/report.html.j2:430
+#: templates/report.html.j2:357 templates/report.html.j2:477
 msgid "Slot"
 msgstr "Slot"
 
-#: templates/report.html.j2:323
+#: templates/report.html.j2:357
 msgid "n (clean)"
 msgstr "n (clean)"
 
-#: templates/report.html.j2:323
+#: templates/report.html.j2:357
 msgid "Ø CHO"
 msgstr "Ø CHO"
 
-#: templates/report.html.j2:323 templates/report.html.j2:349
-#: templates/report.html.j2:430
+#: templates/report.html.j2:357 templates/report.html.j2:383 templates/report.html.j2:477
 msgid "CR (CHO/bolus)"
 msgstr "CR (CHO/bolus)"
 
-#: templates/report.html.j2:323
+#: templates/report.html.j2:357
 msgid "Bolus"
 msgstr "Bolus"
 
-#: templates/report.html.j2:324 templates/report.html.j2:349
-#: templates/report.html.j2:431
+#: templates/report.html.j2:358 templates/report.html.j2:383 templates/report.html.j2:478
 msgid "Loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:324 templates/report.html.j2:431
+#: templates/report.html.j2:358 templates/report.html.j2:478
 msgid "CR_eff (+loop)"
 msgstr "CR_eff (+loop)"
 
-#: templates/report.html.j2:324
+#: templates/report.html.j2:358
 msgid "Verdict"
 msgstr "Verdict"
 
-#: templates/report.html.j2:327 templates/report.html.j2:346
+#: templates/report.html.j2:361 templates/report.html.j2:380
 msgid "low confidence"
 msgstr "low confidence"
 
-#: templates/report.html.j2:327 templates/report.html.j2:346
+#: templates/report.html.j2:361 templates/report.html.j2:380
 msgid "verdict not stable"
 msgstr "verdict not stable"
 
-#: templates/report.html.j2:329
+#: templates/report.html.j2:363
 #, python-format
 msgid "Stability %(pct)s"
 msgstr "Stability %(pct)s"
 
-#: templates/report.html.j2:329 templates/report.html.j2:350
+#: templates/report.html.j2:363 templates/report.html.j2:384
 msgid "calendar days"
 msgstr "days"
 
-#: templates/report.html.j2:329 templates/report.html.j2:350
-#: templates/report.html.j2:396
+#: templates/report.html.j2:363 templates/report.html.j2:384 templates/report.html.j2:436
 msgid "(few)"
 msgstr "(few)"
 
-#: templates/report.html.j2:329
+#: templates/report.html.j2:363
 #, python-format
 msgid "spread CR_eff %(cre)s"
 msgstr "spread CR_eff %(cre)s"
 
-#: templates/report.html.j2:329
+#: templates/report.html.j2:363
 #, python-format
 msgid "observed CR_eff %(cre)s"
 msgstr "observed CR_eff %(cre)s"
 
-#: templates/report.html.j2:333 templates/report.html.j2:439
+#: templates/report.html.j2:367 templates/report.html.j2:486
 msgid "Swipe the table sideways for the remaining columns."
 msgstr "Swipe the table sideways for the remaining columns."
 
-#: templates/report.html.j2:336
+#: templates/report.html.j2:370
 msgid "Selection used for the verdict:"
 msgstr "Selection used for the verdict:"
 
-#: templates/report.html.j2:338
+#: templates/report.html.j2:372
 msgid ""
-"The verdict uses only meals without another meal in the window and "
-"without a large CGM\n"
-"    gap. The value in brackets is how far that selection would move the "
-"baseline-normalised curves\n"
-"    shown in Part 1 — a small number means those curves also describe "
-"what the verdict rests\n"
+"The verdict uses only meals without another meal in the window and without a large "
+"CGM\n"
+"    gap. The value in brackets is how far that selection would move the baseline-"
+"normalised curves\n"
+"    shown in Part 1 — a small number means those curves also describe what the "
+"verdict rests\n"
 "    on."
 msgstr ""
-"The verdict uses only meals without another meal in the window and "
-"without a large CGM\n"
-"    gap. The value in brackets is how far that selection would move the "
-"baseline-normalised curves\n"
-"    shown in Part 1 — a small number means those curves also describe "
-"what the verdict rests\n"
+"The verdict uses only meals without another meal in the window and without a large "
+"CGM\n"
+"    gap. The value in brackets is how far that selection would move the baseline-"
+"normalised curves\n"
+"    shown in Part 1 — a small number means those curves also describe what the "
+"verdict rests\n"
 "    on."
 
-#: templates/report.html.j2:342
+#: templates/report.html.j2:376
 msgid "Derivations from the curve shape &amp; possible approaches"
 msgstr "Derivations from the curve shape &amp; possible approaches"
 
-#: templates/report.html.j2:347
+#: templates/report.html.j2:381
 msgid "Peak"
 msgstr "Peak"
 
-#: templates/report.html.j2:347
+#: templates/report.html.j2:381
 msgid "after"
 msgstr "after"
 
-#: templates/report.html.j2:348
+#: templates/report.html.j2:382
 msgid "nadir"
 msgstr "nadir"
 
-#: templates/report.html.j2:350
+#: templates/report.html.j2:384
 msgid "Spread"
 msgstr "Spread"
 
-#: templates/report.html.j2:350
+#: templates/report.html.j2:384
 msgid "loop"
 msgstr "Loop"
 
-#: templates/report.html.j2:350
+#: templates/report.html.j2:384
 #, python-format
 msgid "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 msgstr "Observed CR_eff %(cre)s (%(meals)s meals / %(days)s days)"
 
-#: templates/report.html.j2:350
+#: templates/report.html.j2:384
 #, python-format
 msgid "stability %(pct)s"
 msgstr "stability %(pct)s"
 
-#: templates/report.html.j2:356
+#: templates/report.html.j2:390
 msgid ""
-"Hypotheses and candidates for the conversation with the care team, not a "
-"dosing instruction."
+"Hypotheses and candidates for the conversation with the care team, not a dosing "
+"instruction."
 msgstr ""
-"Hypotheses and candidates for the conversation with the care team, not a "
-"dosing instruction."
+"Hypotheses and candidates for the conversation with the care team, not a dosing "
+"instruction."
 
-#: templates/report.html.j2:356
+#: templates/report.html.j2:390
 msgid ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
@@ -911,200 +876,201 @@ msgstr ""
 "Hypotheses/candidates for the team discussion, not a\n"
 "    dosing instruction. Under Auto Mode the loop co-shapes the curve."
 
-#: templates/report.html.j2:362
+#: templates/report.html.j2:398
 msgid "Explanations &amp; limits"
 msgstr "Explanations &amp; limits"
 
-#: templates/report.html.j2:364
+#: templates/report.html.j2:400
 msgid "Time windows:"
 msgstr "Time windows:"
 
-#: templates/report.html.j2:366
+#: templates/report.html.j2:402
 msgid "Fasting basal rate:"
 msgstr "Fasting basal rate:"
 
-#: templates/report.html.j2:366
+#: templates/report.html.j2:402
 #, python-format
 msgid "mean of the nights; %(lo)s–%(hi)s U/h"
 msgstr "mean of the nights; %(lo)s–%(hi)s U/h"
 
-#: templates/report.html.j2:367
+#: templates/report.html.j2:403
 msgid ""
-"the reference the loop extra basal is measured against. It assumes meal- "
-"and correction-free\n"
-"    nights 00:00–06:00; if that does not hold, every \"Loop\" figure "
-"shifts with it."
+"the reference the loop extra basal is measured against. It assumes meal- and "
+"correction-free\n"
+"    nights 00:00–06:00; if that does not hold, every \"Loop\" figure shifts with it."
 msgstr ""
-"the reference the loop extra basal is measured against. It assumes meal- "
-"and correction-free\n"
-"    nights 00:00–06:00; if that does not hold, every \"Loop\" figure "
-"shifts with it."
+"the reference the loop extra basal is measured against. It assumes meal- and "
+"correction-free\n"
+"    nights 00:00–06:00; if that does not hold, every \"Loop\" figure shifts with it."
 
-#: templates/report.html.j2:370
+#: templates/report.html.j2:406
+#, python-format
+msgid ""
+"<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus\n"
+"    only (it may contain correction insulin); it is not the pump's programmed ratio "
+"but is derived\n"
+"    from the export. Δ%(w)s = glucose at %(w)s minus pre-meal. Both are measured "
+"values; this\n"
+"    report draws no conclusion from them."
+msgstr ""
+"<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus\n"
+"    only (it may contain correction insulin); it is not the pump's programmed ratio "
+"but is derived\n"
+"    from the export. Δ%(w)s = glucose at %(w)s minus pre-meal. Both are measured "
+"values; this\n"
+"    report draws no conclusion from them."
+
+#: templates/report.html.j2:410
 #, python-format
 msgid ""
 "<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus only (it\n"
-"    may contain correction insulin). Δ%(w)s = glucose at %(w)s minus pre-"
-"meal — with no basal in\n"
-"    the export the verdict rests on this return alone. \"clean\" = meals "
-"without another meal in the\n"
+"    may contain correction insulin). Δ%(w)s = glucose at %(w)s minus pre-meal — with "
+"no basal in\n"
+"    the export the verdict rests on this return alone. \"clean\" = meals without "
+"another meal in the\n"
 "    %(w)s window and without a large CGM gap."
 msgstr ""
 "<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus only (it\n"
-"    may contain correction insulin). Δ%(w)s = glucose at %(w)s minus pre-"
-"meal — with no basal in\n"
-"    the export the verdict rests on this return alone. \"clean\" = meals "
-"without another meal in the\n"
+"    may contain correction insulin). Δ%(w)s = glucose at %(w)s minus pre-meal — with "
+"no basal in\n"
+"    the export the verdict rests on this return alone. \"clean\" = meals without "
+"another meal in the\n"
 "    %(w)s window and without a large CGM gap."
 
-#: templates/report.html.j2:374
+#: templates/report.html.j2:414
 #, python-format
 msgid ""
-"<b>Method:</b> Loop %(w)s = basal delivered by Auto Mode in addition to "
-"the\n"
-"    fasting basal rate. <b>CR (CHO/bolus)</b> = CHO / meal bolus only "
-"(not the pump’s programmed ICR).\n"
-"    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ%(w)s = "
-"glucose at\n"
-"    %(w)s minus pre-meal. \"clean\" = meals without another meal in the "
-"%(w)s window and without a\n"
+"<b>Method:</b> Loop %(w)s = basal delivered by Auto Mode in addition to the\n"
+"    fasting basal rate. <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s"
+" programmed ICR).\n"
+"    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ%(w)s = glucose at\n"
+"    %(w)s minus pre-meal. \"clean\" = meals without another meal in the %(w)s window "
+"and without a\n"
 "    large CGM gap."
 msgstr ""
-"<b>Method:</b> Loop %(w)s = basal delivered by Auto Mode in addition to "
-"the\n"
-"    fasting basal rate. <b>CR (CHO/bolus)</b> = CHO / meal bolus only "
-"(not the pump’s programmed ICR).\n"
-"    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ%(w)s = "
-"glucose at\n"
-"    %(w)s minus pre-meal. \"clean\" = meals without another meal in the "
-"%(w)s window and without a\n"
+"<b>Method:</b> Loop %(w)s = basal delivered by Auto Mode in addition to the\n"
+"    fasting basal rate. <b>CR (CHO/bolus)</b> = CHO / meal bolus only (not the pump’s"
+" programmed ICR).\n"
+"    <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ%(w)s = glucose at\n"
+"    %(w)s minus pre-meal. \"clean\" = meals without another meal in the %(w)s window "
+"and without a\n"
 "    large CGM gap."
 
-#: templates/report.html.j2:379
+#: templates/report.html.j2:419
 msgid ""
-"<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies"
-" (in part)\n"
+"<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)\n"
 "    on contaminated windows and is correspondingly less certain."
 msgstr ""
-"<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies"
-" (in part)\n"
+"<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)\n"
 "    on contaminated windows and is correspondingly less certain."
 
-#: templates/report.html.j2:381
+#: templates/report.html.j2:421
 msgid ""
-"<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals);"
-" treat the colour class with extra caution."
+"<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the "
+"colour class with extra caution."
 msgstr ""
-"<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals);"
-" treat the colour class with extra caution."
+"<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the "
+"colour class with extra caution."
 
-#: templates/report.html.j2:383
+#: templates/report.html.j2:423
 msgid ""
-"<b>Stability:</b> shown next to a verdict where enough meals on enough "
-"separate\n"
-"    days exist. It resamples whole recorded days with replacement and re-"
-"runs the same rule:"
+"<b>Stability:</b> shown next to a verdict where enough meals on enough separate\n"
+"    days exist. It resamples whole recorded days with replacement and re-runs the "
+"same rule:"
 msgstr ""
-"<b>Stability:</b> shown next to a verdict where enough meals on enough "
-"separate\n"
-"    days exist. It resamples whole recorded days with replacement and re-"
-"runs the same rule:"
+"<b>Stability:</b> shown next to a verdict where enough meals on enough separate\n"
+"    days exist. It resamples whole recorded days with replacement and re-runs the "
+"same rule:"
 
-#: templates/report.html.j2:385
+#: templates/report.html.j2:425
 msgid "robust"
 msgstr "robust"
 
-#: templates/report.html.j2:385
+#: templates/report.html.j2:425
 msgid "a few days flip it"
 msgstr "a few days flip it"
 
-#: templates/report.html.j2:386
+#: templates/report.html.j2:426
 msgid ""
-"It states how sensitive the verdict is to <b>which meals happened to be "
-"recorded</b> —\n"
-"    not how likely the carb ratio is correct, and not a confidence "
-"interval for a true value. A verdict\n"
-"    that flips under resampling rests on a few individual meals; one that"
-" holds does not become\n"
-"    clinically right by that alone. The thresholds for high/moderate/low "
-"are heuristic."
+"It states how sensitive the verdict is to <b>which meals happened to be recorded</b> "
+"—\n"
+"    not how likely the carb ratio is correct, and not a confidence interval for a "
+"true value. A verdict\n"
+"    that flips under resampling rests on a few individual meals; one that holds does "
+"not become\n"
+"    clinically right by that alone. The thresholds for high/moderate/low are "
+"heuristic."
 msgstr ""
-"It states how sensitive the verdict is to <b>which meals happened to be "
-"recorded</b> —\n"
-"    not how likely the carb ratio is correct, and not a confidence "
-"interval for a true value. A verdict\n"
-"    that flips under resampling rests on a few individual meals; one that"
-" holds does not become\n"
-"    clinically right by that alone. The thresholds for high/moderate/low "
-"are heuristic."
+"It states how sensitive the verdict is to <b>which meals happened to be recorded</b> "
+"—\n"
+"    not how likely the carb ratio is correct, and not a confidence interval for a "
+"true value. A verdict\n"
+"    that flips under resampling rests on a few individual meals; one that holds does "
+"not become\n"
+"    clinically right by that alone. The thresholds for high/moderate/low are "
+"heuristic."
 
-#: templates/report.html.j2:391
+#: templates/report.html.j2:431
 msgid ""
-"<b>Spread:</b> typical 95 % band of CR (CHO/bolus) when days are "
-"reshuffled (only with enough days)."
+"<b>Spread:</b> typical 95 % band of CR (CHO/bolus) when days are reshuffled (only "
+"with enough days)."
 msgstr ""
-"<b>Spread:</b> typical 95 % band of CR (CHO/bolus) when days are "
-"reshuffled (only with enough days)."
+"<b>Spread:</b> typical 95 % band of CR (CHO/bolus) when days are reshuffled (only "
+"with enough days)."
 
-#: templates/report.html.j2:391
+#: templates/report.html.j2:431
 msgid "<b>Spread:</b> typical"
 msgstr "<b>Spread:</b> typical"
 
-#: templates/report.html.j2:391
-msgid ""
-"band of CR_eff (and loop share) when days are reshuffled (enough days "
-"only)."
-msgstr ""
-"band of CR_eff (and loop share) when days are reshuffled (enough days "
-"only)."
+#: templates/report.html.j2:431
+msgid "band of CR_eff (and loop share) when days are reshuffled (enough days only)."
+msgstr "band of CR_eff (and loop share) when days are reshuffled (enough days only)."
 
-#: templates/report.html.j2:393
+#: templates/report.html.j2:433
 msgid ""
-"<b>Observed range:</b> min–max of the actual values when there are too "
-"few days for a spread."
+"<b>Observed range:</b> min–max of the actual values when there are too few days for a"
+" spread."
 msgstr ""
-"<b>Observed range:</b> min–max of the actual values when there are too "
-"few days for a spread."
+"<b>Observed range:</b> min–max of the actual values when there are too few days for a"
+" spread."
 
-#: templates/report.html.j2:394
+#: templates/report.html.j2:434
 msgid "Neither is a confidence interval for “the true CR”."
 msgstr "Neither is a confidence interval for “the true CR”."
 
-#: templates/report.html.j2:396
+#: templates/report.html.j2:436
 #, python-format
 msgid ""
-"<b>How much does it take?</b> Measured on synthetic data: a carb-ratio "
-"error below about %(lo)s %% stays invisible to this method, from about "
-"%(hi)s %% it is flagged reliably. Days matter mostly against false alarms"
-" — with five days a correctly set slot is still flagged in roughly "
-"%(few)s %% of cases, with three weeks in about %(many)s %%. A day count "
-"marked "
+"<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below "
+"about %(lo)s %% stays invisible to this method, from about %(hi)s %% it is flagged "
+"reliably. Days matter mostly against false alarms — with five days a correctly set "
+"slot is still flagged in roughly %(few)s %% of cases, with three weeks in about "
+"%(many)s %%. A day count marked "
 msgstr ""
-"<b>How much does it take?</b> Measured on synthetic data: a carb-ratio "
-"error below about %(lo)s %% stays invisible to this method, from about "
-"%(hi)s %% it is flagged reliably. Days matter mostly against false alarms"
-" — with five days a correctly set slot is still flagged in roughly "
-"%(few)s %% of cases, with three weeks in about %(many)s %%. A day count "
-"marked "
+"<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below "
+"about %(lo)s %% stays invisible to this method, from about %(hi)s %% it is flagged "
+"reliably. Days matter mostly against false alarms — with five days a correctly set "
+"slot is still flagged in roughly %(few)s %% of cases, with three weeks in about "
+"%(many)s %%. A day count marked "
 
-#: templates/report.html.j2:396
+#: templates/report.html.j2:436
 #, python-format
 msgid " is below %(n)s days, where that risk is still noticeable."
 msgstr " is below %(n)s days, where that risk is still noticeable."
 
-#: templates/report.html.j2:398
+#: templates/report.html.j2:440
 msgid ""
-"<b>CR_eff is an approach, not a target value.</b> It converts the basal "
-"the loop pushed in\n"
-"    into an \"effectively used\" ratio: <code>CR_eff = CHO / (bolus + "
-"loop extra basal)</code>."
+"<b>CR_eff is an approach, not a target value.</b> It converts the basal the loop "
+"pushed in\n"
+"    into an \"effectively used\" ratio: <code>CR_eff = CHO / (bolus + loop extra "
+"basal)</code>."
 msgstr ""
-"<b>CR_eff is an approach, not a target value.</b> It converts the basal "
-"the loop pushed in\n"
-"    into an \"effectively used\" ratio: <code>CR_eff = CHO / (bolus + "
-"loop extra basal)</code>."
+"<b>CR_eff is an approach, not a target value.</b> It converts the basal the loop "
+"pushed in\n"
+"    into an \"effectively used\" ratio: <code>CR_eff = CHO / (bolus + loop extra "
+"basal)</code>."
 
-#: templates/report.html.j2:400
+#: templates/report.html.j2:442
 #, python-format
 msgid ""
 "Example %(label)s: %(cho)s g on\n"
@@ -1115,409 +1081,444 @@ msgstr ""
 "    (%(bol)s U bolus + %(loop)s U loop) ≈ <b>%(cre)s</b>\n"
 "    instead of the configured ratio."
 
-#: templates/report.html.j2:402
+#: templates/report.html.j2:444
 #, python-format
 msgid ""
 "And even then the BG at\n"
-"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
-"boosted amount\n"
-"    was not enough within the window. <b>CR_eff is a lower bound "
-"here</b>: the actually needed CR\n"
+"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-boosted amount\n"
+"    was not enough within the window. <b>CR_eff is a lower bound here</b>: the "
+"actually needed CR\n"
 "    is even tighter (roughly: an additional ~Δ/ISF units)."
 msgstr ""
 "And even then the BG at\n"
-"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-"
-"boosted amount\n"
-"    was not enough within the window. <b>CR_eff is a lower bound "
-"here</b>: the actually needed CR\n"
+"    %(w)s is still <b>%(d4)s %(unit)s</b> above baseline — the loop-boosted amount\n"
+"    was not enough within the window. <b>CR_eff is a lower bound here</b>: the "
+"actually needed CR\n"
 "    is even tighter (roughly: an additional ~Δ/ISF units)."
 
-#: templates/report.html.j2:406
+#: templates/report.html.j2:448
 msgid ""
-"<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact "
-"pump setting.\n"
+"<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact pump setting."
+"\n"
 "    Approximation (loop extra fully attributed to the meal; "
 "corrections/exercise/adaptation possible).\n"
 "    Small step with the team; re-check after ~1–2 weeks."
 msgstr ""
-"<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact "
-"pump setting.\n"
+"<b>Meant as:</b> direction and order of magnitude — <b>not</b> an exact pump setting."
+"\n"
 "    Approximation (loop extra fully attributed to the meal; "
 "corrections/exercise/adaptation possible).\n"
 "    Small step with the team; re-check after ~1–2 weeks."
 
-#: templates/report.html.j2:410
-msgid ""
-"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
-" instruction."
-msgstr ""
-"This is <b>decision evidence for the diabetes care team</b>, not a dosing"
-" instruction."
+#: templates/report.html.j2:452
+msgid "This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction."
+msgstr "This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction."
 
-#: templates/report.html.j2:412
+#: templates/report.html.j2:453
 msgid ""
-"• Under CamAPS Auto Mode the loop compensates continuously; that is "
-"exactly why the loop extra\n"
-"      basal is the meaningful signal. The algorithm adapts over days and "
-"can partly smooth out\n"
+"These are measured values for the conversation with the diabetes care team — the "
+"report derives nothing from them."
+msgstr ""
+"These are measured values for the conversation with the diabetes care team — the "
+"report derives nothing from them."
+
+#: templates/report.html.j2:456
+msgid ""
+"• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the "
+"loop extra\n"
+"      basal is the meaningful signal. The algorithm adapts over days and can partly "
+"smooth out\n"
 "      longer-standing misconfigurations."
 msgstr ""
-"• Under CamAPS Auto Mode the loop compensates continuously; that is "
-"exactly why the loop extra\n"
-"      basal is the meaningful signal. The algorithm adapts over days and "
-"can partly smooth out\n"
+"• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the "
+"loop extra\n"
+"      basal is the meaningful signal. The algorithm adapts over days and can partly "
+"smooth out\n"
 "      longer-standing misconfigurations."
 
-#: templates/report.html.j2:415
+#: templates/report.html.j2:459
 msgid ""
-"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
-"are dampened by medians,\n"
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened "
+"by medians,\n"
 "      not eliminated; slots with few \"clean\" meals"
 msgstr ""
-"• Confounders (fat/protein, exercise, split boluses, overlapping meals) "
-"are dampened by medians,\n"
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened "
+"by medians,\n"
 "      not eliminated; slots with few \"clean\" meals"
 
-#: templates/report.html.j2:416
+#: templates/report.html.j2:460
 msgid "are less certain."
 msgstr "are less certain."
 
-#: templates/report.html.j2:417
+#: templates/report.html.j2:461
 msgid ""
-"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
-"cannot be detected automatically.\n"
-"      If either mode is active somewhere in the post-meal window, loop "
-"extra basal and CR signals can be\n"
-"      distorted — interpret such windows with the care team; exclude them"
-" mentally from CR conclusions if known."
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened "
+"by the\n"
+"      medians, not eliminated."
 msgstr ""
-"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and "
-"cannot be detected automatically.\n"
-"      If either mode is active somewhere in the post-meal window, loop "
-"extra basal and CR signals can be\n"
-"      distorted — interpret such windows with the care team; exclude them"
-" mentally from CR conclusions if known."
+"• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened "
+"by the\n"
+"      medians, not eliminated."
 
-#: templates/report.html.j2:427
+#: templates/report.html.j2:464
+msgid ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be "
+"detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop extra basal "
+"and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them mentally "
+"from CR conclusions if known."
+msgstr ""
+"• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be "
+"detected automatically.\n"
+"      If either mode is active somewhere in the post-meal window, loop extra basal "
+"and CR signals can be\n"
+"      distorted — interpret such windows with the care team; exclude them mentally "
+"from CR conclusions if known."
+
+#: templates/report.html.j2:474
 msgid "Per-meal detail"
 msgstr "Per-meal detail"
 
-#: templates/report.html.j2:430
+#: templates/report.html.j2:477
 msgid "Time"
 msgstr "Time"
 
-#: templates/report.html.j2:435
+#: templates/report.html.j2:482
 msgid "hypo rescue in the window"
 msgstr "hypo rescue in the window"
 
-#: templates/report.html.j2:435
+#: templates/report.html.j2:482
 msgid "contaminated window"
 msgstr "contaminated window"
 
-#: templates/report.html.j2:435
+#: templates/report.html.j2:482
 msgid "CGM gap in the window"
 msgstr "CGM gap in the window"
 
-#: templates/report.html.j2:440
+#: templates/report.html.j2:487
 #, python-format
 msgid ""
-"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a "
-"hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap"
-" over 25 min in the window (excluded from the clean median when enough "
-"other meals exist)."
+"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a hypo rescue "
+"(small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the "
+"window (excluded from the clean median when enough other meals exist)."
 msgstr ""
-"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a "
-"hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap"
-" over 25 min in the window (excluded from the clean median when enough "
-"other meals exist)."
+"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a hypo rescue "
+"(small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the "
+"window (excluded from the clean median when enough other meals exist)."
 
-#: templates/report.html.j2:441
+#: templates/report.html.j2:487
+#, python-format
+msgid ""
+"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a hypo rescue "
+"(small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the "
+"window."
+msgstr ""
+"⚠︎ = contaminated window (another meal &lt;%(w)s afterwards). ⚠︎ H = a hypo rescue "
+"(small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the "
+"window."
+
+#: templates/report.html.j2:488
 #, python-format
 msgid ""
 "A Δ4h below %(lo)s is set in colour: that meal ended well below its\n"
-"    starting value. Rows are deliberately not colour-coded — a single "
-"meal carries far too\n"
+"    starting value. Rows are deliberately not colour-coded — a single meal carries "
+"far too\n"
 "    little signal to be judged on its own."
 msgstr ""
 "A Δ4h below %(lo)s is set in colour: that meal ended well below its\n"
-"    starting value. Rows are deliberately not colour-coded — a single "
-"meal carries far too\n"
+"    starting value. Rows are deliberately not colour-coded — a single meal carries "
+"far too\n"
 "    little signal to be judged on its own."
 
-#: templates/report.html.j2:447
+#: templates/report.html.j2:494
 msgid "Appendix — daily courses"
 msgstr "Appendix — daily courses"
 
-#: templates/report.html.j2:448
+#: templates/report.html.j2:495
 msgid "Raw daily plots, unfiltered."
 msgstr "Raw daily plots, unfiltered."
 
-#: templates/report.html.j2:450
+#: templates/report.html.j2:497
 msgid "Daily overview — CGM · bolus · basal"
 msgstr "Daily overview — CGM · bolus · basal"
 
-#: templates/report.html.j2:451
+#: templates/report.html.j2:498
 #, python-format
 msgid ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
 "style=\"color:#0b2e6b\">units</b>\n"
-"    = bolus · <span style=\"color:#c0392b\">grams</span> = carbs (all "
-"individual entries) ·\n"
-"    blue area below = basal rate (U/h scale on the right, same for all "
-"days). One panel per day."
+"    = bolus · <span style=\"color:#c0392b\">grams</span> = carbs (all individual "
+"entries) ·\n"
+"    blue area below = basal rate (U/h scale on the right, same for all days). One "
+"panel per day."
 msgstr ""
 "Green band = target range %(lo)s–%(hi)s %(unit)s · <b "
 "style=\"color:#0b2e6b\">units</b>\n"
-"    = bolus · <span style=\"color:#c0392b\">grams</span> = carbs (all "
-"individual entries) ·\n"
-"    blue area below = basal rate (U/h scale on the right, same for all "
-"days). One panel per day."
+"    = bolus · <span style=\"color:#c0392b\">grams</span> = carbs (all individual "
+"entries) ·\n"
+"    blue area below = basal rate (U/h scale on the right, same for all days). One "
+"panel per day."
 
-#: templates/upload.html.j2:77
+#: templates/upload.html.j2:82
 msgid "Loop-aware Carb-Ratio Review · CR assessment from CGM and pump exports"
 msgstr "Loop-aware Carb-Ratio Review · CR assessment from CGM and pump exports"
 
-#: templates/upload.html.j2:78
+#: templates/upload.html.j2:83
 msgid ""
-"<b>Full assessment</b> for CamAPS FX Auto Mode (Glooko export), where the"
-" loop's own share can be read from the modulated basal. Every other "
-"export — LibreView, Dexcom Clarity, Nightscout — is assessed <b>from the "
-"glucose course alone</b>: same verdicts, without the loop figures. "
-"Details in the README."
+"<b>Full assessment</b> for CamAPS FX Auto Mode (Glooko export), where the loop's own "
+"share can be read from the modulated basal. Every other export — LibreView, Dexcom "
+"Clarity, Nightscout — is assessed <b>from the glucose course alone</b>: same "
+"verdicts, without the loop figures. Details in the README."
 msgstr ""
-"<b>Full assessment</b> for CamAPS FX Auto Mode (Glooko export), where the"
-" loop's own share can be read from the modulated basal. Every other "
-"export — LibreView, Dexcom Clarity, Nightscout — is assessed <b>from the "
-"glucose course alone</b>: same verdicts, without the loop figures. "
-"Details in the README."
+"<b>Full assessment</b> for CamAPS FX Auto Mode (Glooko export), where the loop's own "
+"share can be read from the modulated basal. Every other export — LibreView, Dexcom "
+"Clarity, Nightscout — is assessed <b>from the glucose course alone</b>: same "
+"verdicts, without the loop figures. Details in the README."
 
-#: templates/upload.html.j2:81
+#: templates/upload.html.j2:86
 msgid "Export (ZIP, CSV or Nightscout JSON)"
 msgstr "Export (ZIP, CSV or Nightscout JSON)"
 
-#: templates/upload.html.j2:83
+#: templates/upload.html.j2:88
 msgid ""
-"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json"
-" and treatments.json) — no zip needed. Processed in memory only, then "
-"deleted"
+"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json and "
+"treatments.json) — no zip needed. Processed in memory only, then deleted"
 msgstr ""
-"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json"
-" and treatments.json) — no zip needed. Processed in memory only, then "
-"deleted"
+"Glooko ZIP, LibreView/Clarity CSV, or both Nightscout files (entries.json and "
+"treatments.json) — no zip needed. Processed in memory only, then deleted"
 
-#: templates/upload.html.j2:87
+#: templates/upload.html.j2:92
 msgid "Language"
 msgstr "Language"
 
-#: templates/upload.html.j2:92
+#: templates/upload.html.j2:97
 msgid "UI and report language (default German)."
 msgstr "UI and report language (default German)."
 
-#: templates/upload.html.j2:95
+#: templates/upload.html.j2:100
 msgid "Meal window (h)"
 msgstr "Time windows:"
 
-#: templates/upload.html.j2:97
+#: templates/upload.html.j2:102
 msgid "Postprandial window (default 4)."
 msgstr "Postprandial window (default 4)."
 
-#: templates/upload.html.j2:104
+#: templates/upload.html.j2:109
 msgid "From"
 msgstr "From"
 
-#: templates/upload.html.j2:108
+#: templates/upload.html.j2:113
 msgid "To"
 msgstr "To"
 
-#: templates/upload.html.j2:110
+#: templates/upload.html.j2:115
 msgid "Choose a file to see the full range. Nothing is stored on the server."
 msgstr "Choose a file to see the full range. Nothing is stored on the server."
 
-#: templates/upload.html.j2:113
+#: templates/upload.html.j2:118
+msgid "Analysis only — no assessment (leaves out part 2)"
+msgstr "Analysis only — no assessment (leaves out part 2)"
+
+#: templates/upload.html.j2:119
 msgid "Read Nightscout as CamAPS (adds the loop figures)"
 msgstr "Read Nightscout as CamAPS (adds the loop figures)"
 
-#: templates/upload.html.j2:114
+#: templates/upload.html.j2:120
 msgid "Attach daily overview"
 msgstr "Attach daily overview"
 
-
-#: templates/upload.html.j2:118
+#: templates/upload.html.j2:123
 msgid "Slots (time-of-day windows)"
 msgstr "Time windows:"
 
-#: templates/upload.html.j2:119
+#: templates/upload.html.j2:124
 msgid "Source"
 msgstr "Source"
 
-#: templates/upload.html.j2:121
+#: templates/upload.html.j2:126
 msgid "Default (05–10 / 11–15 / 17–22)"
 msgstr "Default (05–10 / 11–15 / 17–22)"
 
-#: templates/upload.html.j2:122
+#: templates/upload.html.j2:127
 msgid "Extended (05–11 / 11–15 / 15–22)"
 msgstr "Extended (05–11 / 11–15 / 15–22)"
 
-#: templates/upload.html.j2:123
+#: templates/upload.html.j2:128
 msgid "With snacks (snacks 09–11 and 15–17)"
 msgstr "With snacks (snacks 09–11 and 15–17)"
 
-#: templates/upload.html.j2:124
+#: templates/upload.html.j2:129
 msgid "Custom fields"
 msgstr "Custom fields"
 
-#: templates/upload.html.j2:125
+#: templates/upload.html.j2:130
 msgid "JSON file"
 msgstr "JSON file"
 
-#: templates/upload.html.j2:127
+#: templates/upload.html.j2:132
 msgid "Profiles only set the time-of-day windows, not the CR calculation."
 msgstr "Profiles only set the time-of-day windows, not the CR calculation."
 
-#: templates/upload.html.j2:131
+#: templates/upload.html.j2:136
 msgid "Label"
 msgstr "Label"
 
-#: templates/upload.html.j2:131
+#: templates/upload.html.j2:136
 msgid "Start"
 msgstr "Start"
 
-#: templates/upload.html.j2:131
+#: templates/upload.html.j2:136
 msgid "End"
 msgstr "End"
 
-#: templates/upload.html.j2:134
+#: templates/upload.html.j2:139
 msgid "Row"
 msgstr "Row"
 
-#: templates/upload.html.j2:135
+#: templates/upload.html.j2:140
 msgid ""
-"Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is "
-"added automatically."
+"Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is added "
+"automatically."
 msgstr ""
-"Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is "
-"added automatically."
+"Hours 0–24, start &lt; end, no overlap. The catch-all slot “Other” is added "
+"automatically."
 
-#: templates/upload.html.j2:139
+#: templates/upload.html.j2:144
 msgid "Slots file (JSON)"
 msgstr "Slots file (JSON)"
 
-#: templates/upload.html.j2:144 templates/upload.html.j2:291
-#: templates/upload.html.j2:297
+#: templates/upload.html.j2:150
+msgid ""
+"Your last settings were restored — language, meal window, the checkboxes and any own "
+"slot times. They stay on this device."
+msgstr ""
+"Your last settings were restored — language, meal window, the checkboxes and any own "
+"slot times. They stay on this device."
+
+#: templates/upload.html.j2:151
+msgid "Forget my settings"
+msgstr "Forget my settings"
+
+#: templates/upload.html.j2:154 templates/upload.html.j2:440 templates/upload.html.j2:448
 msgid "Create report"
 msgstr "Create report"
 
-#: templates/upload.html.j2:148
+#: templates/upload.html.j2:158
 msgid "Preparing analysis…"
 msgstr "Preparing analysis…"
 
-#: templates/upload.html.j2:156
-msgid ""
-"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
-"      Statistical analysis of existing CGM/pump data as a basis for "
-"discussions\n"
-"      with the care team — no diagnosis, no treatment decision."
-msgstr ""
-"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
-"      Statistical analysis of existing CGM/pump data as a basis for "
-"discussions\n"
-"      with the care team — no diagnosis, no treatment decision."
-
-#: templates/upload.html.j2:160
-msgid ""
-"<b>The loop figures need CamAPS FX (Auto Mode).</b>\n"
-"      They are read from modulated basal. Other AID systems\n"
-"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) give their "
-"corrections as\n"
-"      boluses, so those figures do not apply there — the assessment from "
-"the\n"
-"      glucose course does."
-msgstr ""
-"<b>The loop figures need CamAPS FX (Auto Mode).</b>\n"
-"      They are read from modulated basal. Other AID systems\n"
-"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) give their "
-"corrections as\n"
-"      boluses, so those figures do not apply there — the assessment from "
-"the\n"
-"      glucose course does."
-
 #: templates/upload.html.j2:166
 msgid ""
+"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
+"      Statistical analysis of existing CGM/pump data as a basis for discussions\n"
+"      with the care team — no diagnosis, no treatment decision."
+msgstr ""
+"<b>⚠︎ Not a medical device, no dosing recommendation.</b>\n"
+"      Statistical analysis of existing CGM/pump data as a basis for discussions\n"
+"      with the care team — no diagnosis, no treatment decision."
+
+#: templates/upload.html.j2:170
+msgid ""
+"<b>The loop figures need CamAPS FX (Auto Mode).</b>\n"
+"      They are read from modulated basal. Other AID systems\n"
+"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) give their corrections as\n"
+"      boluses, so those figures do not apply there — the assessment from the\n"
+"      glucose course does."
+msgstr ""
+"<b>The loop figures need CamAPS FX (Auto Mode).</b>\n"
+"      They are read from modulated basal. Other AID systems\n"
+"      (e.g. Control-IQ, Omnipod&nbsp;5, AndroidAPS) give their corrections as\n"
+"      boluses, so those figures do not apply there — the assessment from the\n"
+"      glucose course does."
+
+#: templates/upload.html.j2:176
+msgid ""
+"<b>Everything stays on this device.</b>\n"
+"      No account, no sign-in, nothing sent to a server. The export is deleted as\n"
+"      soon as the report has been built from it, and the report itself when the app\n"
+"      is closed — at the latest a quarter of an hour later."
+msgstr ""
+"<b>Everything stays on this device.</b>\n"
+"      No account, no sign-in, nothing sent to a server. The export is deleted as\n"
+"      soon as the report has been built from it, and the report itself when the app\n"
+"      is closed — at the latest a quarter of an hour later."
+
+#: templates/upload.html.j2:180
+msgid ""
 "<b>Homelab / private.</b>\n"
-"      While the analysis runs, the upload and the finished report sit in "
-"a private\n"
-"      folder in the system temp area. The export itself is deleted as "
-"soon\n"
-"      as the report exists; the report follows after 15 minutes at the "
-"latest.\n"
-"      Until then it stays open so you can still save it. No public "
-"hosting, no archive."
+"      While the analysis runs, the upload and the finished report sit in a private\n"
+"      folder in the system temp area. The export itself is deleted as soon\n"
+"      as the report exists; the report follows after 15 minutes at the latest.\n"
+"      Until then it stays open so you can still save it. No public hosting, no "
+"archive."
 msgstr ""
 "<b>Homelab / private.</b>\n"
-"      While the analysis runs, the upload and the finished report sit in "
-"a private\n"
-"      folder in the system temp area. The export itself is deleted as "
-"soon\n"
-"      as the report exists; the report follows after 15 minutes at the "
-"latest.\n"
-"      Until then it stays open so you can still save it. No public "
-"hosting, no archive."
+"      While the analysis runs, the upload and the finished report sit in a private\n"
+"      folder in the system temp area. The export itself is deleted as soon\n"
+"      as the report exists; the report follows after 15 minutes at the latest.\n"
+"      Until then it stays open so you can still save it. No public hosting, no "
+"archive."
 
-#: templates/upload.html.j2:210
+#: templates/upload.html.j2:346
 msgid "Queued…"
 msgstr "Queued…"
 
-#: templates/upload.html.j2:211
+#: templates/upload.html.j2:347
 msgid "Reading data…"
 msgstr "Reading data…"
 
-#: templates/upload.html.j2:212
+#: templates/upload.html.j2:348
 msgid "Analysing meals…"
 msgstr "Analysing meals…"
 
-#: templates/upload.html.j2:213
+#: templates/upload.html.j2:349
 msgid "Analysing slots…"
 msgstr "Analysing slots…"
 
-#: templates/upload.html.j2:214
+#: templates/upload.html.j2:350
 msgid "Rendering charts…"
 msgstr "Rendering charts…"
 
-#: templates/upload.html.j2:215
+#: templates/upload.html.j2:351
 msgid "Rendering daily charts…"
 msgstr "Rendering daily charts…"
 
-#: templates/upload.html.j2:216
+#: templates/upload.html.j2:352
 msgid "Preparing report…"
 msgstr "Preparing report…"
 
-#: templates/upload.html.j2:217
+#: templates/upload.html.j2:353
 msgid "Rendering report…"
 msgstr "Rendering report…"
 
-#: templates/upload.html.j2:218
+#: templates/upload.html.j2:354
 msgid "Analysis complete"
 msgstr "Analysis complete"
 
-#: templates/upload.html.j2:219
+#: templates/upload.html.j2:355
 msgid "Analysis failed"
 msgstr "Analysis failed"
 
-#: templates/upload.html.j2:222 templates/upload.html.j2:248
+#: templates/upload.html.j2:358 templates/upload.html.j2:391
 msgid "Analysing…"
 msgstr "Analysing…"
 
-#: templates/upload.html.j2:237 templates/upload.html.j2:273
+#: templates/upload.html.j2:373 templates/upload.html.j2:421
 msgid "Could not build report."
 msgstr "Could not build report."
 
-#: templates/upload.html.j2:254
+#: templates/upload.html.j2:401
 msgid "Could not start analysis."
 msgstr "Could not start analysis."
 
-#: templates/upload.html.j2:264
+#: templates/upload.html.j2:412
 msgid "Progress unavailable."
 msgstr "Progress unavailable."
+
+#: templates/upload.html.j2:481 templates/upload.html.j2:502
+msgid "Reading date range…"
+msgstr "Reading date range…"
 
 #: templates/viewer.html.j2:43
 msgid "New report"
@@ -1531,42 +1532,19 @@ msgstr "Save"
 msgid "Open in browser"
 msgstr "Open in browser"
 
-#: templates/upload.html.j2
-msgid ""
-"<b>Everything stays on this device.</b>\n"
-"      No account, no sign-in, nothing sent to a server. The export is "
-"deleted as\n"
-"      soon as the report has been built from it, and the report itself "
-"when the app\n"
-"      is closed — at the latest a quarter of an hour later."
-msgstr ""
-"<b>Everything stays on this device.</b>\n"
-"      No account, no sign-in, nothing sent to a server. The export is "
-"deleted as\n"
-"      soon as the report has been built from it, and the report itself "
-"when the app\n"
-"      is closed — at the latest a quarter of an hour later."
-
 #: templates/viewer.html.j2:46
 msgid "Print"
 msgstr "Print"
 
-#: templates/upload.html.j2
-msgid "Forget my settings"
-msgstr "Forget my settings"
+#~ msgid "Hypoglycemia component (%)"
+#~ msgstr "Hypoglycemia component (%)"
 
-#: templates/upload.html.j2
-msgid "Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device."
-msgstr "Your last settings were restored — language, meal window, the checkboxes and any own slot times. They stay on this device."
+#~ msgid "Hyperglycemia component (%)"
+#~ msgstr "Hyperglycemia component (%)"
 
-#: templates/upload.html.j2
-msgid "Reading date range…"
-msgstr "Reading date range…"
+#~ msgid "25–75 %"
+#~ msgstr "25–75 %"
 
-#: lcr/charts.py
-msgid "Hypoglycemia (%)"
-msgstr "Hypoglycemia (%)"
+#~ msgid "10–90 %"
+#~ msgstr "10–90 %"
 
-#: lcr/charts.py
-msgid "Hyperglycemia (%)"
-msgstr "Hyperglycemia (%)"

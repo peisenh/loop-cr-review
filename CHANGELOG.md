@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added
+- `--no-assessment` (web form: "Nur Auswertung") leaves out part 2. What stays is
+  what was measured: AGP, consensus metrics, the courses per meal type, and the
+  per-meal table with CR (CHO/bolus) and the delta. What goes is everything the
+  report concludes — verdict per slot, derivations from the curve shape, and the
+  loop-derived quantities (loop extra basal, `CR_eff`, fasting basal rate).
+  Independent of `lite`, which says what the export supports rather than what the
+  reader asked for; the two flags combine freely.
+
+### Changed
+- A missing basal trace is no longer fatal without the assessment. It used to end
+  the run for any source that normally carries one; nothing outside part 2 reads
+  the loop figures, so the report is now built and only loses the loop columns.
+- The CamAPS opt-in is disabled in the form while "Nur Auswertung" is ticked —
+  everything it unlocks sits in part 2.
+
+### Fixed
+- The explanation card left a `<div>` open when the assessment was off: the
+  closing tag sat inside the block that goes with part 2.
+- The German title of the full report was half translated: the catalog carried
+  "Ambulatory Glucose Profile &amp; CR-Beurteilung". Only the second half had
+  ever been done, which stood out beside the two other titles.
+- Without the assessment the explanation card still described things that were
+  no longer in the report: it defined "clean" although the clean subset is only
+  ever picked in part 2, the warning-marker legend said a CGM gap is left out of
+  the clean median, and the confounder line qualified how certain a verdict is.
+  The method line now defines only CR and the delta, the legend ends at the gap
+  itself, and the confounder line stops at the medians — all three unchanged in
+  the full report, where they describe something that exists.
+
 ## [0.26.0] - 2026-09-05
 
 ### Added

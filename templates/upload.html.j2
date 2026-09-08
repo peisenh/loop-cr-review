@@ -115,7 +115,8 @@
         <div class="hint" id="span-hint">{% trans %}Choose a file to see the full range. Nothing is stored on the server.{% endtrans %}</div>
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="assume_camaps" {% if prefs.get('assume_camaps') %}checked{% endif %}> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
+    <label class="check"><input type="checkbox" id="no_assessment" name="no_assessment" {% if prefs.get('no_assessment') %}checked{% endif %} onchange="assessMode()"> {% trans %}Analysis only — no assessment (leaves out part 2){% endtrans %}</label>
+    <label class="check" id="camaps_row"><input type="checkbox" name="assume_camaps" {% if prefs.get('assume_camaps') %}checked{% endif %}> {% trans %}Read Nightscout as CamAPS (adds the loop figures){% endtrans %}</label>
     <label class="check"><input type="checkbox" name="daily" {% if prefs.get('daily') %}checked{% endif %}> {% trans %}Attach daily overview{% endtrans %}</label>
 
     <fieldset>
@@ -254,9 +255,19 @@
       lang: document.getElementById("lang").value,
       window_hours: Number(document.getElementById("window_hours").value),
       assume_camaps: form.assume_camaps.checked,
-      daily: form.daily.checked
+      daily: form.daily.checked,
+      no_assessment: form.no_assessment.checked
     };
     writeCookie(PREFS_STORE, encodeURIComponent(JSON.stringify(prefs)), 31536000);
+  }
+
+  // The CamAPS opt-in only adds figures inside part 2, so it has nothing to do
+  // once part 2 is off. Shown as disabled rather than hidden: a control that
+  // vanishes reads like a bug, one that greys out explains itself.
+  function assessMode(){
+    var off = document.getElementById("no_assessment").checked;
+    form.assume_camaps.disabled = off;
+    document.getElementById("camaps_row").style.opacity = off ? "0.5" : "";
   }
 
   function forgetPrefs(){
@@ -308,6 +319,8 @@
 
   document.addEventListener("DOMContentLoaded", function(){
     restoreSlots();
+    // A remembered "analysis only" must grey the CamAPS box on first paint too.
+    assessMode();
     // The server has already filled these in; the note is what tells the user
     // that the form is not showing plain defaults.
     if (document.cookie.indexOf(PREFS_STORE + "=") >= 0) showRestoredNote();

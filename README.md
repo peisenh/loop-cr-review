@@ -14,7 +14,11 @@ Zwei Stufen, automatisch am Export:
 - **Voll (CamAPS FX Auto Mode** über Glooko, oder Nightscout mit `--assume-camaps`, wenn das wirklich CamAPS ist): AGP, Konsens-Metriken, GRI **und** Loop-aware CR-Beurteilung pro Tageszeit-Slot.
 - **Lite** (LibreView, Dexcom Clarity, Nightscout ohne diese Annahme): dieselben Glukose-Auswertungen — **ohne** Loop-Mehrbasal, `CR_eff` und Fasten-Basal. Andere AID-Systeme (Control-IQ, Omnipod 5, …) gehören hierher, nicht in die Loop-Bewertung.
 
-Details: Abschnitt „Unterstützte Systeme“.
+Quer dazu steht, wie viel der Report daraus schließt: `--no-assessment` (im Web
+„Nur Auswertung“) lässt Teil 2 weg — Messwerte ja, Beurteilung nein. Die beiden
+Achsen sind unabhängig und frei kombinierbar.
+
+Details: Abschnitte „Unterstützte Systeme“ und „Mit oder ohne Beurteilung“.
 
 ![Beispiel-Report von loop-cr-review](docs/screenshot.png)
 
@@ -82,6 +86,24 @@ sämtliche Ableitungen aus der Kurvenform. Es bleibt die klassische Betrachtung 
 Bolus auf so viele Kohlenhydrate, und dort stand der Zucker vier Stunden später. Ohne Loop,
 der die Auslenkung glättet, ist dieses Signal sogar direkter als unter CamAPS.
 
+## Mit oder ohne Beurteilung
+
+Voll und Lite sagen, **was der Export hergibt**. Davon getrennt steht, **wie viel
+der Report daraus schließt**. Mit `--no-assessment` (im Web „Nur Auswertung“)
+entfällt Teil 2 vollständig: keine Beurteilung je Slot, keine Ableitungen aus der
+Kurvenform, keine loop-abgeleiteten Größen.
+
+Was bleibt, sind die gemessenen Werte — AGP, Konsens-Metriken, GRI, die Verläufe
+je Mahlzeitentyp und die Tabelle je Mahlzeit mit CR (CHO/Bolus) und Δ4h. CR und Δ
+sind Rechengrößen aus dem Export und keine Wertung, deshalb bleiben sie; die
+Verdict-Spalte und die Stellschrauben gehen mit Teil 2.
+
+Die beiden Schalter greifen ineinander, ohne sich zu widersprechen: `lite` nimmt
+die Loop-Größen heraus, weil der Export sie nicht hergibt, `--no-assessment`
+nimmt die Schlüsse heraus, weil sie nicht gefragt sind. Fehlt in einem sonst
+vollen Export die Basalspur, ist das ohne Beurteilung kein Abbruchgrund mehr: der
+Report wird gebaut und verliert nur die Loop-Spalten.
+
 
 Für andere Loops ist eine Nutzung **mit Anpassungen denkbar**, aber nicht getestet — insbesondere müssten (1) die Export-Spalten gemappt und (2) Auto-Korrektur-**Boli** in den „Loop-Mehrbasal"-Term einbezogen werden. Ohne diese Anpassungen sind die Ergebnisse für Nicht-CamAPS-Systeme nicht gültig.
 
@@ -139,6 +161,7 @@ python3 loop_cr_review.py <export_ordner> -w 3.5     # anderes Fenster (Stunden)
 python3 loop_cr_review.py <export_ordner> --lang en  # Report auf Englisch (Default: de)
 python3 loop_cr_review.py <ns-ordner>                # Nightscout: entries.json + treatments.json → Lite
 python3 loop_cr_review.py <ns-ordner> --assume-camaps  # NS: CamAPS-Teil 2 einschalten
+python3 loop_cr_review.py <export_ordner> --no-assessment  # nur Auswertung, ohne Teil 2
 python3 loop_cr_review.py <libreview-ordner>          # LibreView-CSV → immer Lite
 python3 loop_cr_review.py <clarity-ordner>            # Dexcom-Clarity-CSV → immer Lite
 python3 loop_cr_review.py <export_ordner> --span      # nur Von–Bis ausgeben
@@ -152,6 +175,7 @@ python3 loop_cr_review.py <export_ordner> -t <template_ordner>
 | `export_dir` | Ordner mit Glooko-Export, Nightscout-Dump, LibreView- oder Clarity-CSV. **Pflichtangabe**; gesucht wird bis zwei Ebenen darunter | — |
 | `-w, --window-hours` | postprandiales Auswertungsfenster (h) | `4.0` |
 | `--assume-camaps` | Loop-Größen (Loop-Mehrbasal, CR_eff) auch für Nightscout. LibreView und Clarity bleiben Lite. Default aus | aus |
+| `--no-assessment` | Nur Auswertung: Teil 2 weglassen (Beurteilung je Slot, Ableitungen, Loop-Größen). Die Messwerte bleiben | aus |
 | `--span` | nur CGM-Zeitraum ausgeben, kein Report | aus |
 | `--from` / `--to` | Kalendertage YYYY-MM-DD (einschließlich) | ganzer Export |
 | `-d, --daily` | Tagesübersicht (kleine Tagesprofile je Kalendertag) mit ausgeben | aus |
@@ -177,7 +201,9 @@ privaten Ordner im System-Temp-Verzeichnis. Der Export wird gelöscht, sobald de
 Report fertig ist; der Report selbst spätestens nach 15 Minuten, oder sofort mit
 „Herunterladen". Der Report erscheint in einem Rahmen (Neuer Report / Speichern);
 die gespeicherte HTML ist dieselbe Datei wie von der Kommandozeile. Nightscout bleibt Lite, außer Häkchen
-„CamAPS-Auswertung erzwingen“. Gedacht für den **privaten Betrieb im Heimnetz,
+„CamAPS-Auswertung erzwingen“. Das Häkchen „Nur Auswertung“ lässt Teil 2 weg; solange
+es gesetzt ist, ist „CamAPS-Auswertung erzwingen“ ausgegraut, weil alles, was es
+freischaltet, in Teil 2 sitzt. Gedacht für den **privaten Betrieb im Heimnetz,
 nicht für öffentliches Hosting**.
 
 ```bash

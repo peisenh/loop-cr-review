@@ -238,12 +238,12 @@ img { width: 100%; border-radius: 8px }
 <path transform="translate(5155,0)" d="M121 -6Q97 -6 84.0 8.5Q71 23 71 49V439Q71 465 84.0 479.0Q97 493 121 493Q145 493 158.5 479.0Q172 465 172 439V49Q172 23 159.0 8.5Q146 -6 121 -6ZM121 597Q91 597 74.5 612.0Q58 627 58 654Q58 682 74.5 696.5Q91 711 121 711Q151 711 167.5 696.5Q184 682 184 654Q184 627 167.5 612.0Q151 597 121 597Z"/>
 <path transform="translate(5398,0)" d="M300 -9Q220 -9 162.5 21.5Q105 52 73.5 108.5Q42 165 42 243Q42 319 73.0 376.0Q104 433 158.0 465.0Q212 497 281 497Q332 497 372.0 480.5Q412 464 440.5 432.5Q469 401 483.5 356.0Q498 311 498 255Q498 238 488.0 229.5Q478 221 458 221H122V283H430L413 269Q413 319 398.5 354.0Q384 389 355.5 407.5Q327 426 285 426Q238 426 205.5 404.0Q173 382 156.0 343.0Q139 304 139 252V246Q139 158 180.5 113.5Q222 69 301 69Q331 69 364.5 77.0Q398 85 428 104Q445 114 458.5 113.0Q472 112 480.5 104.0Q489 96 491.0 84.0Q493 72 487.0 59.5Q481 47 466 37Q432 14 387.0 2.5Q342 -9 300 -9Z"/>
 <path transform="translate(5935,0)" d="M249 -7Q228 -7 212.5 3.5Q197 14 188 37L41 426Q33 446 36.0 461.5Q39 477 51.5 486.0Q64 495 84 495Q102 495 113.5 486.5Q125 478 133 454L264 85H240L376 458Q383 477 395.0 486.0Q407 495 426 495Q445 495 457.5 486.0Q470 477 476 458L609 85H587L720 456Q728 479 740.5 487.0Q753 495 769 495Q789 495 799.5 485.0Q810 475 811.5 459.5Q813 444 806 426L659 37Q650 15 634.5 4.0Q619 -7 599 -7Q578 -7 562.5 4.0Q547 15 538 37L398 416H448L309 37Q301 15 285.5 4.0Q270 -7 249 -7Z"/></g></svg>
-<h1>{% if lite %}{% trans %}Ambulatory Glucose Profile &amp; Meal Windows{% endtrans %}{% else %}{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}{% endif %}</h1>
+<h1>{% if not assess %}{% trans %}Ambulatory Glucose Profile{% endtrans %}{% elif lite %}{% trans %}Ambulatory Glucose Profile &amp; Meal Windows{% endtrans %}{% else %}{% trans %}Ambulatory Glucose Profile &amp; CR Assessment{% endtrans %}{% endif %}</h1>
 <div class="sub">{{ name }} · {{ span }} · {% trans %}{{ days }} days{% endtrans %} · {{ device }} · {% trans %}sensor wear{% endtrans %} {{ wear }}%</div>
 <div class="gen">{% trans %}Created with{% endtrans %} {{ tool }}{% if version %} {{ version }}{% endif %} · {{ generated }} · {% trans %}{{ wlab }} window{% endtrans %} ·
   <a href="{{ repo }}" target="_blank" rel="noopener noreferrer">{{ repo | replace('https://', '') }}</a></div>
 
-{% if source == 'nightscout' or source == 'libreview' %}
+{% if assess and (source == 'nightscout' or source == 'libreview') %}
 <div class="note">{% if source == 'libreview' %}{% trans %}Source: LibreView. No basal in this export, so no loop figures — the assessment rests on the glucose course alone.{% endtrans %}{% elif lite %}{% trans %}Source: Nightscout. Read without a basal trace, so the assessment rests on the glucose course alone; the CamAPS loop figures are off unless you opt in.{% endtrans %}{% else %}{% trans %}Source: Nightscout dump treated as CamAPS (opt-in). Temp basal is the basal trace.{% endtrans %}{% endif %}</div>
 {% endif %}
 <div class="disclaimer">
@@ -302,7 +302,7 @@ img { width: 100%; border-radius: 8px }
 <div class="card card-break"><h2>{% trans %}Real postprandial courses per meal (median){% endtrans %}</h2>
   <div class="chart-wrap">{{ slot_img|safe }}</div>
   <div class="note" style="margin-top: 6px">{{ curve_cap }}</div>
-  <div class="note" style="margin-top: 6px">{% if lite %}{% trans %}This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below.{% endtrans %}{% else %}{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}{% endif %}</div></div>
+  <div class="note" style="margin-top: 6px">{% if lite or not assess %}{% trans %}This absolute median uses <b>all meals</b> in each slot — as do the baseline-normalised curves below.{% endtrans %}{% else %}{% trans %}This absolute median uses <b>all meals</b> in each slot, including contaminated windows — as do the baseline-normalised curves below. The CR table in Part 2 prefers contamination-free meals instead (at least 3 clean, otherwise all), so its count (n) can differ; how much that selection changes the picture is stated there.{% endtrans %}{% endif %}</div></div>
 
 <div class="card card-break">
   <h2>{% trans %}Baseline-normalised courses by meal type{% endtrans %}</h2>
@@ -311,11 +311,12 @@ img { width: 100%; border-radius: 8px }
   <div class="note" style="margin-top: 6px">
     {% trans %}The curves show the typical course (median) and the spread (25–75 and 10–90) of baseline-normalised glucose for each meal type. Positive = above baseline, negative = below.{% endtrans %}
     {% trans %}Baseline = glucose near meal start (individual). n = number of meals of this type with a usable start value.{% endtrans %}
-    {% if not lite %}{% trans w=wlab %}The value at the end of the median is related to the Δ{{ w }} used later in Part 2; that part may prefer a cleaner meal subset, so n can differ there.{% endtrans %}{% endif %}
+    {% if not lite and assess %}{% trans w=wlab %}The value at the end of the median is related to the Δ{{ w }} used later in Part 2; that part may prefer a cleaner meal subset, so n can differ there.{% endtrans %}{% endif %}
   </div>
 </div>
 
 
+{% if assess %}
 <div class="part"><h2>{% trans %}Part 2 — assessment and how to read it{% endtrans %}</h2>
   <div class="part-sub">{% trans %}Everything from here rests on the method described in this part.{% endtrans %}</div></div>
 
@@ -391,16 +392,22 @@ img { width: 100%; border-radius: 8px }
 </div>
 
 
+{% endif %}
+
 <div class="card card-break">
   <h2>{% trans %}Explanations &amp; limits{% endtrans %}</h2>
   <div class="note" style="margin: 6px 0 0">
     <b>{% trans %}Time windows:{% endtrans %}</b> {{ slot_defs | join(' · ') }}</div>
-{% if not lite %}  <div class="note" style="margin: 6px 0 0">
+{% if not lite and assess %}  <div class="note" style="margin: 6px 0 0">
     <b>{% trans %}Fasting basal rate:{% endtrans %}</b> {{ fb }} U/h{% if fb_lo != fb_hi %} ({% trans lo=fb_lo, hi=fb_hi %}mean of the nights; {{ lo }}–{{ hi }} U/h{% endtrans %}){% endif %} —
     {% trans %}the reference the loop extra basal is measured against. It assumes meal- and correction-free
     nights 00:00–06:00; if that does not hold, every "Loop" figure shifts with it.{% endtrans %}</div>{% endif %}
   <div class="note" style="margin-top: 8px">
-    {% if lite %}{% trans w=wlab %}<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus only (it
+    {% if not assess %}{% trans w=wlab %}<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus
+    only (it may contain correction insulin); it is not the pump's programmed ratio but is derived
+    from the export. Δ{{ w }} = glucose at {{ w }} minus pre-meal. Both are measured values; this
+    report draws no conclusion from them.{% endtrans %}
+    {% elif lite %}{% trans w=wlab %}<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus only (it
     may contain correction insulin). Δ{{ w }} = glucose at {{ w }} minus pre-meal — with no basal in
     the export the verdict rests on this return alone. "clean" = meals without another meal in the
     {{ w }} window and without a large CGM gap.{% endtrans %}
@@ -409,7 +416,7 @@ img { width: 100%; border-radius: 8px }
     <b>CR_eff (+loop)</b> = CHO / (bolus + loop extra basal). Δ{{ w }} = glucose at
     {{ w }} minus pre-meal. "clean" = meals without another meal in the {{ w }} window and without a
     large CGM gap.{% endtrans %}{% endif %}
-    {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
+{% if assess %}    {% trans %}<b>⚠︎</b> on the verdict = fewer than 3 clean meals; the statement relies (in part)
     on contaminated windows and is correspondingly less certain.{% endtrans %}
     {% trans %}<b>Hatched row</b> = same low-confidence case (fewer than 3 clean meals); treat the colour class with extra caution.{% endtrans %}
     <br>
@@ -426,8 +433,10 @@ img { width: 100%; border-radius: 8px }
     {% trans %}<b>Observed range:</b> min–max of the actual values when there are too few days for a spread.{% endtrans %}
     {% trans %}Neither is a confidence interval for “the true CR”.{% endtrans %}
     <br>
-    {% trans lo=15, hi=25, few=34, many=3 %}<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below about {{ lo }} % stays invisible to this method, from about {{ hi }} % it is flagged reliably. Days matter mostly against false alarms — with five days a correctly set slot is still flagged in roughly {{ few }} % of cases, with three weeks in about {{ many }} %. A day count marked {% endtrans %}<b>{% trans %}(few){% endtrans %}</b>{% trans n=10 %} is below {{ n }} days, where that risk is still noticeable.{% endtrans %}</div>
-{% if not lite %}  <div class="eff">
+    {% trans lo=15, hi=25, few=34, many=3 %}<b>How much does it take?</b> Measured on synthetic data: a carb-ratio error below about {{ lo }} % stays invisible to this method, from about {{ hi }} % it is flagged reliably. Days matter mostly against false alarms — with five days a correctly set slot is still flagged in roughly {{ few }} % of cases, with three weeks in about {{ many }} %. A day count marked {% endtrans %}<b>{% trans %}(few){% endtrans %}</b>{% trans n=10 %} is below {{ n }} days, where that risk is still noticeable.{% endtrans %}
+{% endif %}
+  </div>
+{% if not lite and assess %}  <div class="eff">
     {% trans %}<b>CR_eff is an approach, not a target value.</b> It converts the basal the loop pushed in
     into an "effectively used" ratio: <code>CR_eff = CHO / (bolus + loop extra basal)</code>.{% endtrans %}
     {% if cr_example %}<br><br>{% trans label=cr_example.label, cho=cr_example.cho, bol=cr_example.bol, loop=cr_example.loop, cre=cr_example.cre %}Example {{ label }}: {{ cho }} g on
@@ -440,14 +449,19 @@ img { width: 100%; border-radius: 8px }
     Approximation (loop extra fully attributed to the meal; corrections/exercise/adaptation possible).
     Small step with the team; re-check after ~1–2 weeks.{% endtrans %}</div>{% endif %}
   <div class="note">
-    {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
+{% if assess %}    {% trans %}This is <b>decision evidence for the diabetes care team</b>, not a dosing instruction.{% endtrans %}<br>
+{% else %}    {% trans %}These are measured values for the conversation with the diabetes care team — the report derives nothing from them.{% endtrans %}<br>
+{% endif %}
     {{ cr_note | safe }}
-{% if not lite %}    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
+{% if not lite and assess %}    {% trans %}• Under CamAPS Auto Mode the loop compensates continuously; that is exactly why the loop extra
       basal is the meaningful signal. The algorithm adapts over days and can partly smooth out
       longer-standing misconfigurations.{% endtrans %}<br>{% endif %}
-    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
+{% if assess %}    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by medians,
       not eliminated; slots with few "clean" meals{% endtrans %}{{ clean_note }} {% trans %}are less certain.{% endtrans %}<br>
-{% if not lite %}    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
+{% else %}    {% trans %}• Confounders (fat/protein, exercise, split boluses, overlapping meals) are dampened by the
+      medians, not eliminated.{% endtrans %}<br>
+{% endif %}
+{% if not lite and assess %}    {% trans %}• <b>Boost / Ease-off</b> are not present in the Glooko CSV export and cannot be detected automatically.
       If either mode is active somewhere in the post-meal window, loop extra basal and CR signals can be
       distorted — interpret such windows with the care team; exclude them mentally from CR conclusions if known.{% endtrans %}<br><br>{% endif %}
   </div>
@@ -461,16 +475,16 @@ img { width: 100%; border-radius: 8px }
   <div class="table-wrap">
   <table>
     <tr><th>{% trans %}Time{% endtrans %}</th><th>{% trans %}Slot{% endtrans %}</th><th>CHO g</th><th>Bolus U</th><th>{% trans %}CR (CHO/bolus){% endtrans %}</th>
-        {% if not lite %}<th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
+        {% if not lite and assess %}<th>{% trans %}Loop{% endtrans %} {{ wlab }} U</th><th>{% trans %}CR_eff (+loop){% endtrans %}</th>{% endif %}<th>Δ{{ wlab }}</th><th>⚠︎</th></tr>
     {% for m in meals %}
     <tr><td>{{ m.time }}</td><td>{{ m.label }}</td><td>{{ m.cho }}</td>
-        <td>{{ m.bolus }}</td><td>{{ m.cr }}</td>{% if not lite %}<td>{{ m.exc }}</td><td>{{ m.cre }}</td>{% endif %}
+        <td>{{ m.bolus }}</td><td>{{ m.cr }}</td>{% if not lite and assess %}<td>{{ m.exc }}</td><td>{{ m.cre }}</td>{% endif %}
         <td>{% if m.low_d4 %}<b class="d4low">{{ m.d4 }}</b>{% else %}{{ m.d4 }}{% endif %}</td><td>{% if m.hypo_rescue %}<span title="{% trans %}hypo rescue in the window{% endtrans %}">⚠︎ H</span>{% elif m.contam %}<span title="{% trans %}contaminated window{% endtrans %}">⚠︎</span>{% elif m.cgm_gap %}<span title="{% trans %}CGM gap in the window{% endtrans %}">⚠︎ G</span>{% endif %}</td></tr>
     {% endfor %}
   </table>
   </div>
   <div class="scroll-hint">{% trans %}Swipe the table sideways for the remaining columns.{% endtrans %}</div>
-  <div class="note" style="margin-top: 6px">{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window (excluded from the clean median when enough other meals exist).{% endtrans %}
+  <div class="note" style="margin-top: 6px">{% if assess %}{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window (excluded from the clean median when enough other meals exist).{% endtrans %}{% else %}{% trans w=wlab %}⚠︎ = contaminated window (another meal &lt;{{ w }} afterwards). ⚠︎ H = a hypo rescue (small carbs, no bolus, low BG) in the window. ⚠︎ G = CGM gap over 25 min in the window.{% endtrans %}{% endif %}
     {% trans lo=-30 %}A Δ4h below {{ lo }} is set in colour: that meal ended well below its
     starting value. Rows are deliberately not colour-coded — a single meal carries far too
     little signal to be judged on its own.{% endtrans %}</div>

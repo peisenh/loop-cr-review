@@ -236,8 +236,14 @@ def _daily_days(times, gluc, base, basal, events=None, tdd=None, progress=None):
 
 
 def build_context(base, window, wlab, daily=False, lang="de",
-                  assume_camaps=False, date_from=None, date_to=None, progress=None):
+                  assume_camaps=False, date_from=None, date_to=None, progress=None,
+                  assess=True):
     """Read all data, analyse, and assemble the template context.
+
+    ``assess=False`` drops part 2: the report then shows the measured figures
+    (AGP, consensus metrics, CR (CHO/bolus), delta) and no verdict, no levers
+    and no loop-derived quantities. Independent of ``lite``, which says what
+    the export supports rather than what the reader asked for.
 
     ``progress`` is an optional callback receiving ``(stage, percent)``.
     It is deliberately advisory: progress reporting must never change the
@@ -287,8 +293,14 @@ def build_context(base, window, wlab, daily=False, lang="de",
 
     met = consensus_metrics(times, gluc)
     gri = gri_metrics(met)
-    if basal is None and not lite:
-        raise LoopCRError("No basal rates found.")
+    if basal is None:
+        if assess and not lite:
+            raise LoopCRError("No basal rates found.")
+        # A source that carries no basal is already lite. A full source whose
+        # export happens to have none is only fatal while part 2 is being
+        # built: without it nothing reads the loop figures, so the report is
+        # made and just loses the loop columns.
+        lite = True
     # Without a basal trace the loop figures stay empty, but contamination, hypo
     # rescues and the return delta come from the glucose curve and are worked out
     # the same way - the assessment then rests on CHO/bolus and the delta alone.
@@ -337,11 +349,11 @@ def build_context(base, window, wlab, daily=False, lang="de",
     _progress("charts", 97)
 
     return {
-        "source": source, "lite": lite,
+        "source": source, "lite": lite, "assess": assess,
         "tool": TOOL_NAME, "name": name, "span": f"{times[0]:%d.%m.%Y}–{times[-1]:%d.%m.%Y}",
         "generated": datetime.now().strftime("%d.%m.%Y, %H:%M"), "repo": REPO_URL,
         "version": tool_version(), "lang": lang,
-        "days": f"{met['days']:.0f}", "device": device if lite else f"{device} · Auto Mode",
+        "days": f"{met['days']:.0f}", "device": device if (lite or not assess) else f"{device} · Auto Mode",
         "wear": f"{met['wear']:.0f}", "mean": fmt_glucose(met["mean"]), "gmi": f"{met['gmi']:.1f}",
         "gmi_mmol": f"{met['gmi_mmol']:.0f}",
         "cv": f"{met['cv']:.0f}", "tir": f"{met['tir']:.0f}", "titr": f"{met['titr']:.0f}",
@@ -356,7 +368,7 @@ def build_context(base, window, wlab, daily=False, lang="de",
         "curve_cap": curve_cap,
         "slots": _slots_context(by_slot, meals, window, val_at, stability, selected),
         "meals": _meals_context(rows),
-        "cr_note": build_cr_note(rows, by_slot), "clean_note": clean_note,
+        "cr_note": build_cr_note(rows, by_slot) if assess else "", "clean_note": clean_note,
         "slot_defs": slot_definitions(),
         "recs": recs, "cr_example": cr_example,
         "fb": "—" if basal is None else f"{basal[3]:.2f}",
@@ -364,7 +376,7 @@ def build_context(base, window, wlab, daily=False, lang="de",
         "fb_hi": "—" if basal is None else f"{basal[5]:.2f}",
         "fb_spread": False if basal is None else (
             (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False),
-        "rest": None if (lite or basal is None) else loop_rest(basal, meals),
+        "rest": None if (lite or basal is None or not assess) else loop_rest(basal, meals),
         "wlab": wlab, "unit": glucose_unit(),
         "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
         "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),
@@ -406,6 +418,9 @@ def parse_args():
                         "profile (see example-data/slots.example.json)")
     parser.add_argument("--lang", default="de", choices=["de", "en"],
                         help="report language (default: de)")
+    parser.add_argument("--no-assessment", action="store_true",
+                        help="analysis only: leave out part 2 (verdict, levers, "
+                             "loop figures). The measured values stay.")
     parser.add_argument("--assume-camaps", action="store_true",
                         help="Nightscout: run the CamAPS CR assessment (off by default)")
     parser.add_argument("--span", action="store_true",
@@ -420,7 +435,8 @@ def parse_args():
 def generate_report(export_dir, *, lang="de", window_hours=4.0,
                     daily=False, assume_camaps=False,
                     date_from=None, date_to=None,
-                    slots=None, template_dir=None, progress=None):
+                    slots=None, template_dir=None, progress=None,
+                    assess=True):
     """Analyse an unpacked export and return (html, context).
 
     Reusable core shared by the CLI and other front-ends (e.g. a web
@@ -442,7 +458,8 @@ def generate_report(export_dir, *, lang="de", window_hours=4.0,
     with _slot_scope(slots):
         context = build_context(Path(export_dir), window, wlab, daily, lang=lang,
                             assume_camaps=assume_camaps,
-                            date_from=date_from, date_to=date_to, progress=progress)
+                            date_from=date_from, date_to=date_to, progress=progress,
+                            assess=assess)
         if progress is not None:
             progress("render", 98)
         html = render(context, tpl_dir)
@@ -474,7 +491,7 @@ def main():
         html, context = generate_report(
             args.export_dir, lang=args.lang, window_hours=args.window_hours,
             daily=args.daily,
-            assume_camaps=args.assume_camaps,
+            assume_camaps=args.assume_camaps, assess=not args.no_assessment,
             date_from=parse_day(args.date_from), date_to=parse_day(args.date_to),
             slots=slots, template_dir=args.template_dir)
     except LoopCRError as exc:
@@ -488,7 +505,8 @@ def main():
     out.write_text(html, encoding="utf-8")
     print(f"written: {out} | {len(html)} bytes")
     # Labels from the report context (slot scope already restored)
-    if not context.get("lite"):
+    # Verdict labels only exist when part 2 was built.
+    if context.get("assess") and not context.get("lite"):
         print(" | ".join(f"{s['label']}={s['flag']}" for s in context["slots"]))
 
 
