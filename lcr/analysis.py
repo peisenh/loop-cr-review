@@ -72,6 +72,13 @@ def consensus_metrics(times, gluc):
         # guessing, and the reader takes the one they know.
         "gmi": 3.31 + 0.02392 * mean_mgdl,
         "gmi_mmol": 12.71 + 4.70587 * (mean_mgdl / MGDL_PER_MMOL),
+        # The updated GMI (Xu/Dunn 2026): same purpose, a curve rather than a
+        # straight line, which lands closer to HbA1c at both ends of the range.
+        # Each unit is its own formula from that paper, not a conversion of the
+        # other, so the two can differ by up to a point after rounding. Not a
+        # consensus figure, so it stays a footnote and never replaces the GMI.
+        "ugmi": 1 / (15.36 / mean_mgdl + 0.0425),
+        "ugmi_mmol": 1 / (0.07808 / (mean_mgdl / MGDL_PER_MMOL) + 0.003889) - 23.497,
         "wear": 100 * len(gluc) / (days * 24 * 60 / step) if step else float("nan"),
         "tir": share(lambda v: g(70) <= v <= g(180)),
         "titr": share(lambda v: g(70) <= v <= g(140)),

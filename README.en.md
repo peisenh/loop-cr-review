@@ -44,6 +44,8 @@ Always (full and lite):
 
 - **AGP** (percentiles 5/25/50/75/95 over 24 h) and **median postprandial curves** per slot.
 - **Consensus metrics** (Battelino 2019): mean glucose, GMI, CV, TIR/TITR/TBR/TAR, sensor wear.
+  The explanations also name the uGMI (Xu/Dunn 2026), the updated GMI model — as a
+  footnote rather than in the card: it is not a consensus figure yet.
 - **Glycemia Risk Index (GRI)** (Klonoff et al.).
 - Meal windows and curve shape (peak, return) — not a proof of the CR.
 

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+- The explanations name the uGMI (Xu/Dunn 2026) alongside the GMI: the updated
+  model is a curve rather than a straight line and lands closer to HbA1c at both
+  ends of the range. One quiet line in "Explanations & limits", in both units and
+  in both report modes. The metric card keeps the established GMI (Bergenstal
+  2018) — uGMI is not a consensus figure, and two similar numbers side by side in
+  the key figures would invite confusion.
+
 ## [0.27.0] - 2026-09-08
 
 ### Added

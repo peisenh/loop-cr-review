@@ -44,6 +44,8 @@ Immer (Voll und Lite):
 
 - **AGP** (Perzentile 5/25/50/75/95 über 24 h) und **mediane Postprandial-Verläufe** je Slot.
 - **Konsens-Metriken** (Battelino 2019): Ø-Glukose, GMI, CV, TIR/TITR/TBR/TAR, Sensor-Wear.
+  Der Erklärteil nennt zusätzlich den uGMI (Xu/Dunn 2026), das aktualisierte GMI-Modell —
+  als Fußnote, nicht in der Kachel: es ist noch keine Konsensgröße.
 - **Glycemia Risk Index (GRI)** nach Klonoff et al.
 - Mahlzeitfenster und Kurvenform (Peak, Rückkehr) — ohne Anspruch, die CR zu beweisen.
 

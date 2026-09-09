@@ -402,6 +402,12 @@ img { width: 100%; border-radius: 8px }
     <b>{% trans %}Fasting basal rate:{% endtrans %}</b> {{ fb }} U/h{% if fb_lo != fb_hi %} ({% trans lo=fb_lo, hi=fb_hi %}mean of the nights; {{ lo }}–{{ hi }} U/h{% endtrans %}){% endif %} —
     {% trans %}the reference the loop extra basal is measured against. It assumes meal- and correction-free
     nights 00:00–06:00; if that does not hold, every "Loop" figure shifts with it.{% endtrans %}</div>{% endif %}
+  <div class="note" style="margin-top: 6px">
+    {% trans u=ugmi, um=ugmi_mmol %}The GMI in the key figures follows Bergenstal 2018. Under the
+    updated model (uGMI) it would be {{ u }}% ({{ um }} mmol/mol); that model is not a consensus
+    figure, so the card keeps the established one.{% endtrans %}
+  </div>
+
   <div class="note" style="margin-top: 8px">
     {% if not assess %}{% trans w=wlab %}<b>Method:</b> <b>CR (CHO/bolus)</b> = CHO / meal bolus
     only (it may contain correction insulin); it is not the pump's programmed ratio but is derived

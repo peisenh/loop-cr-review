@@ -105,6 +105,11 @@ class TestNoAssessment(unittest.TestCase):
                 self.assertNotIn(term, self.html)
         self.assertIn("clean", self.full_html)
 
+    def test_ugmi_line_is_in_both_modes(self):
+        """A footnote about the metrics, not part of the assessment."""
+        self.assertIn("uGMI", self.html)
+        self.assertIn("uGMI", self.full_html)
+
     def test_loop_figures_stay_out(self):
         for term in ("CR_eff", "Loop-Mehrbasal", "Auto Mode", "Fasten-Basalrate"):
             with self.subTest(term=term):
