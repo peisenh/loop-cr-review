@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-09-10
+
 ### Added
 - The explanations name the uGMI (Xu/Dunn 2026) alongside the GMI: the updated
   model is a curve rather than a straight line and lands closer to HbA1c at both
@@ -1359,7 +1361,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/peisenh/loop-cr-review/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/peisenh/loop-cr-review/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/peisenh/loop-cr-review/compare/v0.25.1...v0.26.0
 [0.25.1]: https://github.com/peisenh/loop-cr-review/compare/v0.25.0...v0.25.1
