@@ -1,5 +1,1 @@
-Neu: „Nur Auswertung“. Der Bericht zeigt dann allein die gemessenen Werte — Verlauf, Metriken und die Tabelle je Mahlzeit — und lässt die Beurteilung samt Empfehlungen weg.
-
-Der Bericht lässt sich sauber als PDF speichern oder drucken — mit richtigem Seitenrand, ohne abgeschnittene Zeilen und ohne Überschriften, die allein am Seitenende stehen.
-
-Das AGP zeigt jetzt die Perzentile 10 bis 90 wie der CamAPS-Bericht, so lassen sich beide direkt nebeneinander lesen.
+Der Erklärteil nennt jetzt zusätzlich den uGMI, ein aktualisiertes Modell für den geschätzten Langzeitwert. Es steht neben dem gewohnten GMI, nicht an dessen Stelle: unterhalb eines Mittelwerts von etwa 150 mg/dl liegt es niedriger, darüber höher. Die Kachel oben behält die etablierte Zahl.

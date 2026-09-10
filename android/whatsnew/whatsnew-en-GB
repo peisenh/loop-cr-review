@@ -1,5 +1,1 @@
-New: “analysis only”. The report then shows the measured values alone — courses, metrics and the per-meal table — and leaves out the assessment and its suggestions.
-
-The report saves and prints properly as a PDF — a real page margin, no clipped lines, and no heading left alone at the foot of a page.
-
-The AGP now shows the 10th to 90th percentiles, the same band as the CamAPS report, so the two can be read side by side.
+The explanations now also name the uGMI, an updated model for the estimated long-term value. It sits beside the familiar GMI rather than in its place: below a mean of about 150 mg/dl it reads lower, above it higher. The card at the top keeps the established figure.
