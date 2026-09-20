@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Reading a Nightscout export (entries + treatments as JSON or CSV)."""
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -82,6 +82,45 @@ def _ns_offset_minutes(entries):
     return Counter(offs).most_common(1)[0][0]
 
 
+# An hour of basal trace before a day counts as a day at all.
+MIN_BASAL_MINUTES_PER_DAY = 60
+
+
+def _ns_daily_totals(basal, events):
+    """Insulin per day from the basal trace and the boluses. -> {date: (bolus, total, basal)}
+
+    Glooko ships a summary file the pump wrote; Nightscout does not, so the
+    totals are added up here. The basal half is the rate trace integrated over
+    each day — the same sum the loop figures already use — and the bolus half is
+    what the treatments say was given.
+
+    Only with a basal trace: a total without it would be the bolus alone under a
+    name that promises everything, which is worse than saying nothing.
+    """
+    if basal is None:
+        return {}
+    rate, t0, minutes = basal[:3]
+    basal_by_day, covered = defaultdict(float), defaultdict(int)
+    for minute in range(minutes):
+        value = rate[minute]
+        if not pure.is_nan(value):
+            day = (t0 + timedelta(minutes=minute)).date()
+            basal_by_day[day] += value / 60.0
+            covered[day] += 1
+    bolus_by_day = defaultdict(float)
+    for event in events:
+        if event["bolus"] > 0:
+            bolus_by_day[event["time"].date()] += event["bolus"]
+    # A day needs real coverage to get a total. The trace ends a few minutes
+    # into the day after the last segment, and that sliver would otherwise
+    # appear as a day of its own with almost no insulin in it.
+    return {day: (bolus_by_day.get(day, 0.0),
+                  bolus_by_day.get(day, 0.0) + basal_units,
+                  basal_units)
+            for day, basal_units in basal_by_day.items()
+            if covered[day] >= MIN_BASAL_MINUTES_PER_DAY}
+
+
 def read_nightscout(base):
     """Load a Nightscout dump (entries.json + treatments.json).
 
@@ -151,6 +190,7 @@ def read_nightscout(base):
     return {
         "times": times, "gluc": gluc, "name": "Nightscout",
         "sensor": "Nightscout", "meals": meals, "minors": minors,
-        "pump": "Nightscout", "basal": basal, "events": events, "tdd": {},
+        "pump": "Nightscout", "basal": basal, "events": events,
+        "tdd": _ns_daily_totals(basal, events),
         "source": "nightscout",
     }

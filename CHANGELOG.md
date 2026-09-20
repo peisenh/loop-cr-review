@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- Daily panels from a Nightscout export carry their TDD. Glooko ships a summary
+  file the pump wrote; Nightscout does not, so the totals are added up here —
+  the basal trace integrated over each day, plus what the treatments say was
+  bolused. Only where a basal trace exists: LibreView and Dexcom have none, and
+  a total without its basal half would promise more than it holds.
+
 ### Changed
 - The Docker image installs no system libraries. libfreetype6 and libpng16-16
   were there for matplotlib's font rendering and outlived it — what the image

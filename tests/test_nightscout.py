@@ -5,7 +5,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import loop_cr_review as core
-from lcr.readers.nightscout import _ns_offset_minutes, read_nightscout
+from lcr.readers.nightscout import (_ns_daily_totals, _ns_offset_minutes,
+                                     read_nightscout)
 
 
 def _dump(folder, entries, treatments):
@@ -109,3 +110,58 @@ class TestDaylightSaving(unittest.TestCase):
         entries = [self._reading((8, 22), h, 120) for h in (20, 21, 22, 23)]
         result = self._read(entries, [meal])
         self.assertEqual([m["time"].hour for m in result["meals"]], [22])
+
+
+class TestDailyTotals(unittest.TestCase):
+    """Nightscout has no summary file, so the daily insulin is added up.
+
+    Without this the daily panels from a Nightscout export carried no TDD at
+    all, while the same days from Glooko did — the pump ships a summary there
+    and Nightscout does not.
+    """
+
+    DAY = datetime(2026, 8, 20)
+
+    @staticmethod
+    def _utc(when, offset=120):
+        stamp = (when - timedelta(minutes=offset)).replace(tzinfo=timezone.utc)
+        return stamp.isoformat().replace("+00:00", "Z")
+
+    def _export(self, days=2, rate=1.0, boluses=((8, 4.0), (13, 6.0), (19, 5.0))):
+        entries, treatments = [], []
+        for day in range(days):
+            for minute in range(0, 24 * 60, 5):
+                when = self.DAY + timedelta(days=day, minutes=minute)
+                entries.append({"sgv": 120, "utcOffset": 120,
+                                "dateString": self._utc(when)})
+                treatments.append({"eventType": "Temp Basal", "rate": rate,
+                                   "duration": 5, "utcOffset": 120,
+                                   "created_at": self._utc(when)})
+            for hour, units in boluses:
+                treatments.append({"eventType": "Meal Bolus", "carbs": 50,
+                                   "insulin": units, "utcOffset": 120,
+                                   "created_at": self._utc(
+                                       self.DAY + timedelta(days=day, hours=hour))})
+        folder = Path(tempfile.mkdtemp())
+        (folder / "entries.json").write_text(json.dumps(entries), encoding="utf-8")
+        (folder / "treatments.json").write_text(json.dumps(treatments), encoding="utf-8")
+        return read_nightscout(folder)
+
+    def test_the_totals_are_bolus_plus_the_integrated_basal(self):
+        """A flat 1 U/h for a day is 24 U, and the boluses add 15."""
+        result = self._export()
+        self.assertEqual(len(result["tdd"]), 2)
+        for bolus, total, basal in result["tdd"].values():
+            self.assertAlmostEqual(bolus, 15.0, places=6)
+            self.assertAlmostEqual(basal, 24.0, places=6)
+            self.assertAlmostEqual(total, 39.0, places=6)
+
+    def test_a_sliver_of_a_day_is_not_a_day(self):
+        """The trace runs a few minutes past midnight into the day after."""
+        result = self._export(days=2)
+        self.assertEqual(sorted(result["tdd"]),
+                         [self.DAY.date(), (self.DAY + timedelta(days=1)).date()])
+
+    def test_no_basal_means_no_total(self):
+        """A total without its basal half would promise more than it holds."""
+        self.assertEqual(_ns_daily_totals(None, [{"time": self.DAY, "bolus": 5.0}]), {})
