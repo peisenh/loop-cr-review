@@ -15,10 +15,10 @@ RUN echo "VERSION = \"$(git describe --tags --dirty --always 2>/dev/null || echo
 FROM python:3.14-slim
 WORKDIR /app
 
-# System libs matplotlib needs at runtime (Agg backend, font rendering)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libfreetype6 libpng16-16 \
-    && rm -rf /var/lib/apt/lists/*
+# No system libraries: the charts are SVG and the arithmetic is plain Python,
+# so Jinja2, Flask and gunicorn are all that is installed and none of them
+# needs anything from apt. libfreetype6 and libpng16-16 lived here for
+# matplotlib's font rendering.
 
 COPY requirements.txt requirements-web.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-web.txt

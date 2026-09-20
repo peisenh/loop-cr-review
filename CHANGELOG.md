@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+- The Docker image installs no system libraries. libfreetype6 and libpng16-16
+  were there for matplotlib's font rendering and outlived it — what the image
+  installs now is Jinja2, Flask and gunicorn, none of which needs anything from
+  apt. The runtime stage has no apt layer at all.
+
 ## [0.28.0] - 2026-09-10
 
 ### Added
