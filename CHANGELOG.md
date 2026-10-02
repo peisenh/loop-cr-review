@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-02
+
 ### Added
 - Daily panels from a Nightscout export carry their TDD. Glooko ships a summary
   file the pump wrote; Nightscout does not, so the totals are added up here —
@@ -1374,7 +1376,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/peisenh/loop-cr-review/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/peisenh/loop-cr-review/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/peisenh/loop-cr-review/compare/v0.25.1...v0.26.0
