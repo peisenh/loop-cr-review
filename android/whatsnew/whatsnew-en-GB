@@ -1,1 +1,5 @@
-The explanations now also name the uGMI, an updated model for the estimated long-term value. It sits beside the familiar GMI rather than in its place: below a mean of about 150 mg/dl it reads lower, above it higher. The card at the top keeps the established figure.
+First public release.
+
+Loop CR Review reads CGM and pump data exported from Glooko, Nightscout, LibreView or Dexcom Clarity and turns it into a report with AGP, consensus metrics and the courses per meal – entirely on the device, no cloud, no account. The assessment is designed for CamAPS FX and can be switched off, leaving the measured values alone.
+
+Not a medical device: no diagnosis, no treatment advice.
