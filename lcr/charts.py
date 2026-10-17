@@ -450,6 +450,44 @@ def _day_basal(chart, sx, series, gmax):
                f"{gmax:.1f}", "basal", size=8.3)
 
 
+# A hole in the daily curve: more than one reading missing, measured against
+# the pace around it, and never under five minutes. The pace is taken locally,
+# from the steps either side, because it differs by sensor - one minute for a
+# Libre 3, five for a Dexcom, about two for xDrip reading the pump app - and an
+# export can change sensor halfway. Five minutes keeps one-minute data from
+# fraying at every missed reading; shorter holes do not show at day width
+# even when every reading is drawn as a dot.
+GAP_FACTOR, GAP_FLOOR_MIN, GAP_CONTEXT = 1.5, 5.0, 10
+
+
+def _break_at_gaps(points):
+    """Hours and values with a break at every hole in the readings. -> (xs, ys)
+
+    The readings are a list of what arrived; one that did not arrive is not in
+    it, so a polyline through the list joins its neighbours across the hole. A
+    None between them breaks the line there.
+    """
+    steps = [(b[0] - a[0]) * 60.0 for a, b in zip(points, points[1:])]
+    xs, ys = [], []
+    for index, (hour, value) in enumerate(points):
+        if index:
+            step = steps[index - 1]
+            before = steps[max(0, index - 1 - GAP_CONTEXT):index - 1]
+            after = steps[index:index + GAP_CONTEXT]
+            # Each side on its own, and the slower one counts: where the sensor
+            # changes, the step between the two belongs to either pace, and a
+            # median across both would land between them and call it a hole.
+            pace = max([pure.median(side) for side in (before, after) if side] or [step])
+            # A hair of tolerance: the hours are floats, and a step of exactly
+            # the limit would otherwise land above it at half the clock times.
+            if step > max(GAP_FLOOR_MIN, GAP_FACTOR * pace) + 1e-6:
+                xs.append(hour)
+                ys.append(None)
+        xs.append(hour)
+        ys.append(value)
+    return xs, ys
+
+
 def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
     """One page-wide panel per day (CGM + bolus/carb + optional basal + TDD)."""
     del dark
@@ -479,8 +517,18 @@ def daily_charts(times, gluc, events, basal, tdd, dark=False, progress=None):
                       for mnt in range(0, 24 * 60, 5)]
         _day_basal(chart, sx, series, gmax)
 
-        chart.line(path_d([h for h, _v in cgm_by[day]],
-                          [v for _h, v in cgm_by[day]], sx, sy), "cgm", 1.0)
+        cgm_x, cgm_y = _break_at_gaps(cgm_by[day])
+        chart.line(path_d(cgm_x, cgm_y, sx, sy), "cgm", 1.0)
+        # A reading with a hole on both sides is a run of one point. The path
+        # gives it a dot the width of the line, too small to see; a small ring
+        # in the curve's colour shows it is there.
+        for index, value in enumerate(cgm_y):
+            before = cgm_y[index - 1] if index else None
+            after = cgm_y[index + 1] if index + 1 < len(cgm_y) else None
+            if value is not None and before is None and after is None:
+                chart.add(f'<circle cx="{sx(cgm_x[index])}" cy="{sy(value)}" r="1.1" '
+                          f'class="cgm-s" fill="none" stroke-width="1.4" '
+                          f'clip-path="url(#{chart.clip_id()})"/>')
 
         day_events = ev_by.get(day, [])
         hours = {id(e): e["time"].hour + e["time"].minute / 60 for e in day_events}

@@ -66,14 +66,21 @@ def path_d(xs, ys, sx, sy):
     A None or NaN breaks the line rather than joining across it: a sensor gap
     is not a straight run between the values on either side of it.
     """
-    parts, pen_down = [], False
+    runs, current = [], []
     for x, y in zip(xs, ys):
         if y is None or (isinstance(y, float) and math.isnan(y)):
-            pen_down = False
+            if current:
+                runs.append(current)
+            current = []
             continue
-        parts.append(f"{'L' if pen_down else 'M'}{sx(x)},{sy(y)}")
-        pen_down = True
-    return "".join(parts)
+        current.append(f"{sx(x)},{sy(y)}")
+    if current:
+        runs.append(current)
+    # A run of one point is a reading between two gaps. A bare moveto draws
+    # nothing, so it gets a zero-length segment, which a round line cap turns
+    # into a dot. Without it a lone reading simply vanished.
+    return "".join("M" + run[0] + "L" + ("L".join(run[1:]) if len(run) > 1 else run[0])
+                   for run in runs)
 
 
 def band_d(xs, los, his, sx, sy):

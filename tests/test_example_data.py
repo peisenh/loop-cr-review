@@ -299,6 +299,58 @@ class TestRenderedValues(unittest.TestCase):
                 self.assertRegex(slot["exc"], r"^[+-]\d+\.\d\d$")
                 self.assertRegex(slot["cho"], r"^\d+$")
 
+class TestDailyCurveGaps(unittest.TestCase):
+    """The daily curve shows the readings as they came, holes included.
+
+    Regression: a missing stretch is not in the list of readings, so the line
+    joined its neighbours across it. Found on a Nightscout export where two
+    sensor warm-ups and a failing sensor left an evening in pieces and the panel
+    drew it as one smooth curve.
+    """
+
+    @staticmethod
+    def _breaks(minutes):
+        """Holes the curve shows for readings at *minutes*. -> int"""
+        from lcr import charts  # pylint: disable=import-outside-toplevel
+        points = [(m / 60, 120.0) for m in minutes]
+        _xs, ys = charts._break_at_gaps(points)  # pylint: disable=protected-access
+        return sum(value is None for value in ys)
+
+    def test_dexcom_breaks_at_one_missed_reading(self):
+        """Five-minute pace: ten minutes is one reading short."""
+        self.assertEqual(self._breaks(range(0, 300, 5)), 0)
+        self.assertEqual(self._breaks([m for m in range(0, 300, 5) if m != 100]), 1)
+
+    def test_libre_3_does_not_fray_at_single_misses(self):
+        """One-minute pace: a few missed readings stay joined, seven minutes do not."""
+        self.assertEqual(self._breaks([m for m in range(300) if m not in (50, 51, 52)]), 0)
+        self.assertEqual(self._breaks([m for m in range(300) if not 100 <= m < 107]), 1)
+
+    def test_a_sensor_change_within_the_day_is_no_hole(self):
+        """The pace is taken on each side, so a switch of sensor is not a gap."""
+        dexcom_then_libre = list(range(0, 300, 5)) + list(range(300, 600))
+        libre_then_dexcom = list(range(0, 300)) + list(range(300, 600, 5))
+        self.assertEqual(self._breaks(dexcom_then_libre), 0)
+        self.assertEqual(self._breaks(libre_then_dexcom), 0)
+
+    def test_a_step_of_exactly_the_limit_stays_joined(self):
+        """Hours are floats; a step of exactly the limit must not land above it."""
+        for start in range(0, 24 * 60 - 60):
+            # One-minute pace, so the limit is the five-minute floor; the step
+            # from start+29 to start+34 is exactly five minutes.
+            minutes = list(range(start, start + 30)) + list(range(start + 34, start + 60))
+            self.assertEqual(self._breaks(minutes), 0, f"at minute {start}")
+
+    def test_a_reading_between_two_holes_is_drawn(self):
+        """A run of one point gets a ring, not nothing."""
+        from lcr import charts  # pylint: disable=import-outside-toplevel
+        day = datetime(2026, 10, 14)
+        minutes = list(range(0, 40, 2)) + [70] + list(range(100, 140, 2))
+        times = [day + timedelta(minutes=m) for m in minutes]
+        svg = charts.daily_charts(times, [120.0] * len(times), [], None, {})[0]["img"]
+        self.assertEqual(svg.count("<circle"), 1)
+
+
 class TestDayTitle(unittest.TestCase):
     """Panel titles of the daily charts.
 
@@ -344,3 +396,24 @@ class TestChartsAreSelfContained(unittest.TestCase):
         html, _ctx = core.generate_report(EXAMPLE, lang="de")
         self.assertIn("prefers-color-scheme:dark", html.replace(" ", ""))
 
+
+class TestPathBreaks(unittest.TestCase):
+    """The polyline helper every chart shares."""
+
+    @staticmethod
+    def _d(xs, ys):
+        """Path data with identity scales. -> str"""
+        from lcr.svg import path_d  # pylint: disable=import-outside-toplevel
+        return path_d(xs, ys, lambda v: v, lambda v: v)
+
+    def test_a_run_is_one_subpath(self):
+        """No gap, one moveto."""
+        self.assertEqual(self._d([1, 2, 3], [10, 20, 30]), "M1,10L2,20L3,30")
+
+    def test_a_lone_point_gets_a_zero_length_segment(self):
+        """A bare moveto draws nothing; with a round cap this is a dot."""
+        self.assertEqual(self._d([1, 2, 3], [None, 20, None]), "M2,20L2,20")
+
+    def test_nothing_present_is_nothing_drawn(self):
+        """None and NaN both count as missing."""
+        self.assertEqual(self._d([1, 2], [None, float("nan")]), "")

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed
+- The daily curve shows the readings as they came. It joined the values either
+  side of a silent stretch, so sensor warm-ups and dropouts looked like a smooth
+  run. It now breaks wherever more than one reading is missing, measured against
+  the pace on each side of the hole — one minute for a Libre 3, five for a
+  Dexcom, about two for xDrip — and never under five minutes, so a sensor change
+  within the range is not mistaken for a gap. A reading between two holes is
+  drawn as a small ring; before, it did not appear at all.
+
 ## [0.29.0] - 2026-10-02
 
 ### Added
