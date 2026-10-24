@@ -10,6 +10,13 @@
   Dexcom, about two for xDrip — and never under five minutes, so a sensor change
   within the range is not mistaken for a gap. A reading between two holes is
   drawn as a small ring; before, it did not appear at all.
+- Sensor wear could pass 100 %. It counted readings against the median step, so
+  a sensor sending a little faster now and then said 103 %. It is now the share
+  of the span the readings cover, holes left out by the same rule as the daily
+  curve.
+- A Nightscout report header no longer reads "Nightscout · Nightscout". The
+  device is the uploader the readings came from (xDrip-UiBased, …), and no
+  part of the header repeats.
 
 ## [0.29.0] - 2026-10-02
 

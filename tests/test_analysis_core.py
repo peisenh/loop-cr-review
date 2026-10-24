@@ -195,6 +195,40 @@ class TestConsensusMetrics(unittest.TestCase):
         self.assertAlmostEqual(m["tbr1"], 0.0, places=6)
 
 
+class TestSensorWear(unittest.TestCase):
+    """Sensor wear is the share of the span the readings cover, never above 100 %.
+
+    Regression: wear counted readings against the median step. An xDrip upload
+    whose readings came a little faster than their median now and then said
+    103 %, on an export with an evening of holes in it.
+    """
+
+    @staticmethod
+    def _wear(minutes):
+        """Sensor wear for readings at *minutes*. -> float"""
+        start = datetime(2026, 5, 1)
+        times = [start + timedelta(minutes=m) for m in minutes]
+        return core.consensus_metrics(times, [120.0] * len(times))["wear"]
+
+    def test_gapless_readings_are_full_wear(self):
+        """Every pace without a hole is 100 %: Dexcom, xDrip, Libre 3."""
+        for step in (5, 2, 1):
+            self.assertAlmostEqual(self._wear(range(0, 1440, step)), 100.0, places=6)
+
+    def test_uneven_pace_does_not_pass_hundred(self):
+        """Steps of 1.5 and 2.5 minutes: the old count said more than 100 %."""
+        minutes, now = [], 0.0
+        for i in range(800):
+            minutes.append(now)
+            now += 1.5 if i % 3 else 2.5
+        self.assertLessEqual(self._wear(minutes), 100.0 + 1e-9)
+
+    def test_holes_are_left_out(self):
+        """Two hours missing from a Dexcom day of twelve: wear about 5/6."""
+        minutes = [m for m in range(0, 720 + 1, 5) if not 300 <= m < 420]
+        self.assertAlmostEqual(self._wear(minutes), 100 * (720 - 125) / 720, places=6)
+
+
 class TestSlotVerdicts(unittest.TestCase):
     """Verdict thresholds: |extra basal / bolus| and the 4 h glucose delta."""
 

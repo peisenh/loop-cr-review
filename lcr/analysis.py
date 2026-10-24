@@ -19,7 +19,7 @@ from lcr.common import (
     MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW, PEAK_EARLY, PEAK_RISE_HIGH,
     PRE_BG_HIGH, REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS,
     REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL, STABILITY_HIGH, STABILITY_MODERATE, _,
-    _slot_state, fmt_cr, g, glucose_unit, is_mmol, select_slot_rows, slot_of)
+    _slot_state, fmt_cr, g, glucose_unit, is_mmol, reading_holes, select_slot_rows, slot_of)
 
 __all__ = [
     "consensus_metrics",
@@ -53,7 +53,12 @@ def consensus_metrics(times, gluc):
     """
     mean, sd = float(pure.mean(gluc)), float(pure.stdev(gluc))
     days = (times[-1] - times[0]).total_seconds() / 86400
-    step = pure.median(pure.diff([t.timestamp() for t in times])) / 60
+    steps = [m / 60 for m in pure.diff([t.timestamp() for t in times])]
+    # Sensor wear is the share of the span the readings cover, holes left out
+    # by the same rule that breaks the daily curve. Counting readings against
+    # the median step said 103 % for a sensor that sends a little faster than
+    # its median now and then; covered time cannot pass 100 %.
+    covered = sum(s for s, hole in zip(steps, reading_holes(steps)) if not hole)
     mean_mgdl = mean * MGDL_PER_MMOL if is_mmol() else mean
 
     def share(test):
@@ -79,7 +84,7 @@ def consensus_metrics(times, gluc):
         # consensus figure, so it stays a footnote and never replaces the GMI.
         "ugmi": 1 / (15.36 / mean_mgdl + 0.0425),
         "ugmi_mmol": 1 / (0.07808 / (mean_mgdl / MGDL_PER_MMOL) + 0.003889) - 23.497,
-        "wear": 100 * len(gluc) / (days * 24 * 60 / step) if step else float("nan"),
+        "wear": 100 * covered / (days * 24 * 60) if days else float("nan"),
         "tir": share(lambda v: g(70) <= v <= g(180)),
         "titr": share(lambda v: g(70) <= v <= g(140)),
         "tbr1": share(lambda v: g(54) <= v < g(70)),

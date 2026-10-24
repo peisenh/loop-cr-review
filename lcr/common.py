@@ -27,6 +27,7 @@ __all__ = [
     "single_match",
     "tool_version",
     "sorted_unique_series",
+    "reading_holes",
     "merge_carb_entries",
     "_basal_from_segments",
     "DAILY_BOLUS_Y",
@@ -694,6 +695,31 @@ def merge_carb_entries(raw):
     meals = [m for m in merged if m["cho"] >= MEAL_MIN_CHO and m["bolus"] > 0]
     minors = [m for m in merged if m["cho"] < MEAL_MIN_CHO or m["bolus"] <= 0]
     return meals, minors
+
+GAP_FACTOR, GAP_FLOOR_MIN, GAP_CONTEXT = 1.5, 5.0, 10
+
+
+def reading_holes(steps):
+    """Which steps between readings are holes. -> list of bool, one per step
+
+    steps are the minutes between neighbouring readings. A step is a hole when
+    it is longer than the sensor's own pace allows, and the pace is read where
+    the step is: Libre 3 sends every minute, Dexcom every five, xDrip about
+    every two, and one export can hold more than one of them.
+    """
+    holes = []
+    for index, step in enumerate(steps):
+        before = steps[max(0, index - GAP_CONTEXT):index]
+        after = steps[index + 1:index + 1 + GAP_CONTEXT]
+        # Each side on its own, and the slower one counts: where the sensor
+        # changes, the step between the two belongs to either pace, and a
+        # median across both would land between them and call it a hole.
+        pace = max([pure.median(side) for side in (before, after) if side] or [step])
+        # A hair of tolerance: the times are floats, and a step of exactly
+        # the limit would otherwise land above it at half the clock times.
+        holes.append(step > max(GAP_FLOOR_MIN, GAP_FACTOR * pace) + 1e-6)
+    return holes
+
 
 def sorted_unique_series(times, gluc):
     """CGM samples -> arrays sorted by time, duplicate timestamps dropped.

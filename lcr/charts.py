@@ -25,8 +25,8 @@ from lcr import pure
 
 from lcr.common import (
     DAILY_MIN_GAP, WEEKDAYS, _, _slot_state,
-    fmt_delta, g, glucose_unit, select_slot_rows, slot_median_curve, slot_norm_bands,
-    slot_norm_curve, slot_of)
+    fmt_delta, g, glucose_unit, reading_holes, select_slot_rows, slot_median_curve,
+    slot_norm_bands, slot_norm_curve, slot_of)
 from lcr.svg import Chart, band_d, clip_halfplane, path_d, polygon_d
 
 __all__ = [
@@ -457,9 +457,6 @@ def _day_basal(chart, sx, series, gmax):
 # export can change sensor halfway. Five minutes keeps one-minute data from
 # fraying at every missed reading; shorter holes do not show at day width
 # even when every reading is drawn as a dot.
-GAP_FACTOR, GAP_FLOOR_MIN, GAP_CONTEXT = 1.5, 5.0, 10
-
-
 def _break_at_gaps(points):
     """Hours and values with a break at every hole in the readings. -> (xs, ys)
 
@@ -468,21 +465,12 @@ def _break_at_gaps(points):
     None between them breaks the line there.
     """
     steps = [(b[0] - a[0]) * 60.0 for a, b in zip(points, points[1:])]
+    holes = reading_holes(steps)
     xs, ys = [], []
     for index, (hour, value) in enumerate(points):
-        if index:
-            step = steps[index - 1]
-            before = steps[max(0, index - 1 - GAP_CONTEXT):index - 1]
-            after = steps[index:index + GAP_CONTEXT]
-            # Each side on its own, and the slower one counts: where the sensor
-            # changes, the step between the two belongs to either pace, and a
-            # median across both would land between them and call it a hole.
-            pace = max([pure.median(side) for side in (before, after) if side] or [step])
-            # A hair of tolerance: the hours are floats, and a step of exactly
-            # the limit would otherwise land above it at half the clock times.
-            if step > max(GAP_FLOOR_MIN, GAP_FACTOR * pace) + 1e-6:
-                xs.append(hour)
-                ys.append(None)
+        if index and holes[index - 1]:
+            xs.append(hour)
+            ys.append(None)
         xs.append(hour)
         ys.append(value)
     return xs, ys

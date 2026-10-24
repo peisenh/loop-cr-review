@@ -165,3 +165,30 @@ class TestDailyTotals(unittest.TestCase):
     def test_no_basal_means_no_total(self):
         """A total without its basal half would promise more than it holds."""
         self.assertEqual(_ns_daily_totals(None, [{"time": self.DAY, "bolus": 5.0}]), {})
+
+
+class TestHeaderDevice(unittest.TestCase):
+    """The header names Nightscout once, and the uploader as the device.
+
+    Regression: the reader gave Nightscout as name, pump and sensor, and the
+    header read "Nightscout · ... · Nightscout · Nightscout".
+    """
+
+    @staticmethod
+    def _report(device):
+        """Report context for two readings sent by *device*. -> dict"""
+        entries = [
+            {"type": "sgv", "sgv": 110 + i, "utcOffset": 120,
+             "dateString": f"2026-08-21T08:0{5 * i}:00.000Z", **device}
+            for i in range(2)]
+        with tempfile.TemporaryDirectory() as tmp:
+            _dump(tmp, entries, [])
+            return core.generate_report(tmp, lang="en")[1]
+
+    def test_uploader_is_the_device(self):
+        """xDrip as uploader: the header names xDrip, not Nightscout again."""
+        self.assertEqual(self._report({"device": "xDrip-UiBased"})["device"], "xDrip-UiBased")
+
+    def test_no_uploader_is_device_unknown(self):
+        """No device field: the header says so rather than repeating the source."""
+        self.assertEqual(self._report({})["device"], "device unknown")

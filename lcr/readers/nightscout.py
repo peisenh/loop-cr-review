@@ -153,6 +153,13 @@ def read_nightscout(base):
     if not times:
         raise LoopCRError("Nightscout entries.json has no sgv rows.")
     times, gluc = sorted_unique_series(times, gluc)
+    # Nightscout knows no pump and no sensor, only the uploader that sent the
+    # readings (xDrip-UiBased, share2, ...). That is the closest thing to a
+    # device the export names; the header says Nightscout once, as the source.
+    uploaders = Counter(row["device"] for row in entries
+                        if row.get("type") in (None, "sgv") and row.get("sgv") is not None
+                        and isinstance(row.get("device"), str) and row["device"].strip())
+    sensor = uploaders.most_common(1)[0][0].strip() if uploaders else None
     raw = []
     for row in treatments:
         ts = _ns_parse_time(row, offset)
@@ -189,8 +196,8 @@ def read_nightscout(base):
             events.append({"time": ts, "cho": cho, "bolus": ins})
     return {
         "times": times, "gluc": gluc, "name": "Nightscout",
-        "sensor": "Nightscout", "meals": meals, "minors": minors,
-        "pump": "Nightscout", "basal": basal, "events": events,
+        "sensor": sensor, "meals": meals, "minors": minors,
+        "pump": None, "basal": basal, "events": events,
         "tdd": _ns_daily_totals(basal, events),
         "source": "nightscout",
     }

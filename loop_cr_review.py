@@ -317,7 +317,10 @@ def build_context(base, window, wlab, daily=False, lang="de",
     recs, cr_example = _recommendations_context(meals, by_slot, window, val_at,
                                                 stability, selected)
     _progress("analysis", 70)
-    device = " · ".join(p for p in (pump, sensor) if p) or _("device unknown")
+    # Each name once: the header already opens with the source's name, and a
+    # source that names itself as pump and sensor would say it three times.
+    device = " · ".join(dict.fromkeys(p for p in (pump, sensor) if p and p != name)) \
+        or _("device unknown")
 
     # Chart rendering dominates report generation for larger exports. Keep the
     # progress range reserved for the actual rendering work instead of jumping
