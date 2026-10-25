@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-10-25
+
 ### Fixed
 - The daily curve shows the readings as they came. It joined the values either
   side of a silent stretch, so sensor warm-ups and dropouts looked like a smooth
@@ -1392,7 +1394,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...HEAD
+[0.29.1]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/peisenh/loop-cr-review/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/peisenh/loop-cr-review/compare/v0.26.0...v0.27.0
