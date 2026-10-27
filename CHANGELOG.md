@@ -2,7 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+- Part 2 shows the basal the loop gave in rest, by time of day: quarter hours
+  six hours after any bolus or carbs, with every reading in 70–180 mg/dL and
+  glucose steady. Per hour the mean and median, per block of the day the mean,
+  and the basal delivered over all quarter hours as the upper bound. Hours with
+  rest on fewer than 3 days are shaded, blocks need 4 hours of it as well; the
+  card needs 14 days and a basal trace. A description of what the loop did,
+  not a profile to programme.
+
 ### Fixed
+- The German report labels the AGP time axis "Tageszeit"; the translation was
+  missing and it read "Time of day".
+- The README names the AGP percentiles the report draws, 10/25/50/75/90; it
+  still said 5/95.
 - The GRI zone matches the score shown. A GRI of 20.4 was printed as 20 under
   "Zone B (21–40)"; the zone now goes by the whole number the report prints,
   as the zone ranges are whole numbers.

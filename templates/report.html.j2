@@ -389,7 +389,25 @@ img { width: 100%; border-radius: 8px }
   {% endfor %}
   <div class="note" style="margin-top: 8px">{% if lite %}{% trans %}Hypotheses and candidates for the conversation with the care team, not a dosing instruction.{% endtrans %}{% else %}{% trans %}Hypotheses/candidates for the team discussion, not a
     dosing instruction. Under Auto Mode the loop co-shapes the curve.{% endtrans %}{% endif %}</div>
+</div>{% if rest_basal %}
+
+<div class="card card-break">
+  <h2>{% trans %}Basal in rest by time of day{% endtrans %}</h2>
+  <div class="note" style="margin-bottom: 0">{% trans h=rest_basal.rest_hours, d=rest_basal.span_days, lo=tir_lo, hi=tir_hi, u=unit, a=rest_basal.after_h %}What the loop gave while nothing needed covering: {{ h }} hours of rest in {{ d }} days. Rest = no bolus and no carbs for {{ a }} hours, every reading within {{ lo }}–{{ hi }} {{ u }}, glucose steady over the last half hour.{% endtrans %}</div>
+  <div class="chart-wrap">{{ rest_basal.img|safe }}</div>
+  <div class="table-wrap">
+  <table class="slot-table">
+    <tr><th>{% trans %}Time{% endtrans %}</th>{% for b in rest_basal.blocks %}<th>{{ b.label }}</th>{% endfor %}</tr>
+    <tr><td>{% trans %}Mean in rest{% endtrans %}</td>{% for b in rest_basal.blocks %}<td>{% if b.mean %}{{ b.mean }} U/h{% else %}–{% endif %}</td>{% endfor %}</tr>
+    <tr><td>{% trans %}Days · hours of rest{% endtrans %}</td>{% for b in rest_basal.blocks %}<td>{{ b.days }} · {{ b.hours }} h</td>{% endfor %}</tr>
+  </table>
+  </div>
+  <div class="note" style="margin-top: 6px">
+    {% trans d=rest_basal.min_days, h=rest_basal.min_block_h %}Means, not medians: the loop often throttles and then gives briefly a lot, and what a time of day needs is the amount. The dashed mark in each bar is the median. The line is the basal delivered over all quarter hours, including what the loop adds around meals — an upper bound. An hour needs rest on at least {{ d }} days, a block also at least {{ h }} hours of it; shaded hours had too little, usually because a meal was always close.{% endtrans %}
+    {% trans %}A description of what the loop did, not a basal profile to programme: rest is where the loop already keeps glucose steady, and the evening is rarely far enough from a meal to count.{% endtrans %}
+  </div>
 </div>
+{% endif %}
 
 
 {% endif %}

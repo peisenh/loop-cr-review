@@ -42,7 +42,7 @@ Details: “Supported systems” and “With or without the assessment”.
 
 Always (full and lite):
 
-- **AGP** (percentiles 5/25/50/75/95 over 24 h) and **median postprandial curves** per slot.
+- **AGP** (percentiles 10/25/50/75/90 over 24 h) and **median postprandial curves** per slot.
 - **Consensus metrics** (Battelino 2019): mean glucose, GMI, CV, TIR/TITR/TBR/TAR, sensor wear.
   The explanations also name the uGMI (Xu/Dunn 2026), the updated GMI model — as a
   footnote rather than in the card: it is not a consensus figure yet.
@@ -53,6 +53,7 @@ Additionally only in **full** mode (CamAPS with a basal trace):
 
 - **Loop-aware CR assessment** per slot (breakfast / lunch / dinner) with a data-driven verdict (too weak / too strong / adequate) and a per-meal detail table.
 - **Derivations from the curve shape** as hypotheses for the care team, plus a clarification of `CR_eff` as an approach rather than a target value.
+- **Basal in rest** by time of day: what the loop gave while nothing needed covering (6 h without bolus/carbs, glucose 70–180 mg/dL and steady) — mean per hour and block of the day, with the basal delivered overall as the upper bound. From 14 days; a description, not a basal profile to programme.
 
 Everything patient-related (name, device, period) is drawn **from the data**; nothing is hard-coded.
 

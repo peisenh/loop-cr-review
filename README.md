@@ -42,7 +42,7 @@ Details: Abschnitte „Unterstützte Systeme“ und „Mit oder ohne Beurteilung
 
 Immer (Voll und Lite):
 
-- **AGP** (Perzentile 5/25/50/75/95 über 24 h) und **mediane Postprandial-Verläufe** je Slot.
+- **AGP** (Perzentile 10/25/50/75/90 über 24 h) und **mediane Postprandial-Verläufe** je Slot.
 - **Konsens-Metriken** (Battelino 2019): Ø-Glukose, GMI, CV, TIR/TITR/TBR/TAR, Sensor-Wear.
   Der Erklärteil nennt zusätzlich den uGMI (Xu/Dunn 2026), das aktualisierte GMI-Modell —
   als Fußnote, nicht in der Kachel: es ist noch keine Konsensgröße.
@@ -53,6 +53,7 @@ Zusätzlich nur im **vollen** Modus (CamAPS mit Basalspur):
 
 - **Loop-aware CR-Beurteilung** pro Slot (Frühstück / Mittag / Abend) mit datengetriebenem Befund (zu schwach / zu stark / passend) und Per-Mahlzeit-Detailtabelle.
 - **Ableitungen aus der Kurvenform** als Hypothesen fürs Team, plus Klarstellung von `CR_eff` als Ansatz statt Zielwert.
+- **Basal in Ruhephasen** nach Tageszeit: was der Loop gab, während nichts abzudecken war (6 h ohne Bolus/KH, Glukose 70–180 mg/dL und stabil) — Mittel je Stunde und Tagesblock, dazu die insgesamt gelieferte Basal als Obergrenze. Ab 14 Tagen; eine Beschreibung, kein Basalprofil zum Einstellen.
 
 Alles Patientenbezogene (Name, Gerät, Zeitraum) kommt **aus den Daten**, nichts ist hartcodiert.
 

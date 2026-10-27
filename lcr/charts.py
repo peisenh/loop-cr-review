@@ -19,6 +19,7 @@ import warnings
 from collections import defaultdict
 from datetime import datetime
 
+import html
 import math
 
 from lcr import pure
@@ -38,6 +39,7 @@ __all__ = [
     "selection_effect",
     "slot_norm_curves_chart",
     "daily_charts",
+    "rest_basal_chart",
 ]
 
 # Colour roles as (light, dark). The light values are the ones the PNG theme
@@ -342,6 +344,95 @@ def slot_norm_curves_chart(meals, window, val_at, dark=False):
         y = LEGEND_H + row * (CARD_H + CARD_GAP)
         _norm_card(chart, x, y, label, band, window, (y_lo, y_hi))
     return chart.to_svg("Baseline-normalised")
+
+
+def rest_basal_chart(prof, dark=False):
+    """Basal in rest by hour, block means, and the basal delivered overall."""
+    del dark
+    # The shade for hours without enough rest is this chart's own; in the
+    # shared palette it would go into the style block of every other chart.
+    chart = Chart(WIDE, 430, margins=(64, 20, 56, 20),
+                  palette={**PALETTE, "norest": ("#eef1f5", "#232b38")})
+    tops = [h["mean"] for h in prof["hours"] if h] + [v for v in prof["delivered"] if v]
+    ymax = max(1.0, math.ceil(max(tops) * 2) / 2)
+    sx, sy = chart.scales((0, 24), (0, ymax))
+    y_ticks = [i / 2 for i in range(int(ymax * 2) + 1)]
+    x_ticks = list(range(0, 25, 3))
+    # Shade every run of hours without enough rest, and name the long ones:
+    # an empty stretch would otherwise read as zero.
+    hour = 0
+    while hour < 24:
+        if prof["hours"][hour]:
+            hour += 1
+            continue
+        end = hour
+        while end < 24 and not prof["hours"][end]:
+            end += 1
+        chart.add(f'<rect x="{sx(hour)}" y="{chart.top}" width="{sx(end) - sx(hour)}" '
+                  f'height="{chart.bottom - chart.top}" class="norest"/>')
+        if end - hour >= 4:
+            chart.text(sx((hour + end) / 2), sy(ymax * 0.08), _("too little rest"), "ink",
+                       size=12, anchor="middle")
+        hour = end
+    chart.grid_y(sy, y_ticks, "grid")
+    chart.grid_x(sx, x_ticks, "grid")
+    width = (sx(1) - sx(0)) * 0.62
+    for hour, item in enumerate(prof["hours"]):
+        x = sx(hour + 0.5)
+        if item:
+            chart.add(f'<rect x="{x - width / 2:.2f}" y="{sy(item["mean"]):.2f}" '
+                      f'width="{width:.2f}" height="{sy(0) - sy(item["mean"]):.2f}" class="p5"/>')
+            chart.add(f'<line x1="{x - width / 2:.2f}" y1="{sy(item["median"])}" '
+                      f'x2="{x + width / 2:.2f}" y2="{sy(item["median"])}" class="p25-s" '
+                      f'stroke-width="2" stroke-dasharray="3 2"/>')
+        chart.text(x, chart.bottom + 30, str(item["days"] if item else 0), "ink", size=10,
+                   anchor="middle")
+    xs = [h + 0.5 for h in range(24)]
+    chart.line(path_d(xs, prof["delivered"], sx, sy), "ink", 1.8)
+    # One stepped line through the blocks, joined upright where one block meets
+    # the next; a block without enough rest breaks it.
+    points = []
+    for block in prof["blocks"]:
+        if block["mean"] is None:
+            points.append((None, None))
+            continue
+        y = sy(block["mean"])
+        if points and points[-1][0] != sx(block["start"]):
+            points.append((None, None))
+        points += [(sx(block["start"]), y), (sx(block["end"]), y)]
+    runs, run = [], []
+    for x, y in points:
+        if x is None:
+            if run:
+                runs.append(run)
+            run = []
+        else:
+            run.append((x, y))
+    if run:
+        runs.append(run)
+    for run in runs:
+        d = "M" + "L".join(f"{x:.2f},{y:.2f}" for x, y in run)
+        chart.add(f'<path d="{d}" class="carb-s" fill="none" stroke-width="3.5" '
+                  f'stroke-linejoin="miter"/>')
+    for block in prof["blocks"]:
+        if block["mean"] is not None:
+            chart.text(sx((block["start"] + block["end"]) / 2), sy(block["mean"]) - 8,
+                       f'{block["mean"]:.2f}', "carb", size=14, anchor="middle", weight="700")
+    chart.frame("frame")
+    chart.ticks_x(sx, x_ticks, "ink", fmt=lambda v: f"{int(v)}", size=TICK_SIZE)
+    chart.ticks_y(sy, y_ticks, "ink", fmt=lambda v: f"{v:.1f}", size=TICK_SIZE)
+    chart.text(chart.left - 8, chart.bottom + 30, _("days"), "ink", size=10, anchor="end")
+    chart.text((chart.left + chart.right) / 2, chart.bottom + 50, _("Time of day"), "ink",
+               size=LABEL_SIZE, anchor="middle")
+    chart.add(f'<text transform="translate({chart.left - 46},'
+              f'{(chart.top + chart.bottom) / 2}) rotate(-90)" class="ink" '
+              f'font-size="{LABEL_SIZE}" text-anchor="middle">{html.escape(_("Basal U/h"))}</text>')
+    chart.legend([("carb", _("mean in rest, per block"), False),
+                  ("p5", _("mean in rest, per hour"), True),
+                  ("p25", _("median in rest, per hour"), False),
+                  ("ink", _("delivered overall (upper bound)"), False)],
+                 "ink", size=LEGEND_SIZE)
+    return chart.to_svg(_("Basal in rest"))
 
 
 def _norm_card(chart, x, y, label, band, window, y_range):

@@ -71,6 +71,13 @@ __all__ = [
     "REST_MIN_HOURS",
     "REST_REL",
     "REST_OFF_FRAC",
+    "REST_BASAL_BIN_MIN",
+    "REST_BASAL_AFTER_H",
+    "REST_BASAL_STEADY",
+    "REST_BASAL_MIN_SPAN_DAYS",
+    "REST_BASAL_MIN_DAYS",
+    "REST_BASAL_MIN_BLOCK_H",
+    "REST_BASAL_BLOCKS",
     "LOOP_RATIO",
     "D4_WEAK",
     "D4_STRONG",
@@ -432,6 +439,16 @@ REST_MIN_WINDOWS = 3
 REST_MIN_HOURS = 6
 REST_REL = 0.20                  # |mean rate / fasting − 1|
 REST_OFF_FRAC = 0.30             # share of minutes that far off
+# Basal in rest by time of day (descriptive, not a profile).
+REST_BASAL_BIN_MIN = 15          # quarter hours, judged one by one
+REST_BASAL_AFTER_H = 6           # since the last bolus or carbs: at 4 h a breakfast
+                                 # bolus still held the midday basal down
+REST_BASAL_STEADY = 15           # mg/dL change over the last 30 min, at most
+REST_BASAL_MIN_SPAN_DAYS = 14    # below that one fortnight's pattern looked like a rule
+REST_BASAL_MIN_DAYS = 3          # an hour or a block needs rest on this many days
+REST_BASAL_MIN_BLOCK_H = 4       # and a block this many hours of it: a mean over a
+                                 # few quarter hours drew a line across hours with none
+REST_BASAL_BLOCKS = ((0, 3), (3, 7), (7, 11), (11, 15), (15, 19), (19, 24))
 LOOP_RATIO = 0.12          # |loop extra basal / bolus| notable from here
 D4_WEAK, D4_STRONG = 15, -30
 D4_HIGH = 40               # Δ4h clearly too high from here (even without loop signal)

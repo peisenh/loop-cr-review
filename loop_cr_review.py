@@ -24,7 +24,8 @@ from lcr.common import (  # pylint: disable=unused-import
     FEW_DAYS_HINT, HEAD_BYTES, HYPO_BG, LOOP_RATIO, LoopCRError, MAX_GAP_MIN,
     MAX_SEARCH_DEPTH, MAX_SNIFF_FILES, MEAL_MIN_CHO, MERGE_SEC, MGDL_PER_MMOL,
     MIN_CLEAN_MEALS, MIN_DAYS_FOR_STABILITY, MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW,
-    N_, PEAK_EARLY, PEAK_RISE_HIGH, PRE_BG_HIGH, REPO_URL, REST_EXCL_AFTER_MEAL_MIN,
+    N_, PEAK_EARLY, PEAK_RISE_HIGH, PRE_BG_HIGH, REPO_URL, REST_BASAL_AFTER_H,
+    REST_BASAL_MIN_BLOCK_H, REST_BASAL_MIN_DAYS, REST_EXCL_AFTER_MEAL_MIN,
     REST_MIN_HOURS, REST_MIN_WINDOWS, REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL,
     SKIP_DIRS, SLOT_PROFILES, STABILITY_HIGH, STABILITY_MODERATE, TIME_FMTS, TOOL_NAME,
     WEEKDAYS, _, _GLUCOSE_UNIT, _SLOTS_VAR, _SLOT_PALETTE, _TRANSLATION,
@@ -41,13 +42,13 @@ from lcr.readers import (  # pylint: disable=unused-import
     read_libreview, read_meals, read_nightscout, read_tdd)
 from lcr import pure
 from lcr.charts import (  # pylint: disable=unused-import
-    PALETTE, _day_title, agp_chart, daily_charts, gri_grid_chart, selection_effect,
-    slot_curves_chart, slot_norm_curves_chart)
+    PALETTE, _day_title, agp_chart, daily_charts, gri_grid_chart, rest_basal_chart,
+    selection_effect, slot_curves_chart, slot_norm_curves_chart)
 from lcr.analysis import (  # pylint: disable=unused-import
     _hypo_caution, _reference_lever, _scan_minors, _weak_levers, aggregate_slot,
     analyze_meals, build_cr_note, cgm_gap_in_window, consensus_metrics, curve_metrics,
     decision_stability, gri_metrics, loop_rest, make_glucose_lookup, observed_range,
-    shape_description, slot_headline, slot_levers, verdict_class)
+    rest_basal, shape_description, slot_headline, slot_levers, verdict_class)
 # --- Context / Rendering ----------------------------------------------------
 
 
@@ -344,6 +345,24 @@ def build_context(base, window, wlab, daily=False, lang="de",
     _progress("charts", 80)
     slot_norm_img = slot_norm_curves_chart(meals, window, val_at)
     _progress("charts", 86)
+    # Only where part 2 reads the basal: lite sources have none, and without the
+    # assessment there is nothing this card is context for.
+    rest_prof = (rest_basal(basal, times, gluc,
+                            [m["time"] for m in (*meals, *minors)])
+                 if not lite and basal is not None and assess else None)
+    rest_ctx = None
+    if rest_prof:
+        rest_ctx = {
+            "img": rest_basal_chart(rest_prof),
+            "span_days": rest_prof["span_days"],
+            "after_h": REST_BASAL_AFTER_H,
+            "min_days": REST_BASAL_MIN_DAYS, "min_block_h": REST_BASAL_MIN_BLOCK_H,
+            "rest_hours": f"{rest_prof['rest_hours']:.0f}",
+            "blocks": [{"label": f"{b['start']:02d}–{b['end']:02d}",
+                        "mean": None if b["mean"] is None else f"{b['mean']:.2f}",
+                        "days": b["days"], "hours": f"{b['hours']:.0f}"}
+                       for b in rest_prof["blocks"]],
+        }
     daily_days = (_daily_days(times, gluc, base, basal,
                               events=events,
                               tdd=ns["tdd"] if ns else None,
@@ -381,6 +400,7 @@ def build_context(base, window, wlab, daily=False, lang="de",
         "fb_spread": False if basal is None else (
             (basal[5] - basal[4]) >= 0.3 * basal[3] if basal[3] > 0 else False),
         "rest": None if (lite or basal is None or not assess) else loop_rest(basal, meals),
+        "rest_basal": rest_ctx,
         "wlab": wlab, "unit": glucose_unit(),
         "tir_lo": fmt_glucose(g(70)), "tir_hi": fmt_glucose(g(180)),
         "bg70": fmt_glucose(g(70)), "bg54": fmt_glucose(g(54)), "bg140": fmt_glucose(g(140)),

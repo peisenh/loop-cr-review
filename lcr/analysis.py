@@ -7,6 +7,7 @@ pictures or arranges them. Kept free of rendering so a change to the report
 cannot quietly change a verdict.
 """
 import html
+from collections import defaultdict
 from datetime import timedelta
 
 import math
@@ -17,7 +18,9 @@ from lcr.common import (
     BOOTSTRAP_N, BOOTSTRAP_SEED, CR_DEV_HIGH, CR_DEV_LOW, D4_HIGH, D4_STRONG, FASTING_HOURS,
     HYPO_BG, LOOP_RATIO, MAX_GAP_MIN, MGDL_PER_MMOL, MIN_DAYS_FOR_STABILITY,
     MIN_MEALS_FOR_STABILITY, NADIR_LATE, NADIR_LOW, PEAK_EARLY, PEAK_RISE_HIGH,
-    PRE_BG_HIGH, REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS,
+    PRE_BG_HIGH, REST_BASAL_AFTER_H, REST_BASAL_BIN_MIN, REST_BASAL_BLOCKS,
+    REST_BASAL_MIN_BLOCK_H, REST_BASAL_MIN_DAYS, REST_BASAL_MIN_SPAN_DAYS, REST_BASAL_STEADY,
+    REST_EXCL_AFTER_MEAL_MIN, REST_MIN_HOURS, REST_MIN_WINDOWS,
     REST_MIN_WINDOW_MIN, REST_OFF_FRAC, REST_REL, STABILITY_HIGH, STABILITY_MODERATE, _,
     _slot_state, fmt_cr, g, glucose_unit, is_mmol, reading_holes, select_slot_rows, slot_of)
 
@@ -41,6 +44,7 @@ __all__ = [
     "slot_headline",
     "build_cr_note",
     "loop_rest",
+    "rest_basal",
 ]
 
 # --- Analysis ---------------------------------------------------------
@@ -614,3 +618,96 @@ def loop_rest(basal, meals):
         off = float(pure.median([w["off"] for w in windows]))
         state = "active" if (rel >= REST_REL or off >= REST_OFF_FRAC) else "quiet"
     return {"state": state, "windows": n, "hours": hours, "rel": rel, "off": off}
+
+
+def rest_basal(basal, times, gluc, actions):
+    """Basal the loop gave in rest, by time of day. -> dict or None
+
+    Rest is a quarter hour with no bolus and no carbs for REST_BASAL_AFTER_H
+    before its end, every reading in it within 70-180 mg/dL and glucose steady
+    over the last half hour. What the loop gives then is close to what the body
+    needs with nothing to cover; around meals it gives more, which is why the
+    basal delivered over all quarter hours comes alongside as the upper bound.
+
+    Means, not medians: the loop throttles often and gives briefly a lot, and
+    it is the amount that a time of day needs, which the median understates.
+    A description of what happened, not a basal profile to programme.
+
+    actions: datetimes of every bolus and carb entry. None when the export
+    spans fewer than REST_BASAL_MIN_SPAN_DAYS full days or has no rest at all.
+    """
+    rate, t0, minutes = basal[:3]
+    if not times or minutes <= 0:
+        return None
+    start = max(t0, times[0])
+    stop = min(t0 + timedelta(minutes=minutes), times[-1])
+    span_days = round((stop - start).total_seconds() / 86400)
+    if span_days < REST_BASAL_MIN_SPAN_DAYS:
+        return None
+    # Quarter hours on the clock, from the first that lies wholly inside both
+    # the basal trace and the readings — and REST_BASAL_AFTER_H into them: a
+    # bolus just before a chosen date range is not in the list, and the first
+    # hours would pass for calm without it.
+    start += timedelta(hours=REST_BASAL_AFTER_H)
+    first = start.replace(minute=start.minute - start.minute % REST_BASAL_BIN_MIN,
+                          second=0, microsecond=0)
+    if first < start:
+        first += timedelta(minutes=REST_BASAL_BIN_MIN)
+    actions = sorted(actions)
+    lo, hi, steady = g(70), g(180), g(REST_BASAL_STEADY)
+    step = timedelta(minutes=REST_BASAL_BIN_MIN)
+    quiet = timedelta(hours=REST_BASAL_AFTER_H)
+    half_hour = timedelta(minutes=30)
+
+    def readings(a, b):
+        return gluc[pure.searchsorted(times, a, side="left"):
+                    pure.searchsorted(times, b, side="left")]
+
+    rest, days, delivered = defaultdict(list), defaultdict(set), defaultdict(list)
+    t = first
+    while t + step <= stop:
+        end = t + step
+        i0 = int((t - t0).total_seconds() // 60)
+        value = math.fsum(rate[i0:i0 + REST_BASAL_BIN_MIN]) / REST_BASAL_BIN_MIN
+        delivered[t.hour].append(value)
+        k = pure.searchsorted(actions, end, side="left")
+        calm = k == 0 or end - actions[k - 1] >= quiet
+        inside, before = readings(t, end), readings(end - half_hour, end)
+        # Two readings in the quarter hour and four in the half hour: a stretch
+        # the sensor did not see is not known to be steady.
+        if (calm and len(inside) >= 2 and len(before) >= 4
+                and all(lo <= v <= hi for v in inside)
+                and abs(before[-1] - before[0]) <= steady):
+            rest[t.hour].append(value)
+            days[t.hour].add(t.date())
+        t = end
+    if not any(rest.values()):
+        return None
+    per_hour = 60 // REST_BASAL_BIN_MIN
+
+    def summary(values, day_set):
+        if len(day_set) < REST_BASAL_MIN_DAYS:
+            return None
+        return {"mean": math.fsum(values) / len(values), "median": pure.median(values),
+                "days": len(day_set), "hours": len(values) / per_hour}
+
+    hours = [summary(rest[h], days[h]) for h in range(24)]
+    blocks = []
+    for a, b in REST_BASAL_BLOCKS:
+        values = [v for h in range(a, b) for v in rest[h]]
+        day_set = set().union(*(days[h] for h in range(a, b)))
+        # A block without enough rest keeps its counts, so the report can say
+        # how little there was rather than leave it blank.
+        blocks.append({"start": a, "end": b, "days": len(day_set),
+                       "hours": len(values) / per_hour,
+                       "mean": summary(values, day_set)["mean"]
+                       if len(day_set) >= REST_BASAL_MIN_DAYS
+                       and len(values) / per_hour >= REST_BASAL_MIN_BLOCK_H else None})
+    return {
+        "hours": hours,
+        "blocks": blocks,
+        "delivered": [math.fsum(delivered[h]) / len(delivered[h]) if delivered[h] else None
+                      for h in range(24)],
+        "span_days": span_days,
+        "rest_hours": sum(len(v) for v in rest.values()) / per_hour,
+    }
