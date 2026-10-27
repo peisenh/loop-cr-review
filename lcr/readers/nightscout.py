@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Peter Eisenhauer <github@peter-e.de>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Reading a Nightscout export (entries + treatments as JSON or CSV)."""
+import bisect
 import json
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
@@ -34,19 +35,17 @@ def _ns_parse_time(obj, fallback_min):
     was wrong across a daylight-saving change: a six-month range starting in
     March carried the winter offset into every summer day, and every reading
     came out an hour early.
+
+    *fallback_min* is minutes, or a function from the UTC instant to minutes
+    (see _ns_offset_lookup), for records whose offset depends on when they are.
     """
-    raw = obj.get("dateString") or obj.get("created_at")
-    if raw:
-        dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-    elif obj.get("date"):
-        dt = datetime.fromtimestamp(float(obj["date"]) / 1000.0, tz=timezone.utc)
-    else:
+    stamp = _ns_utc_stamp(obj)
+    if stamp is None:
         return None
+    dt = datetime.fromtimestamp(stamp, tz=timezone.utc)
     off = _ns_record_offset(obj)
     if off is None:
-        off = int(fallback_min or 0)
+        off = int((fallback_min(dt) if callable(fallback_min) else fallback_min) or 0)
     local = dt.astimezone(timezone(timedelta(minutes=off)))
     return local.replace(tzinfo=None)
 
@@ -80,6 +79,88 @@ def _ns_offset_minutes(entries):
     if not offs:
         return 0
     return Counter(offs).most_common(1)[0][0]
+
+
+def _ns_offset_lookup(entries):
+    """Offset for a record that carries none, taken at its own time. -> callable
+
+    Treatments carry no offset at all (Nightscout writes zero), so one value for
+    the export put every treatment on one side of a daylight-saving change: a
+    meal at 11:02 after the October change came out at 12:02, its boluses and
+    temp basals with it. The readings do carry the wearer's offset, so a record
+    without one takes the offset of the reading nearest to it in time; an
+    export without any falls back to the most common one, which is zero.
+    """
+    marks = []
+    for row in entries:
+        off = _ns_record_offset(row)
+        if off is None:
+            continue
+        stamp = _ns_utc_stamp(row)
+        if stamp is not None:
+            marks.append((stamp, off))
+    marks.sort()
+    stamps = [stamp for stamp, _off in marks]
+    common = _ns_offset_minutes(entries)
+
+    def offset_at(dt):
+        if not marks:
+            return common
+        index = bisect.bisect_left(stamps, dt.timestamp())
+        near = [i for i in (index - 1, index) if 0 <= i < len(marks)]
+        return marks[min(near, key=lambda i: abs(stamps[i] - dt.timestamp()))][1]
+
+    return offset_at
+
+
+def _ns_utc_stamp(obj):
+    """The record's UTC instant as epoch seconds, or None. -> float|None"""
+    raw = obj.get("dateString") or obj.get("created_at")
+    try:
+        if raw:
+            dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.timestamp()
+        if obj.get("date"):
+            return float(obj["date"]) / 1000.0
+    except (TypeError, ValueError):
+        return None
+    return None
+
+
+# What makes two treatments the same one: the kind and every amount in it.
+_NS_TREATMENT_KEY = ("eventType", "carbs", "insulin", "rate", "absolute", "duration")
+CLOCK_SHIFT_S = 3600
+
+
+def _ns_drop_clock_copies(treatments):
+    """Treatments without the copies an uploader sent again an hour off. -> list
+
+    After the October clock change an uploader sent two days of treatments a
+    second time, each one an hour later than the first copy: same kind, same
+    amounts, to the second. Read as they are, every meal of those days came
+    twice and the temp basals overlapped. A record is such a copy when another
+    one with the same kind and amounts lies exactly an hour away and was
+    uploaded before it (srvCreated; a record without one is the older upload).
+    Two of the same where neither is known to be later stay, both of them.
+    """
+    seen = {}
+    for row in treatments:
+        stamp = _ns_utc_stamp(row)
+        if stamp is not None:
+            seen.setdefault((tuple(row.get(k) for k in _NS_TREATMENT_KEY), stamp), []).append(row)
+
+    def uploaded(row):
+        return row.get("srvCreated") or 0
+
+    copies = set()
+    for (key, stamp), rows in seen.items():
+        for other_stamp in (stamp - CLOCK_SHIFT_S, stamp + CLOCK_SHIFT_S):
+            for row in rows:
+                if any(uploaded(row) > uploaded(other) for other in seen.get((key, other_stamp), ())):
+                    copies.add(id(row))
+    return [row for row in treatments if id(row) not in copies]
 
 
 # An hour of basal trace before a day counts as a day at all.
@@ -126,8 +207,8 @@ def read_nightscout(base):
 
     Times: ISO Z / epoch as UTC, then shifted to each record's own ``utcOffset``
     so slot clocks match the wearer. A record without one — Nightscout writes a
-    zero where the uploader does not track the zone — takes the offset most of
-    the export carries.
+    zero where the uploader does not track the zone, and on every treatment —
+    takes the offset of the reading nearest to it in time.
     """
     ns = _nightscout_dir(base)
     if ns is None:
@@ -136,7 +217,8 @@ def read_nightscout(base):
     treatments = json.loads((ns / "treatments.json").read_text(encoding="utf-8-sig"))
     if not isinstance(entries, list) or not isinstance(treatments, list):
         raise LoopCRError("Nightscout JSON must be arrays.")
-    offset = _ns_offset_minutes(entries)
+    offset = _ns_offset_lookup(entries)
+    treatments = _ns_drop_clock_copies(treatments)
     set_glucose_unit("mg/dL")
     times, gluc = [], []
     for row in entries:

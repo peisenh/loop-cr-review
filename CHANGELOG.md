@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+- Nightscout treatments after a clock change are at the right time. They carry
+  no offset of their own and took the one most of the export had, so after the
+  October change a meal at 11:02 showed at 12:02, its bolus and the temp basals
+  with it. A treatment now takes the offset of the reading nearest to it.
+- Treatments an uploader sent a second time an hour off are read once. After
+  the October change one sent two days again, each an hour later; every meal
+  of those days came twice. A copy is one with the same kind and amounts
+  exactly an hour from another that was uploaded before it.
+
 ## [0.29.1] - 2026-10-25
 
 ### Fixed

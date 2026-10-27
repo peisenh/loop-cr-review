@@ -112,6 +112,58 @@ class TestDaylightSaving(unittest.TestCase):
         self.assertEqual([m["time"].hour for m in result["meals"]], [22])
 
 
+class TestTreatmentsAcrossTheClockChange(unittest.TestCase):
+    """Treatments carry no offset, so they take the one of the readings near them.
+
+    Regression: one offset for the whole export put every treatment on the
+    summer side of the October change. A meal eaten at 11:02 on 27.10 showed
+    at 12:02 although Nightscout showed it right; the export ran from 19.10,
+    so summer was the common offset.
+    """
+
+    @staticmethod
+    def _reading(day, hour, offset):
+        """A reading at *hour* local time on October *day*, *offset* minutes east."""
+        stamp = datetime(2026, 10, day, hour, tzinfo=timezone.utc) - timedelta(minutes=offset)
+        return {"type": "sgv", "sgv": 120, "utcOffset": offset,
+                "dateString": stamp.isoformat().replace("+00:00", "Z")}
+
+    @staticmethod
+    def _meal(utc, **extra):
+        """A meal bolus at *utc*, without an offset as Nightscout writes it."""
+        return {"eventType": "Meal Bolus", "carbs": 57, "insulin": 11, "utcOffset": 0,
+                "created_at": utc.isoformat().replace("+00:00", "Z"), **extra}
+
+    def _meals(self, treatments):
+        """Meal times read from a summer week and two winter days. -> list"""
+        entries = ([self._reading(day, h, 120) for day in range(19, 25) for h in (8, 12, 18)]
+                   + [self._reading(day, h, 60) for day in (26, 27) for h in (8, 12, 18)])
+        with tempfile.TemporaryDirectory() as tmp:
+            _dump(tmp, entries, treatments)
+            return [m["time"] for m in read_nightscout(tmp)["meals"]]
+
+    def test_a_winter_meal_keeps_its_hour(self):
+        """Mostly summer in the export, the meal itself in winter time."""
+        meal = self._meal(datetime(2026, 10, 27, 10, 2, 45, tzinfo=timezone.utc))
+        self.assertEqual(self._meals([meal]), [datetime(2026, 10, 27, 11, 2, 45)])
+
+    def test_a_summer_meal_keeps_its_hour(self):
+        meal = self._meal(datetime(2026, 10, 24, 9, 9, 31, tzinfo=timezone.utc))
+        self.assertEqual(self._meals([meal]), [datetime(2026, 10, 24, 11, 9, 31)])
+
+    def test_a_copy_sent_again_an_hour_off_is_dropped(self):
+        """Seen after the October change: the uploader sent two days again, +1 h."""
+        first = datetime(2026, 10, 24, 9, 9, 31, tzinfo=timezone.utc)
+        treatments = [self._meal(first),
+                      self._meal(first + timedelta(hours=1), srvCreated=1792911981385)]
+        self.assertEqual(self._meals(treatments), [datetime(2026, 10, 24, 11, 9, 31)])
+
+    def test_the_same_meal_an_hour_later_stays_when_nothing_says_copy(self):
+        """Without an upload time the second one may be real, so both stay."""
+        first = datetime(2026, 10, 24, 9, 9, 31, tzinfo=timezone.utc)
+        treatments = [self._meal(first), self._meal(first + timedelta(hours=1))]
+        self.assertEqual(len(self._meals(treatments)), 2)
+
 class TestDailyTotals(unittest.TestCase):
     """Nightscout has no summary file, so the daily insulin is added up.
 
