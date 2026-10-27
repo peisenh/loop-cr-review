@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-10-27
+
 ### Changed
 - Release notes and README point to the app on Google Play, with the note that
   Play gets a release only after Google's review and may lag behind the APK.
@@ -1408,7 +1410,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.2...HEAD
+[0.29.2]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/peisenh/loop-cr-review/compare/v0.27.0...v0.28.0
