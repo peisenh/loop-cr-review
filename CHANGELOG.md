@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-10-27
+
 ### Fixed
 - The basal-in-rest card shows for a 14-day Glooko export. Such an export ends
   when it was made and covers about 13.4 days of clock time; rounded, that was
@@ -1435,7 +1437,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.30.1...HEAD
+[0.30.1]: https://github.com/peisenh/loop-cr-review/compare/v0.30.0...v0.30.1
 [0.30.0]: https://github.com/peisenh/loop-cr-review/compare/v0.29.2...v0.30.0
 [0.29.2]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...v0.29.1
