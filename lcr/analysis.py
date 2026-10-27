@@ -99,13 +99,17 @@ def gri_metrics(met):
     hypo = met["tbr2"] + 0.8 * met["tbr1"]
     hyper = met["tar2"] + 0.5 * met["tar1"]
     score = min(100.0, 3.0 * hypo + 1.6 * hyper)
-    if score <= 20:
+    # The zones are whole numbers (0-20, 21-40, ...) and the report shows the
+    # score as one, so the zone goes by the score as shown: 20.4 was printed
+    # as 20 and put in zone B (21-40). round() rounds as the "%.0f" does.
+    shown = round(score)
+    if shown <= 20:
         zone, zrange, risk = "A", "0–20", _("Low risk")
-    elif score <= 40:
+    elif shown <= 40:
         zone, zrange, risk = "B", "21–40", _("Low to moderate risk")
-    elif score <= 60:
+    elif shown <= 60:
         zone, zrange, risk = "C", "41–60", _("Moderate risk")
-    elif score <= 80:
+    elif shown <= 80:
         zone, zrange, risk = "D", "61–80", _("High risk")
     else:
         zone, zrange, risk = "E", "81–100", _("Very high risk")

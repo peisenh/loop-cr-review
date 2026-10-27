@@ -229,6 +229,35 @@ class TestSensorWear(unittest.TestCase):
         self.assertAlmostEqual(self._wear(minutes), 100 * (720 - 125) / 720, places=6)
 
 
+class TestGriZone(unittest.TestCase):
+    """The zone goes with the score as the report prints it.
+
+    Regression: a GRI of 20.4 was printed as 20 under "Zone B (21-40)".
+    """
+
+    @staticmethod
+    def _gri(tbr1=0.0, tar1=0.0):
+        """GRI for a share low (54-69) and high (181-250), nothing beyond. -> dict"""
+        return core.gri_metrics({"tbr1": tbr1, "tbr2": 0.0, "tar1": tar1, "tar2": 0.0})
+
+    def test_printed_twenty_is_zone_a(self):
+        """The report case: 0.1 % low, 2.6 % very high, 20 % high gives 20.4."""
+        gri = core.gri_metrics({"tbr1": 0.1, "tbr2": 0.0, "tar1": 20.0, "tar2": 2.6})
+        self.assertAlmostEqual(gri["score"], 20.4, places=6)
+        self.assertEqual(("%.0f" % gri["score"], gri["zone"]), ("20", "A"))
+
+    def test_printed_twenty_one_is_zone_b(self):
+        """21.0 from the high share alone: 1.6 * 0.5 * 26.25."""
+        gri = self._gri(tar1=26.25)
+        self.assertEqual(("%.0f" % gri["score"], gri["zone"]), ("21", "B"))
+
+    def test_every_printed_score_sits_in_its_zone_range(self):
+        for tenth in range(0, 1001):
+            gri = self._gri(tar1=tenth / 10 / 0.8)
+            low, high = (int(x) for x in gri["range"].split("–"))
+            self.assertTrue(low <= int("%.0f" % gri["score"]) <= high, gri)
+
+
 class TestSlotVerdicts(unittest.TestCase):
     """Verdict thresholds: |extra basal / bolus| and the 4 h glucose delta."""
 

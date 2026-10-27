@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- The GRI zone matches the score shown. A GRI of 20.4 was printed as 20 under
+  "Zone B (21–40)"; the zone now goes by the whole number the report prints,
+  as the zone ranges are whole numbers.
+
 ## [0.29.2] - 2026-10-27
 
 ### Changed
