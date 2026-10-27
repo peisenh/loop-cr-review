@@ -41,7 +41,7 @@ shoot() {  # shoot <output> <height>
 mkdir -p "$OUT_DIR"
 echo "==> Rendering"
 shoot "$OUT_DIR/screenshot.png" 1800
-shoot "$OUT_DIR/screenshot_full.png" 5500
+shoot "$OUT_DIR/screenshot_full.png" 6200
 
-echo "==> Done. Check them before committing — a report that grew past 5500 px"
+echo "==> Done. Check them before committing — a report that grew past 6200 px"
 echo "    is cut off in screenshot_full.png without any error."
