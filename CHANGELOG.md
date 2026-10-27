@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-27
+
 ### Added
 - Part 2 shows the basal the loop gave in rest, by time of day: quarter hours
   six hours after any bolus or carbs, with every reading in 70–180 mg/dL and
@@ -1428,7 +1430,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.29.2...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/peisenh/loop-cr-review/compare/v0.29.2...v0.30.0
 [0.29.2]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/peisenh/loop-cr-review/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/peisenh/loop-cr-review/compare/v0.28.0...v0.29.0
