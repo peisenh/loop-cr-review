@@ -634,7 +634,7 @@ def rest_basal(basal, times, gluc, actions):
     A description of what happened, not a basal profile to programme.
 
     actions: datetimes of every bolus and carb entry. None when the export
-    spans fewer than REST_BASAL_MIN_SPAN_DAYS full days or has no rest at all.
+    touches fewer than REST_BASAL_MIN_SPAN_DAYS calendar days or has no rest at all.
     """
     rate, t0, minutes = basal[:3]
     if not times or minutes <= 0:
@@ -642,7 +642,10 @@ def rest_basal(basal, times, gluc, actions):
     start = max(t0, times[0])
     stop = min(t0 + timedelta(minutes=minutes), times[-1])
     span_days = round((stop - start).total_seconds() / 86400)
-    if span_days < REST_BASAL_MIN_SPAN_DAYS:
+    # Counted in calendar days, as an export is chosen: a 14-day Glooko export
+    # ends today at the time it was made and covers about 13.4 days of clock
+    # time, which is 13 when rounded, and the card stayed away from it.
+    if (stop.date() - start.date()).days + 1 < REST_BASAL_MIN_SPAN_DAYS:
         return None
     # Quarter hours on the clock, from the first that lies wholly inside both
     # the basal trace and the readings — and REST_BASAL_AFTER_H into them: a

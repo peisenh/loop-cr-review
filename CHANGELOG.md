@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- The basal-in-rest card shows for a 14-day Glooko export. Such an export ends
+  when it was made and covers about 13.4 days of clock time; rounded, that was
+  13 and the card stayed away. The 14 days now count calendar days.
+
 ## [0.30.0] - 2026-10-27
 
 ### Added

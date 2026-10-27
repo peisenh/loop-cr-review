@@ -84,6 +84,22 @@ class TestRestBasal(unittest.TestCase):
         """Under 14 days one fortnight's pattern looked like a rule."""
         self.assertIsNone(rest_basal(*_month(days=10)))
 
+    def test_fourteen_day_export_made_during_the_day(self):
+        """Glooko's 14 days end when the export was made: 13.4 days of clock time
+        over 14 calendar days. Regression: rounded to 13, the card was missing."""
+        basal, times, gluc, acts = _month(days=15)
+        start, stop = START + timedelta(hours=11), START + timedelta(days=13, hours=21)
+        kept = [(t, v) for t, v in zip(times, gluc) if start <= t <= stop]
+        prof = rest_basal(basal, [t for t, _ in kept], [v for _, v in kept], acts)
+        self.assertIsNotNone(prof)
+        self.assertEqual(prof["span_days"], 13)
+
+    def test_thirteen_calendar_days_say_nothing(self):
+        """The bar itself stays: thirteen calendar days are not enough."""
+        basal, times, gluc, acts = _month(days=15)
+        kept = [(t, v) for t, v in zip(times, gluc) if t < START + timedelta(days=13)]
+        self.assertIsNone(rest_basal(basal, [t for t, _ in kept], [v for _, v in kept], acts))
+
     def test_mean_not_median(self):
         """A loop that throttles three quarter hours and gives a lot in the fourth."""
         basal, times, gluc, acts = _month()

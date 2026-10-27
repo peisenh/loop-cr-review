@@ -444,7 +444,7 @@ REST_BASAL_BIN_MIN = 15          # quarter hours, judged one by one
 REST_BASAL_AFTER_H = 6           # since the last bolus or carbs: at 4 h a breakfast
                                  # bolus still held the midday basal down
 REST_BASAL_STEADY = 15           # mg/dL change over the last 30 min, at most
-REST_BASAL_MIN_SPAN_DAYS = 14    # below that one fortnight's pattern looked like a rule
+REST_BASAL_MIN_SPAN_DAYS = 14    # calendar days; fewer, and one week's pattern looked like a rule
 REST_BASAL_MIN_DAYS = 3          # an hour or a block needs rest on this many days
 REST_BASAL_MIN_BLOCK_H = 4       # and a block this many hours of it: a mean over a
                                  # few quarter hours drew a line across hours with none
