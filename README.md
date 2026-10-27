@@ -261,7 +261,7 @@ pip install -r requirements-gui-webview2.txt && python3 gui.py
 
 Alles läuft lokal; die Daten verlassen den Rechner nicht.
 
-### 4 · Android (Sideload)
+### 4 · Android (Google Play oder Sideload)
 
 Dieselbe Auswertung in einer APK, ohne Server. Am Release hängt
 `loop-cr-review-android.apk`. Installation über den Dateimanager
@@ -274,8 +274,11 @@ kompilierten Code mehr — Charts als SVG, Rechnung in reinem Python —,
 womit sich die Frage nach Ausrichtung und ABI erübrigt. Lokal auf
 Pixel 8 (Android 17) und Tab M11 geprüft.
 
-**Play:** Alignment blockiert nicht mehr. Die APK hängt weiter nur am
-GitHub-Release (Sideload); ein Store-Listing ist eine eigene Entscheidung.
+**Google Play:** auch [bei Google Play](https://play.google.com/store/apps/details?id=de.peisenh.loopcrreview) (EU/EWR, UK, Schweiz,
+Australien, Neuseeland). Play bekommt eine neue Version erst nach Googles
+Prüfung und kann daher hinter dem neuesten Release liegen; die APK am Release
+ist immer aktuell. Play-Version und APK sind ggf. unterschiedlich signiert:
+Beim Wechsel zwischen beiden kann vorheriges Deinstallieren nötig sein.
 
 **Lizenzen in der APK:** Projektcode AGPL-3.0; übrige Bestandteile
 (AndroidX, Chaquopy, CPython, Flask, …) unter ihrer

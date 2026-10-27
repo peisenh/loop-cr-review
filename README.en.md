@@ -257,7 +257,7 @@ pip install -r requirements-gui-webview2.txt && python3 gui.py
 
 Everything happens locally; the data never leaves your machine.
 
-### 4 · Android (sideload)
+### 4 · Android (Google Play or sideload)
 
 The same analysis in an APK, no server. Releases attach
 `loop-cr-review-android.apk`. Install from the file manager (allow unknown
@@ -265,13 +265,16 @@ sources). Release-signed with a project keystore (same key locally and on
 GitHub). Play Protect may ask once. Uninstall 0.20.x first — different
 signature.
 
-**Devices:** 4 KB and 16 KB page-size kernels (native libs aligned to
-no native libraries at all: the charts are SVG and the arithmetic is plain
-Python, so alignment and ABI no longer arise). Built and run on
+**Devices:** 4 KB and 16 KB page-size kernels. The app carries no native
+libraries at all: the charts are SVG and the arithmetic is plain Python, so
+alignment and ABI no longer arise. Built and run on
 a Pixel 8 (Android 17) and a Tab M11.
 
-**Play:** alignment is no longer the blocker. The APK is still only on the
-GitHub release (sideload); a store listing is a separate decision.
+**Google Play:** also [on Google Play](https://play.google.com/store/apps/details?id=de.peisenh.loopcrreview) (EU/EEA, UK, Switzerland,
+Australia, New Zealand). Play gets a new version only after Google's review,
+so it can lag behind the latest release; the APK on the release is always
+current. Play and the APK may be signed with different keys: switching between
+them can require uninstalling first.
 
 **Licenses in the APK:** project code is AGPL-3.0; everything else
 (AndroidX, Chaquopy, CPython, Flask, …) keeps its own

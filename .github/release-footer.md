@@ -25,6 +25,12 @@ from source instead (see README).
 
 **Linux:** make it executable first — `chmod +x loop-cr-review-gui-linux`.
 
+**Android** — also on [Google Play](https://play.google.com/store/apps/details?id=de.peisenh.loopcrreview) (EU/EEA, UK, Switzerland,
+  Australia, New Zealand). Play gets new versions after Google's review, so it
+  may not carry this release yet; the APK below always does. Play and the APK
+  may be signed with different keys: switching between them can require
+  uninstalling first.
+
 **Android (sideload)** — `loop-cr-review-android.apk`
   Same analysis on the phone, all on-device. Release-signed with the same
   key as local builds. Install from the file manager (unknown sources).

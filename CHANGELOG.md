@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- Release notes and README point to the app on Google Play, with the note that
+  Play gets a release only after Google's review and may lag behind the APK.
+
 ### Fixed
 - Nightscout treatments after a clock change are at the right time. They carry
   no offset of their own and took the one most of the export had, so after the
