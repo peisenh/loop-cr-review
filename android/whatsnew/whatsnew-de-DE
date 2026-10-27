@@ -1,5 +1,5 @@
-Erste öffentliche Version.
+Neu: Basal in Ruhephasen nach Tageszeit – was der Loop gab, während nichts abzudecken war. Eine Beschreibung, kein Basalprofil zum Einstellen; ab 14 Tagen, nur mit Basalspur.
 
-Loop CR Review wertet CGM- und Pumpendaten aus Glooko, Nightscout, LibreView oder Dexcom Clarity aus und erzeugt daraus einen Bericht mit AGP, Konsens-Metriken und den Verläufen je Mahlzeit – vollständig auf dem Gerät, ohne Cloud und ohne Konto. Die Beurteilung ist auf CamAPS FX ausgelegt und lässt sich abschalten; dann zeigt der Bericht nur die Messwerte.
+Korrigiert: Nightscout-Einträge nach der Zeitumstellung zur richtigen Uhrzeit, doppelt hochgeladene nur einmal. Die Tageskurve zeigt Lücken, Sensor-Wear höchstens 100 %, die GRI-Zone passt zur angezeigten Zahl. Nightscout-Tage zeigen das Tagesinsulin.
 
 Kein Medizinprodukt: keine Diagnose, keine Therapieempfehlung.

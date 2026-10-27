@@ -1,5 +1,5 @@
-First public release.
+New: basal in rest by time of day – what the loop gave while nothing needed covering. A description, not a basal profile to programme; from 14 days and only with a basal trace.
 
-Loop CR Review reads CGM and pump data exported from Glooko, Nightscout, LibreView or Dexcom Clarity and turns it into a report with AGP, consensus metrics and the courses per meal – entirely on the device, no cloud, no account. The assessment is designed for CamAPS FX and can be switched off, leaving the measured values alone.
+Fixed: Nightscout entries after the clock change at the right time, entries uploaded twice read once. The daily curve shows gaps, sensor wear stays at or below 100 %, the GRI zone matches the number shown. Nightscout days show the total daily insulin.
 
 Not a medical device: no diagnosis, no treatment advice.
