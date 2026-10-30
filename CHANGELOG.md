@@ -6,7 +6,8 @@
 - The app targets Android 17 (compileSdk and targetSdk 37). Under 37 the
   local network permission is enforced and native libraries must be read-only;
   the app reaches only its own server on 127.0.0.1 and loads Chaquopy's
-  libraries, both checked on a Pixel 8 with Android 17.
+  libraries, both checked on a Pixel 8 with Android 17. The SDK platform
+  package is called android-37.0; there is no android-37.
 - A local sideload build without Python 3.14 uses the installed python3
   (3.10–3.15) and says so, instead of failing after a minute in Chaquopy's pip
   step. That APK carries the older Python; CI, releases and the Play bundle
