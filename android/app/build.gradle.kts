@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "de.peisenh.loopcrreview"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.peisenh.loopcrreview"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 17
         versionName = (findProperty("appVersion") as String?) ?: "dev"
         ndk {
@@ -112,9 +112,15 @@ tasks.named("preBuild") { dependsOn(syncAnalysis) }
 tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
     .configureEach { dependsOn(syncAnalysis) }
 
+// The Python the app ships, and the one CI and every release build with.
+// tools/build-android-apk.sh may pass -PpythonVersion= for a local test build
+// on a machine that only has an older one; Chaquopy needs the same version on
+// the build machine as in the app.
+val shippedPython = "3.14"
+
 chaquopy {
     defaultConfig {
-        version = "3.14"
+        version = (findProperty("pythonVersion") as String?) ?: shippedPython
         pip {
             // Nothing here is compiled. Flask, Jinja2 and waitress are pure
             // Python, and with numpy gone there is no wheel to fetch, no ABI to

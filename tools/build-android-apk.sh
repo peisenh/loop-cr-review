@@ -4,7 +4,9 @@
 # Usage:  ./tools/build-android-apk.sh
 # Keystore password: android/release.env (gitignored) or a prompt.
 #
-# Needs JDK 17 and an Android SDK (ANDROID_HOME or ANDROID_SDK_ROOT).
+# Needs JDK 17, an Android SDK (ANDROID_HOME or ANDROID_SDK_ROOT) and the
+# Python the app ships (shippedPython in android/app/build.gradle.kts) as
+# pythonX.Y on PATH — or, for a test build, any 3.10-3.15 as python3.
 # First run downloads Gradle, the SDK platforms if missing, and the
 # Chaquopy Python/wheel set — several minutes, needs the network.
 #
@@ -20,6 +22,28 @@ command -v java >/dev/null || {
   exit 1
 }
 
+# Chaquopy compiles the app's Python with a host Python of the same version and
+# looks for it as pythonX.Y on PATH. Without the shipped one, a local test build
+# takes the Python that is installed (Chaquopy supports 3.10-3.15) and says so;
+# releases and CI always build with the shipped version.
+PYVER=$(sed -nE 's/^[[:space:]]*val shippedPython[[:space:]]*=[[:space:]]*"(3\.[0-9]+)".*/\1/p' "$APP/app/build.gradle.kts" | head -1)
+PY_PROPS=()
+if [ -n "$PYVER" ] && ! command -v "python$PYVER" >/dev/null; then
+  LOCAL_PY=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || true)
+  case "$LOCAL_PY" in
+    3.1[0-5])
+      echo "==> python$PYVER not on PATH — building with the installed Python $LOCAL_PY" \
+           "(a test build; releases use $PYVER)" >&2
+      PY_PROPS=(-PpythonVersion="$LOCAL_PY")
+      ;;
+    *)
+      echo "Python $PYVER (or any 3.10-3.15 as python3) is required for the Chaquopy build." >&2
+      echo "  uv python install $PYVER     — puts python$PYVER into ~/.local/bin" >&2
+      exit 1
+      ;;
+  esac
+fi
+
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ]; then
   for candidate in \
@@ -31,7 +55,7 @@ if [ -z "$SDK" ]; then
 fi
 [ -n "$SDK" ] && [ -d "$SDK" ] || {
   echo "Android SDK not found. Set ANDROID_HOME to the SDK directory." >&2
-  echo "  sdkmanager \"platforms;android-36\" \"build-tools;36.0.0\" \"platform-tools\"" >&2
+  echo "  sdkmanager \"platforms;android-37\" \"build-tools;36.0.0\" \"platform-tools\"" >&2
   exit 1
 }
 
@@ -66,7 +90,8 @@ echo "==> keystore $ANDROID_KEYSTORE  alias $ANDROID_KEY_ALIAS"
 "$APP/gradlew" -p "$APP" --no-daemon \
   assembleRelease \
   -PappVersion="$VERSION" \
-  -Pabi="$ABI"
+  -Pabi="$ABI" \
+  ${PY_PROPS[@]+"${PY_PROPS[@]}"}
 
 APK="$APP/app/build/outputs/apk/release/app-release.apk"
 [ -f "$APK" ] || {

@@ -4,8 +4,9 @@
 # Usage:  ./tools/build-android-play.sh
 # Keystore password: android/release.env (gitignored) or a prompt.
 #
-# Needs JDK 17, Android SDK (ANDROID_HOME or ANDROID_SDK_ROOT), and the
-# release keystore (same as ./tools/build-android-apk.sh).
+# Needs JDK 17, Android SDK (ANDROID_HOME or ANDROID_SDK_ROOT), the Python of
+# android/app/build.gradle.kts as pythonX.Y on PATH, and the release keystore
+# (same as ./tools/build-android-apk.sh).
 #
 # Writes:  dist/loop-cr-review-play.aab
 #
@@ -24,6 +25,16 @@ command -v java >/dev/null || {
   exit 1
 }
 
+# Chaquopy compiles the app's Python with a host Python of the same version and
+# looks for it as pythonX.Y on PATH. No fallback here, unlike the sideload APK:
+# a bundle for Play ships the Python it was built with.
+PYVER=$(sed -nE 's/^[[:space:]]*val shippedPython[[:space:]]*=[[:space:]]*"(3\.[0-9]+)".*/\1/p' "$APP/app/build.gradle.kts" | head -1)
+if [ -n "$PYVER" ] && ! command -v "python$PYVER" >/dev/null; then
+  echo "Python $PYVER is required for the Play bundle (python$PYVER not on PATH)." >&2
+  echo "  uv python install $PYVER     — puts python$PYVER into ~/.local/bin" >&2
+  exit 1
+fi
+
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
 if [ -z "$SDK" ]; then
   for candidate in \
@@ -35,7 +46,7 @@ if [ -z "$SDK" ]; then
 fi
 [ -n "$SDK" ] && [ -d "$SDK" ] || {
   echo "Android SDK not found. Set ANDROID_HOME to the SDK directory." >&2
-  echo "  sdkmanager \"platforms;android-36\" \"build-tools;36.0.0\" \"platform-tools\"" >&2
+  echo "  sdkmanager \"platforms;android-37\" \"build-tools;36.0.0\" \"platform-tools\"" >&2
   exit 1
 }
 

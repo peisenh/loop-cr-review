@@ -163,7 +163,7 @@ jobs:
         # Has to match compileSdk in android/app/build.gradle.kts. With an older
         # platform Gradle downloads the right one mid-build, which works but hides
         # the mismatch until something else depends on it.
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
       - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

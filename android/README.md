@@ -30,7 +30,14 @@ Background: [docs/android-poc.md](../docs/android-poc.md).
 
 ## Build
 
-Needs JDK 17 and an Android SDK (`ANDROID_HOME` or `ANDROID_SDK_ROOT`).
+Needs JDK 17, an Android SDK (`ANDROID_HOME` or `ANDROID_SDK_ROOT`) and, on
+PATH, the Python the app ships (`shippedPython` in `app/build.gradle.kts`,
+currently `python3.14`). Chaquopy compiles the app's Python with it. Without it,
+`tools/build-android-apk.sh` builds with the installed `python3` instead (3.10–3.15,
+passed as `-PpythonVersion=`) and says so — fine for trying a change on a phone,
+but that APK carries the older Python. `tools/build-android-play.sh` has no such
+fallback: a bundle for Play ships what it was built with. `uv python install 3.14`
+puts `python3.14` into `~/.local/bin` without touching the system Python.
 From the **repository root**:
 
 ```bash
