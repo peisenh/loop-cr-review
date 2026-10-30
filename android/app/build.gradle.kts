@@ -114,7 +114,7 @@ tasks.matching { it.name.matches(Regex("(merge|generate|extract).*Python.*")) }
 
 chaquopy {
     defaultConfig {
-        version = "3.13"
+        version = "3.14"
         pip {
             // Nothing here is compiled. Flask, Jinja2 and waitress are pure
             // Python, and with numpy gone there is no wheel to fetch, no ABI to

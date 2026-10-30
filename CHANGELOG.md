@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+- One Python everywhere: 3.14. The app ran 3.13 (Chaquopy), the binaries were
+  built and the tests run on 3.12, only the Docker image had 3.14 — so the
+  tests never ran on the Python that was shipped. Chaquopy 17.0 supports 3.14,
+  and every dependency has wheels for it. The report is byte-identical under
+  3.13 and 3.14.
+
 ## [0.30.1] - 2026-10-27
 
 ### Fixed

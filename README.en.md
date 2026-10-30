@@ -129,6 +129,10 @@ Debian/Ubuntu via system packages (recommended, e.g. in a homelab):
 sudo apt install python3-jinja2
 ```
 
+Built and tested in CI with **Python 3.14** — the same version in the app, the
+Docker image and the binaries. Older Python 3 releases such as Debian's usually
+work too, but are no longer tested automatically.
+
 Or platform-independently via pip (in a venv if desired):
 
 ```bash

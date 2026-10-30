@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
@@ -153,9 +153,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      # Chaquopy builds with a host Python of the same version as the one it
+      # puts in the app (android/app/build.gradle.kts, chaquopy.version).
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - uses: android-actions/setup-android@v4
       - name: SDK platforms
         # Has to match compileSdk in android/app/build.gradle.kts. With an older

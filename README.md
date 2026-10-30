@@ -129,6 +129,10 @@ Debian/Ubuntu über Systempakete (empfohlen, z. B. im Homelab):
 sudo apt install python3-jinja2
 ```
 
+Gebaut und in der CI getestet wird mit **Python 3.14** — in der App, im
+Docker-Image und in den Binaries dieselbe Version. Ältere Python 3 wie das von
+Debian laufen in der Regel auch, werden aber nicht mehr automatisch getestet.
+
 Oder plattformunabhängig über pip (ggf. in einem venv):
 
 ```bash
