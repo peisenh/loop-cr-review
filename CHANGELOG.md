@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-30
+
 ### Changed
 - The app targets Android 17 (compileSdk and targetSdk 37). Under 37 the
   local network permission is enforced and native libraries must be read-only;
@@ -1453,7 +1455,8 @@ The report itself is unchanged: same input, byte-identical output.
   einen eigenständigen HTML-Report mit AGP, Konsens-Metriken und einer Loop-aware
   Beurteilung der Kohlenhydrat-Verhältnisse (CR) pro Tageszeit-Slot.
 
-[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.30.1...HEAD
+[Unreleased]: https://github.com/peisenh/loop-cr-review/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/peisenh/loop-cr-review/compare/v0.30.1...v0.31.0
 [0.30.1]: https://github.com/peisenh/loop-cr-review/compare/v0.30.0...v0.30.1
 [0.30.0]: https://github.com/peisenh/loop-cr-review/compare/v0.29.2...v0.30.0
 [0.29.2]: https://github.com/peisenh/loop-cr-review/compare/v0.29.1...v0.29.2
