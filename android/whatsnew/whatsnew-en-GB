@@ -1,5 +1,5 @@
-New: basal in rest by time of day – what the loop gave while nothing needed covering. A description, not a basal profile to programme; from 14 days and only with a basal trace.
+Updated for Android 17: the app now targets Android 17 and has been checked on a Pixel 8 running it. The analysis runs on the device with Python 3.14 — the same version all tests run on.
 
-Fixed: Nightscout entries after the clock change at the right time, entries uploaded twice read once. The daily curve shows gaps, sensor wear stays at or below 100 %, the GRI zone matches the number shown. Nightscout days show the total daily insulin.
+The report itself is unchanged.
 
 Not a medical device: no diagnosis, no treatment advice.

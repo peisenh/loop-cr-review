@@ -1,5 +1,5 @@
-Neu: Basal in Ruhephasen nach Tageszeit – was der Loop gab, während nichts abzudecken war. Eine Beschreibung, kein Basalprofil zum Einstellen; ab 14 Tagen, nur mit Basalspur.
+Für Android 17 aktualisiert: Die App ist jetzt auf Android 17 ausgerichtet und auf einem Pixel 8 damit geprüft. Die Auswertung läuft auf dem Gerät mit Python 3.14 — derselben Version, mit der auch alle Tests laufen.
 
-Korrigiert: Nightscout-Einträge nach der Zeitumstellung zur richtigen Uhrzeit, doppelt hochgeladene nur einmal. Die Tageskurve zeigt Lücken, Sensor-Wear höchstens 100 %, die GRI-Zone passt zur angezeigten Zahl. Nightscout-Tage zeigen das Tagesinsulin.
+Am Report selbst ändert sich nichts.
 
 Kein Medizinprodukt: keine Diagnose, keine Therapieempfehlung.
