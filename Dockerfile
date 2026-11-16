@@ -4,7 +4,7 @@
 # The version shown in the report/web is baked from `git describe` at build time.
 
 # ---- version stage: resolve the version from git (falls back to "dev") -------
-FROM python:3.14-slim AS version
+FROM python:3.15-slim AS version
 WORKDIR /src
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
@@ -12,7 +12,7 @@ COPY . .
 RUN echo "VERSION = \"$(git describe --tags --dirty --always 2>/dev/null || echo dev)\"" > _version.py
 
 # ---- runtime -----------------------------------------------------------------
-FROM python:3.14-slim
+FROM python:3.15-slim
 WORKDIR /app
 
 # No system libraries: the charts are SVG and the arithmetic is plain Python,
